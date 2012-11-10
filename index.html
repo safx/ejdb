@@ -1,0 +1,694 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Ejdb by Softmotions</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Ejdb</h1>
+        <p class="header">EJDB - Embedded JSON Database engine</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/Softmotions/ejdb/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/Softmotions/ejdb/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/Softmotions/ejdb">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/Softmotions">Softmotions</a></p>
+
+
+      </header>
+      <section>
+        <h1>EJDB - Embedded JSON Database engine</h1>
+
+<p>It aims to be a fast <a href="http://mongodb.org">MongoDB</a>-like library <strong>which can be embedded into C/C++ applications under terms of LGPL license.</strong></p>
+
+<p>EJDB is the C library based on modified version of <a href="http://fallabs.com/tokyocabinet/">Tokyo Cabinet</a>.</p>
+
+<p>JSON representation of queries and data implemented with API based on <a href="https://github.com/mongodb/mongo-c-driver/tree/master/src/">C BSON</a></p>
+
+<h1>Features</h1>
+
+<ul>
+<li>LGPL license allows you to embed this library into proprietary software.</li>
+<li>MongoDB-like queries and overall philosophy.</li>
+<li>Collection level write locking.</li>
+<li>Collection level transactions.</li>
+<li>String token matching queries: <code>$stror</code> <code>$strand</code>
+</li>
+<li>
+<a href="http://nodejs.org">Node.js</a> binding</li>
+</ul><h1>Documentation</h1>
+
+<ul>
+<li>
+<strong><a href="#nodejs-binding">NodeJS binding</a></strong>
+
+<ul>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#ejdb-nodejs-api">NodeJS API</a></li>
+</ul>
+</li>
+<li>
+<strong><a href="#ejdb-c-library">EJDB C Library</a></strong>
+
+<ul>
+<li><a href="#building--installation">Building &amp; Installation</a></li>
+<li><a href="#c-api">C API</a></li>
+</ul>
+</li>
+</ul><h1>NodeJS binding</h1>
+
+<h2>One snippet intro</h2>
+
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">EJDB</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"ejdb"</span><span class="p">);</span>
+<span class="c1">//Open zoo DB</span>
+<span class="kd">var</span> <span class="nx">jb</span> <span class="o">=</span> <span class="nx">EJDB</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s2">"zoo"</span><span class="p">,</span> <span class="nx">EJDB</span><span class="p">.</span><span class="nx">DEFAULT_OPEN_MODE</span> <span class="o">|</span> <span class="nx">EJDB</span><span class="p">.</span><span class="nx">JBOTRUNC</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">parrot1</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"name"</span> <span class="o">:</span> <span class="s2">"Grenny"</span><span class="p">,</span>
+    <span class="s2">"type"</span> <span class="o">:</span> <span class="s2">"African Grey"</span><span class="p">,</span>
+    <span class="s2">"male"</span> <span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="s2">"age"</span> <span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"birthdate"</span> <span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(),</span>
+    <span class="s2">"likes"</span> <span class="o">:</span> <span class="p">[</span><span class="s2">"green color"</span><span class="p">,</span> <span class="s2">"night"</span><span class="p">,</span> <span class="s2">"toys"</span><span class="p">],</span>
+    <span class="s2">"extra1"</span> <span class="o">:</span> <span class="kc">null</span>
+<span class="p">};</span>
+<span class="kd">var</span> <span class="nx">parrot2</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"name"</span> <span class="o">:</span> <span class="s2">"Bounty"</span><span class="p">,</span>
+    <span class="s2">"type"</span> <span class="o">:</span> <span class="s2">"Cockatoo"</span><span class="p">,</span>
+    <span class="s2">"male"</span> <span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="s2">"age"</span> <span class="o">:</span> <span class="mi">15</span><span class="p">,</span>
+    <span class="s2">"birthdate"</span> <span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(),</span>
+    <span class="s2">"likes"</span> <span class="o">:</span> <span class="p">[</span><span class="s2">"sugar cane"</span><span class="p">]</span>
+<span class="p">};</span>
+
+<span class="nx">jb</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="s2">"parrots"</span><span class="p">,</span> <span class="p">[</span><span class="nx">parrot1</span><span class="p">,</span> <span class="nx">parrot2</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">oids</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"Grenny OID: "</span> <span class="o">+</span> <span class="nx">parrot1</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"Bounty OID: "</span> <span class="o">+</span> <span class="nx">parrot2</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]);</span>
+
+    <span class="nx">jb</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="s2">"parrots"</span><span class="p">,</span>
+            <span class="p">{</span><span class="s2">"likes"</span> <span class="o">:</span> <span class="s2">"toys"</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">"$orderby"</span> <span class="o">:</span> <span class="p">{</span><span class="s2">"name"</span> <span class="o">:</span> <span class="mi">1</span><span class="p">}},</span>
+            <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">cursor</span><span class="p">,</span> <span class="nx">count</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+                    <span class="k">return</span><span class="p">;</span>
+                <span class="p">}</span>
+                <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"Found "</span> <span class="o">+</span> <span class="nx">count</span> <span class="o">+</span> <span class="s2">" parrots"</span><span class="p">);</span>
+                <span class="k">while</span> <span class="p">(</span><span class="nx">cursor</span><span class="p">.</span><span class="nx">next</span><span class="p">())</span> <span class="p">{</span>
+                    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">cursor</span><span class="p">.</span><span class="nx">field</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="o">+</span> <span class="s2">" likes toys!"</span><span class="p">);</span>
+                <span class="p">}</span>
+                <span class="nx">cursor</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> <span class="c1">//It's not mandatory to close cursor explicitly</span>
+                <span class="nx">jb</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> <span class="c1">//Close the database</span>
+            <span class="p">});</span>
+<span class="p">});</span>
+</pre></div>
+
+<h2>Installation</h2>
+
+<p><strong>System libraries:</strong></p>
+
+<ul>
+<li>g++</li>
+<li>cunit</li>
+<li>zlib</li>
+</ul><p>On Debian/Ubuntu linux you can install it as follows:</p>
+
+<div class="highlight"><pre>   sudo apt-get install g++ libcunit1 libcunit1-dev zlib1g zlib1g-dev
+</pre></div>
+
+<p><strong>Installation from node package manager:</strong></p>
+
+<pre><code>npm install ejdb
+</code></pre>
+
+<h2>EJDB NodeJS API</h2>
+
+<p><a name="open"></a></p>
+
+<h3>EJDB.open(dbFile, openMode)</h3>
+
+<p>Open database. Return database instance handle object.
+<br>Default open mode: <code>JBOWRITER | JBOCREAT</code>.
+<br>This is blocking function.</p>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} dbFile Database main file name</li>
+<li>{Number} <code>[openMode=JBOWRITER | JBOCREAT]</code> Bitmast of open modes:
+
+<ul>
+<li>
+<code>JBOREADER</code> Open as a reader.</li>
+<li>
+<code>JBOWRITER</code> Open as a writer.</li>
+<li>
+<code>JBOCREAT</code> Create if db file not exists</li>
+<li>
+<code>JBOTRUNC</code> Truncate db.</li>
+</ul>
+</li>
+</ul><hr><p><a name="close"></a></p>
+
+<h3>close()</h3>
+
+<p>Close database.
+<br>If database was not opened it does nothing.
+<br>This is blocking function.</p>
+
+<hr><p><a name="isOpen"></a></p>
+
+<h3>isOpen()</h3>
+
+<p>Check if database in opened state.</p>
+
+<hr><p><a name="ensureCollection"></a></p>
+
+<h3>ensureCollection(cname, copts)</h3>
+
+<p>Automatically creates new collection if it does't exists.
+Collection options <code>copts</code> applied only for newly created collection.
+For existing collections <code>copts</code> takes no effect.
+<br>This is blocking function.</p>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} cname Name of collection.</li>
+<li>{Object} <code>[copts]</code> Collection options.</li>
+</ul><hr><p><a name="removeCollection"></a></p>
+
+<h3>removeCollection(cname, prune, cb)</h3>
+
+<p>Remove collection.</p>
+
+<p>Call variations:</p>
+
+<pre><code>removeCollection(cname)
+removeCollection(cname, cb)
+removeCollection(cname, prune, cb)
+</code></pre>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} cname Name of collection.</li>
+<li>{Boolean} <code>[prune=false]</code> If true the collection data will erased from disk.</li>
+<li>{Function} <code>[cb]</code> Callback args: (error)</li>
+</ul><hr><p><a name="save"></a></p>
+
+<h3>save(cname, jsarr, cb)</h3>
+
+<p>Save/update specified JSON objects in the collection.
+If collection with <code>cname</code> does not exists it will be created.</p>
+
+<p>Each persistent object has unique identifier (OID) placed in the <code>_id</code> property.
+If a saved object does not have  <code>_id</code> it will be autogenerated.
+To identify and update object it should contains <code>_id</code> property.</p>
+
+<p>Call variations:</p>
+
+<pre><code>save(cname, json object, [cb])
+save(cname, &lt;Array of json objects&gt;, [cb])
+</code></pre>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} <strong>cname</strong> Name of collection.</li>
+<li>{Array|Object} jsarr Signle JSON object or array of JSON objects to save</li>
+<li>{Function} <code>[cb]</code> Callback args: (error, {Array} of OIDs for saved objects)</li>
+</ul><hr><p><a name="load"></a></p>
+
+<h3>load(cname, oid, cb)</h3>
+
+<p>Loads JSON object identified by OID from the collection.</p>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} cname Name of collection</li>
+<li>{String} oid Object identifier (OID)</li>
+<li>{Function} cb  Callback args: (error, obj)
+    <code>obj</code>:  Retrieved JSON object or NULL if it is not found.</li>
+</ul><hr><p><a name="remove"></a></p>
+
+<h3>remove(cname, oid, cb)</h3>
+
+<p>Removes JSON object from the collection.</p>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} cname Name of collection</li>
+<li>{String} oid Object identifier (OID)</li>
+<li>{Function} cb  Callback args: (error)</li>
+</ul><hr><p><a name="find"></a></p>
+
+<h3>find(cname, qobj, orarr, hints, cb)</h3>
+
+<p>Execute query on collection.
+EJDB queries inspired by MongoDB (mongodb.org) and follows same philosophy.</p>
+
+<pre><code>Supported queries:
+  - Simple matching of String OR Number OR Array value:
+      -   {'json.field.path' : 'val', ...}
+  - $not Negate operation.
+      -   {'json.field.path' : {'$not' : val}} //Field not equal to val
+      -   {'json.field.path' : {'$not' : {'$begin' : prefix}}} //Field not begins with val
+  - $begin String starts with prefix
+      -   {'json.field.path' : {'$begin' : prefix}}
+  - $gt, $gte (&gt;, &gt;=) and $lt, $lte for number types:
+      -   {'json.field.path' : {'$gt' : number}, ...}
+  - $bt Between for number types:
+      -   {'json.field.path' : {'$bt' : [num1, num2]}}
+  - $in String OR Number OR Array val matches to value in specified array:
+      -   {'json.field.path' : {'$in' : [val1, val2, val3]}}
+  - $nin - Not IN
+  - $strand String tokens OR String array val matches all tokens in specified array:
+      -   {'json.field.path' : {'$strand' : [val1, val2, val3]}}
+  - $stror String tokens OR String array val matches any token in specified array:
+      -   {'json.field.path' : {'$stror' : [val1, val2, val3]}}
+  - $exists Field existence matching:
+      -   {'json.field.path' : {'$exists' : true|false}}
+
+NOTE: Negate operations: $not and $nin not using indexes
+      so they can be slow in comparison to other matching operations.
+
+NOTE: Only one index can be used in search query operation.
+
+QUERY HINTS (specified by `hints` argument):
+  - $max Maximum number in the result set
+  - $skip Number of skipped results in the result set
+  - $orderby Sorting order of query fields.
+      Eg: ORDER BY field1 ASC, field2 DESC
+      hints:    {
+                  "$orderby" : {
+                      "field1" : 1,
+                      "field2" : -1
+                  }
+                }
+
+Many C API query examples can be found in `tcejdb/testejdb/t2.c` test case.
+
+To traverse selected records cursor object is used:
+  - Cursor#next() Move cursor to the next record and returns true if next record exists.
+  - Cursor#hasNext() Returns true if cursor can be placed to the next record.
+  - Cursor#field(name) Retrieve value of the specified field of the current JSON object record.
+  - Cursor#object() Retrieve whole JSON object with all fields.
+  - Cursor#reset() Reset cursor to its initial state.
+  - Cursor#length Read-only property: Number of records placed into cursor.
+  - Cursor#pos Read/Write property: You can set cursor position: 0 &lt;= pos &lt; length
+  - Cursor#close() Closes cursor and free cursor resources. Cursor cant be used in closed state.
+
+Call variations of find():
+   - find(cname, qobj, cb)
+   - find(cname, qobj, hints, cb)
+   - find(cname, qobj, qobjarr, cb)
+   - find(cname, qobj, qobjarr, hints, cb)
+</code></pre>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} cname Name of collection</li>
+<li>{Object} qobj Main JSON query object</li>
+<li>{Array} <code>[orarr]</code> Array of additional OR query objects (joined with OR predicate).</li>
+<li>{Object} <code>[hints]</code> JSON object with query hints.</li>
+<li>
+<p>{Function} cb Callback args: (error, cursor, count)
+        <code>cursor</code>: Cursor object to traverse records
+        <code>count</code>:  Total number of selected records</p>
+
+<hr>
+</li>
+</ul><p><a name="findOne"></a></p>
+
+<h3>findOne(cname, qobj, orarr, hints, cb)</h3>
+
+<p>Same as #find() but retrieves only one matching JSON object.</p>
+
+<p>Call variations of findOne():</p>
+
+<pre><code>findOne(cname, qobj, cb)
+findOne(cname, qobj, hints, cb)
+findOne(cname, qobj, qobjarr, cb)
+findOne(cname, qobj, qobjarr, hints, cb)
+</code></pre>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} cname Name of collection</li>
+<li>{Object} qobj Main JSON query object</li>
+<li>{Array} <code>[orarr]</code> Array of additional OR query objects (joined with OR predicate).</li>
+<li>{Object} <code>[hints]</code> JSON object with query hints.</li>
+<li>{Function} cb Callback args: (error, obj)
+         <code>obj</code>  Retrieved JSON object or NULL if it is not found.</li>
+</ul><hr><p><a name="count"></a></p>
+
+<h3>count(cname, qobj, orarr, hints, cb)</h3>
+
+<p>Convenient count(*) operation.</p>
+
+<p>Call variations of count():</p>
+
+<pre><code>count(cname, qobj, cb)
+count(cname, qobj, hints, cb)
+count(cname, qobj, qobjarr, cb)
+count(cname, qobj, qobjarr, hints, cb)
+</code></pre>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} cname Name of collection</li>
+<li>{Object} qobj Main JSON query object</li>
+<li>{Array} <code>[orarr]</code> Array of additional OR query objects (joined with OR predicate).</li>
+<li>{Object} <code>[hints]</code> JSON object with query hints.</li>
+<li>{Function} cb Callback args: (error, count)
+          <code>count</code>:  Number of matching records.</li>
+</ul><hr><p><a name="sync"></a></p>
+
+<h3>sync(cb)</h3>
+
+<p>Synchronize entire EJDB database with disk.</p>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{Function} cb Callback args: (error)</li>
+</ul><hr><p><a name="dropIndexes"></a></p>
+
+<h3>dropIndexes(cname, path, cb)</h3>
+
+<p>Drop indexes of all types for JSON field path.</p>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} cname Name of collection</li>
+<li>{String} path  JSON field path</li>
+<li>{Function} <code>[cb]</code> Optional callback function. Callback args: (error)</li>
+</ul><hr><p><a name="optimizeIndexes"></a></p>
+
+<h3>optimizeIndexes(cname, path, cb)</h3>
+
+<p>Optimize indexes of all types for JSON field path.
+Performs B+ tree index file optimization.</p>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} cname Name of collection</li>
+<li>{String} path  JSON field path</li>
+<li>{Function} <code>[cb]</code> Optional callback function. Callback args: (error)</li>
+</ul><hr><p><a name="ensureIndex"></a></p>
+
+<h3>ensureStringIndex(cname, path, cb)</h3>
+
+<h3>ensureNumberIndex(cname, path, cb)</h3>
+
+<h3>ensureArrayIndex(cname, path, cb)</h3>
+
+<p>Ensure index presence of String|Number|Array type for JSON field path</p>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} cname Name of collection</li>
+<li>{String} path  JSON field path</li>
+<li>{Function} <code>[cb]</code> Optional callback function. Callback args: (error)</li>
+</ul><hr><p><a name="rebuildIndex"></a></p>
+
+<h3>rebuildStringIndex(cname, path, cb)</h3>
+
+<h3>rebuildNumberIndex(cname, path, cb)</h3>
+
+<h3>rebuildArrayIndex(cname, path, cb)</h3>
+
+<p>Rebuild index of String|Number|Array type for JSON field path</p>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} cname Name of collection</li>
+<li>{String} path  JSON field path</li>
+<li>{Function} <code>[cb]</code> Optional callback function. Callback args: (error)</li>
+</ul><hr><p><a name="dropIndex"></a></p>
+
+<h3>dropStringIndex(cname, path, cb)</h3>
+
+<h3>dropNumberIndex(cname, path, cb)</h3>
+
+<h3>dropArrayIndex(cname, path, cb)</h3>
+
+<p>Drop index of String|Number|Array type for JSON field path</p>
+
+<p><strong>Arguments</strong></p>
+
+<ul>
+<li>{String} cname Name of collection</li>
+<li>{String} path  JSON field path</li>
+<li>{Function} <code>[cb]</code> Optional callback function. Callback args: (error)</li>
+</ul><hr><h1>EJDB C Library</h1>
+
+<h2>One snippet intro</h2>
+
+<div class="highlight"><pre><span class="cp">#include &lt;tcejdb/ejdb.h&gt;</span>
+
+<span class="k">static</span> <span class="n">EJDB</span> <span class="o">*</span><span class="n">jb</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">jb</span> <span class="o">=</span> <span class="n">ejdbnew</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ejdbopen</span><span class="p">(</span><span class="n">jb</span><span class="p">,</span> <span class="s">"addressbook"</span><span class="p">,</span> <span class="n">JBOWRITER</span> <span class="o">|</span> <span class="n">JBOCREAT</span> <span class="o">|</span> <span class="n">JBOTRUNC</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="c1">//Get or create collection 'contacts'</span>
+    <span class="n">EJCOLL</span> <span class="o">*</span><span class="n">coll</span> <span class="o">=</span> <span class="n">ejdbcreatecoll</span><span class="p">(</span><span class="n">jb</span><span class="p">,</span> <span class="s">"contacts"</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+
+    <span class="n">bson</span> <span class="n">bsrec</span><span class="p">;</span>
+    <span class="n">bson_oid_t</span> <span class="n">oid</span><span class="p">;</span>
+
+    <span class="c1">//Insert one record:</span>
+    <span class="c1">//JSON: {'name' : 'Bruce', 'phone' : '333-222-333', 'age' : 58}</span>
+    <span class="n">bson_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bsrec</span><span class="p">);</span>
+    <span class="n">bson_append_string</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bsrec</span><span class="p">,</span> <span class="s">"name"</span><span class="p">,</span> <span class="s">"Bruce"</span><span class="p">);</span>
+    <span class="n">bson_append_string</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bsrec</span><span class="p">,</span> <span class="s">"phone"</span><span class="p">,</span> <span class="s">"333-222-333"</span><span class="p">);</span>
+    <span class="n">bson_append_int</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bsrec</span><span class="p">,</span> <span class="s">"age"</span><span class="p">,</span> <span class="mi">58</span><span class="p">);</span>
+    <span class="n">bson_finish</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bsrec</span><span class="p">);</span>
+    <span class="c1">//Save BSON</span>
+    <span class="n">ejdbsavebson</span><span class="p">(</span><span class="n">coll</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bsrec</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">oid</span><span class="p">);</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"</span><span class="se">\n</span><span class="s">Saved Bruce"</span><span class="p">);</span>
+    <span class="n">bson_destroy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bsrec</span><span class="p">);</span>
+
+    <span class="c1">//Now execute query</span>
+    <span class="c1">//QUERY: {'name' : {'$begin' : 'Bru'}} //Name starts with 'Bru' string</span>
+    <span class="n">bson</span> <span class="n">bq1</span><span class="p">;</span>
+    <span class="n">bson_init_as_query</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bq1</span><span class="p">);</span>
+    <span class="n">bson_append_start_object</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bq1</span><span class="p">,</span> <span class="s">"name"</span><span class="p">);</span>
+    <span class="n">bson_append_string</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bq1</span><span class="p">,</span> <span class="s">"$begin"</span><span class="p">,</span> <span class="s">"Bru"</span><span class="p">);</span>
+    <span class="n">bson_append_finish_object</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bq1</span><span class="p">);</span>
+    <span class="n">bson_finish</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bq1</span><span class="p">);</span>
+
+    <span class="n">EJQ</span> <span class="o">*</span><span class="n">q1</span> <span class="o">=</span> <span class="n">ejdbcreatequery</span><span class="p">(</span><span class="n">jb</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bq1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+
+    <span class="kt">uint32_t</span> <span class="n">count</span><span class="p">;</span>
+    <span class="n">TCLIST</span> <span class="o">*</span><span class="n">res</span> <span class="o">=</span> <span class="n">ejdbqrysearch</span><span class="p">(</span><span class="n">coll</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">count</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"</span><span class="se">\n\n</span><span class="s">Records found: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
+
+    <span class="c1">//Now print the result set records</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">TCLISTNUM</span><span class="p">(</span><span class="n">res</span><span class="p">);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">void</span> <span class="o">*</span><span class="n">bsdata</span> <span class="o">=</span> <span class="n">TCLISTVALPTR</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+        <span class="n">bson_print_raw</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="n">bsdata</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+    <span class="c1">//Dispose result set</span>
+    <span class="n">tclistdel</span><span class="p">(</span><span class="n">res</span><span class="p">);</span>
+
+    <span class="c1">//Dispose query</span>
+    <span class="n">ejdbquerydel</span><span class="p">(</span><span class="n">q1</span><span class="p">);</span>
+    <span class="n">bson_destroy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bq1</span><span class="p">);</span>
+
+    <span class="c1">//Close database</span>
+    <span class="n">ejdbclose</span><span class="p">(</span><span class="n">jb</span><span class="p">);</span>
+    <span class="n">ejdbdel</span><span class="p">(</span><span class="n">jb</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<h2>Building &amp; Installation</h2>
+
+<h2>Prerequisites</h2>
+
+<p><strong>System libraries:</strong></p>
+
+<ul>
+<li>gcc</li>
+<li>cunit</li>
+<li>zlib</li>
+</ul><p>On Debian/Ubuntu linux you can install it as follows:</p>
+
+<div class="highlight"><pre>   sudo apt-get install gcc libcunit1 libcunit1-dev zlib1g zlib1g-dev
+</pre></div>
+
+<h2>Building</h2>
+
+<div class="highlight"><pre>   <span class="nb">cd</span> ./tcejdb
+   ./configure --disable-bzip --prefix<span class="o">=</span>&lt;installation prefix&gt; <span class="o">&amp;&amp;</span> make <span class="o">&amp;&amp;</span> make check
+   make install
+</pre></div>
+
+<ul>
+<li>library name: <strong>tcejdb</strong> (with pkgconfig)</li>
+<li>main include header: <code>&lt;tcejdb/ejdb.h&gt;</code>
+</li>
+</ul><h2>C API</h2>
+
+<p>EJDB API presented in <strong>ejdb.h</strong> C header file.</p>
+
+<p>JSON processing API: <strong>bson.h</strong></p>
+
+<h2>Queries</h2>
+
+<pre><code>/**
+ * Create query object.
+ * Sucessfully created queries must be destroyed with ejdbquerydel().
+ *
+ * EJDB queries inspired by MongoDB (mongodb.org) and follows same philosophy.
+ *
+ *  - Supported queries:
+ *      - Simple matching of String OR Number OR Array value:
+ *          -   {'json.field.path' : 'val', ...}
+ *      - $not Negate operation.
+ *          -   {'json.field.path' : {'$not' : val}} //Field not equal to val
+ *          -   {'json.field.path' : {'$not' : {'$begin' : prefix}}} //Field not begins with val
+ *      - $begin String starts with prefix
+ *          -   {'json.field.path' : {'$begin' : prefix}}
+ *      - $gt, $gte (&gt;, &gt;=) and $lt, $lte for number types:
+ *          -   {'json.field.path' : {'$gt' : number}, ...}
+ *      - $bt Between for number types:
+ *          -   {'json.field.path' : {'$bt' : [num1, num2]}}
+ *      - $in String OR Number OR Array val matches to value in specified array:
+ *          -   {'json.field.path' : {'$in' : [val1, val2, val3]}}
+ *      - $nin - Not IN
+ *      - $strand String tokens OR String array val matches all tokens in specified array:
+ *          -   {'json.field.path' : {'$strand' : [val1, val2, val3]}}
+ *      - $stror String tokens OR String array val matches any token in specified array:
+ *          -   {'json.field.path' : {'$stror' : [val1, val2, val3]}}
+ *      - $exists Field existence matching:
+ *          -   {'json.field.path' : {'$exists' : true|false}}
+ *
+ *  NOTE: Negate operations: $not and $nin not using indexes
+ *  so they can be slow in comparison to other matching operations.
+ *
+ *  NOTE: Only one index can be used in search query operation.
+ *
+ *  QUERY HINTS (specified by `hints` argument):
+ *      - $max Maximum number in the result set
+ *      - $skip Number of skipped results in the result set
+ *      - $orderby Sorting order of query fields.
+ *          Eg: ORDER BY field1 ASC, field2 DESC
+ *          hints:    {
+ *                      "$orderby" : {
+ *                          "field1" : 1,
+ *                          "field2" : -1
+ *                      }
+ *                    }
+ *
+ * Many query examples can be found in `testejdb/t2.c` test case.
+ *
+ * @param EJDB database handle.
+ * @param qobj Main BSON query object.
+ * @param orqobjs Array of additional OR query objects (joined with OR predicate).
+ * @param orqobjsnum Number of OR query objects.
+ * @param hints BSON object with query hints.
+ * @return On success return query handle. On error returns NULL.
+ */
+EJDB_EXPORT EJQ* ejdbcreatequery(EJDB *jb, bson *qobj, bson *orqobjs, int orqobjsnum, bson *hints);
+</code></pre>
+
+<h2>Examples</h2>
+
+<p>You can find some code samples in:</p>
+
+<ul>
+<li>tcejdb/samples</li>
+<li>tcejdb/testejdb</li>
+</ul><h2>Basic EJDB architecture</h2>
+
+<p><strong>EJDB database files structure</strong></p>
+
+<pre><code>.
+├── &lt;dbname&gt;
+├── &lt;dbname&gt;_&lt;collection1&gt;
+├── ...
+├── &lt;dbname&gt;_&lt;collectionN&gt;
+└── &lt;dbname&gt;_&lt;collectionN&gt;_&lt;fieldpath&gt;.&lt;index ext&gt;
+</code></pre>
+
+<p>Where</p>
+
+<ul>
+<li>
+<code>&lt;dbname&gt;</code> - name of database. It is metadata DB.</li>
+<li>
+<code>&lt;collectionN&gt;</code> - name of collection. Collection database.</li>
+<li>
+<code>&lt;fieldpath&gt;</code> - JSON field path used in index</li>
+<li>
+<code>&lt;index ext&gt;</code> - Collection index extension:
+
+<ul>
+<li>
+<code>.lex</code> String index</li>
+<li>
+<code>.dec</code> Number index</li>
+<li>
+<code>.tok</code> Array index</li>
+</ul>
+</li>
+</ul><h2>Limitations/TODOs</h2>
+
+<ul>
+<li>Case insensitive string indexes</li>
+<li>Collect collection index statistic</li>
+<li>Windows port</li>
+</ul>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		          <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-36241306-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
