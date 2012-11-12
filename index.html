@@ -20,12 +20,12 @@
         <p class="header">Embedded JSON Database engine</p>
 
         <ul>
-          <!--<li class="download"><a class="buttons" href="https://github.com/Softmotions/ejdb/zipball/master">Download ZIP</a></li>
-          <li class="download"><a class="buttons" href="https://github.com/Softmotions/ejdb/tarball/master">Download TAR</a></li>-->
+          <li class="download"><a class="buttons" href="https://github.com/Softmotions/ejdb/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/Softmotions/ejdb/tarball/master">Download TAR</a></li>
           <li><a class="buttons github" href="https://github.com/Softmotions/ejdb">View On GitHub</a></li>
         </ul>
 
-        <!--<p class="header">This project is maintained by <a class="header name" href="https://github.com/Softmotions">Softmotions</a></p>-->
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/Softmotions">Softmotions</a></p>
 
 
       </header>
@@ -53,6 +53,7 @@ JSON representation of queries and data implemented with API based on <a href="h
 
 <ul>
 <li><a href="https://github.com/Softmotions/ejdb#installation">Installation</a></li>
+<li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-samples">Samples</a></li>
 <li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-api">NodeJS API</a></li>
 <li><a href="https://github.com/Softmotions/ejdb#find">Queries</a></li>
 </ul>
@@ -62,6 +63,7 @@ JSON representation of queries and data implemented with API based on <a href="h
 
 <ul>
 <li><a href="https://github.com/Softmotions/ejdb#building--installation">Building &amp; Installation</a></li>
+<li><a href="https://github.com/Softmotions/ejdb#ejdb-c-samples">Samples</a></li>
 <li><a href="https://github.com/Softmotions/ejdb#c-api">C API</a></li>
 </ul>
 </li>
@@ -178,6 +180,12 @@ JSON representation of queries and data implemented with API based on <a href="h
     <span class="n">ejdbdel</span><span class="p">(</span><span class="n">jb</span><span class="p">);</span>
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
+</pre></div>
+
+<p>You can install ejdb c library then save this code in <code>csnippet.c</code> And build:</p>
+
+<div class="highlight"><pre>gcc -std<span class="o">=</span>c99 -Wall -pedantic  -c -o csnippet.o csnippet.c
+gcc -std<span class="o">=</span>c99 -Wall -pedantic  -o csnippet csnippet.o  -ltcejdb
 </pre></div>
 
 <h2>Limitations/TODOs</h2>
