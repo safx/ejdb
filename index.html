@@ -35,6 +35,10 @@
 <p>EJDB is the C library based on modified version of <a href="http://fallabs.com/tokyocabinet/">Tokyo Cabinet</a>.
 JSON representation of queries and data implemented with API based on <a href="https://github.com/mongodb/mongo-c-driver/tree/master/src/">C BSON</a></p>
 
+<h1>News</h1>
+
+<p><code>2013-01-22</code> <strong><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins now supported</a></strong></p>
+
 <h1>Features</h1>
 
 <ul>
@@ -42,32 +46,34 @@ JSON representation of queries and data implemented with API based on <a href="h
 <li>MongoDB-like queries and overall philosophy.</li>
 <li>Collection level write locking.</li>
 <li>Collection level transactions.</li>
-<li>String token matching queries.</li>
+<li>String token matching queries: <code>$stror</code> <code>$strand</code>
+</li>
 <li>
 <a href="http://nodejs.org">Node.js</a> binding</li>
+<li><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins</a></li>
 </ul><h1>Documentation</h1>
 
 <ul>
 <li><strong><a href="https://github.com/Softmotions/ejdb/wiki/EJDB-Command-line-interface">EJDB Command line interface</a></strong></li>
 <li>
-<strong><a href="https://github.com/Softmotions/ejdb#nodejs-binding">NodeJS binding</a></strong>
+<strong><a href="#nodejs-binding">NodeJS binding</a></strong>
 
 <ul>
-<li><a href="https://github.com/Softmotions/ejdb#installation">Installation</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-samples">Samples</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-api">NodeJS API</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#find">Queries</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#ejdb-nodejs-samples">Samples</a></li>
+<li><a href="#ejdb-nodejs-api">NodeJS API</a></li>
 </ul>
 </li>
 <li>
-<strong><a href="https://github.com/Softmotions/ejdb#ejdb-c-library">EJDB C Library</a></strong>
+<strong><a href="#ejdb-c-library">EJDB C Library</a></strong>
 
 <ul>
-<li><a href="https://github.com/Softmotions/ejdb#building--installation">Building &amp; Installation</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#ejdb-c-samples">Samples</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#c-api">C API</a></li>
+<li><a href="#building--installation">Building &amp; Installation</a></li>
+<li><a href="#ejdb-c-samples">Samples</a></li>
+<li><a href="#c-api">C API</a></li>
 </ul>
 </li>
+<li><strong><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins</a></strong></li>
 </ul><h1>Community</h1>
 
 <p>We use <a href="http://groups.google.com/group/ejdb">EJDB Google group</a> as our mailing list.</p>
@@ -221,6 +227,7 @@ gcc -std<span class="o">=</span>c99 -Wall -pedantic  -o csnippet csnippet.o  -lt
 <li><a href="https://github.com/Softmotions/ejdb#c-api">C API</a></li>
 </ul>
 </li>
+<li><strong><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins</a></strong></li>
 </ul>
       </section>
       <footer>
