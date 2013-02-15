@@ -39,6 +39,9 @@ JSON representation of queries and data implemented with API based on <a href="h
 
 <ul>
 <li>
+<code>2013-02-15</code> <strong><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb/README.md">EJDB Python3 binding available</a></strong>
+</li>
+<li>
 <code>2013-02-07</code> <strong><a href="https://github.com/Softmotions/ejdb/wiki/Debian-Ubuntu-installation">Debian packages provided</a></strong>
 </li>
 <li>
@@ -56,6 +59,7 @@ JSON representation of queries and data implemented with API based on <a href="h
 <li>
 <a href="http://nodejs.org">Node.js</a> binding</li>
 <li><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins</a></li>
+<li><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb/README.md">Python binding</a></li>
 </ul><h1>Documentation</h1>
 
 <ul>
@@ -69,6 +73,7 @@ JSON representation of queries and data implemented with API based on <a href="h
 <li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-api">NodeJS API</a></li>
 </ul>
 </li>
+<li><strong><a href="#ejdb-python3-binding">Python3 binding</a></strong></li>
 <li>
 <strong><a href="https://github.com/Softmotions/ejdb#ejdb-c-library">EJDB C Library</a></strong>
 
@@ -132,6 +137,47 @@ JSON representation of queries and data implemented with API based on <a href="h
             <span class="p">});</span>
 <span class="p">});</span>
 </pre></div>
+
+<h1>EJDB Python3 binding</h1>
+
+<h2>One snippet intro</h2>
+
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">pyejdb</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="c">#Open database</span>
+<span class="n">ejdb</span> <span class="o">=</span> <span class="n">pyejdb</span><span class="o">.</span><span class="n">EJDB</span><span class="p">(</span><span class="s">"zoo"</span><span class="p">,</span> <span class="n">pyejdb</span><span class="o">.</span><span class="n">DEFAULT_OPEN_MODE</span> <span class="o">|</span> <span class="n">pyejdb</span><span class="o">.</span><span class="n">JBOTRUNC</span><span class="p">)</span>
+
+<span class="n">parrot1</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">"name"</span><span class="p">:</span> <span class="s">"Grenny"</span><span class="p">,</span>
+    <span class="s">"type"</span><span class="p">:</span> <span class="s">"African Grey"</span><span class="p">,</span>
+    <span class="s">"male"</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+    <span class="s">"age"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s">"birthdate"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+    <span class="s">"likes"</span><span class="p">:</span> <span class="p">[</span><span class="s">"green color"</span><span class="p">,</span> <span class="s">"night"</span><span class="p">,</span> <span class="s">"toys"</span><span class="p">],</span>
+    <span class="s">"extra1"</span><span class="p">:</span> <span class="bp">None</span>
+<span class="p">}</span>
+<span class="n">parrot2</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">"name"</span><span class="p">:</span> <span class="s">"Bounty"</span><span class="p">,</span>
+    <span class="s">"type"</span><span class="p">:</span> <span class="s">"Cockatoo"</span><span class="p">,</span>
+    <span class="s">"male"</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+    <span class="s">"age"</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+    <span class="s">"birthdate"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+    <span class="s">"likes"</span><span class="p">:</span> <span class="p">[</span><span class="s">"sugar cane"</span><span class="p">],</span>
+    <span class="s">"extra1"</span><span class="p">:</span> <span class="bp">None</span>
+<span class="p">}</span>
+<span class="n">ejdb</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">"parrots2"</span><span class="p">,</span> <span class="n">parrot1</span><span class="p">,</span> <span class="n">parrot2</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">ejdb</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">"parrots2"</span><span class="p">,</span> <span class="p">{</span><span class="s">"likes"</span> <span class="p">:</span> <span class="s">"toys"</span><span class="p">},</span>
+          <span class="n">hints</span><span class="o">=</span><span class="p">{</span><span class="s">"$orderby"</span> <span class="p">:</span> <span class="p">[(</span><span class="s">"name"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"found </span><span class="si">%s</span><span class="s"> parrots"</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">cur</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="si">%s</span><span class="s"> likes toys!"</span> <span class="o">%</span> <span class="n">p</span><span class="p">[</span><span class="s">"name"</span><span class="p">])</span>
+
+<span class="n">ejdb</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+
+<p><strong><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb/README.md">EJDB Python3 binding page</a></strong></p>
 
 <h2>EJDB C Library snippet intro</h2>
 
@@ -220,9 +266,9 @@ gcc -o csnippet csnippet.o  -ltcejdb
 <li><a href="https://github.com/Softmotions/ejdb#installation">Installation</a></li>
 <li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-samples">Samples</a></li>
 <li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-api">NodeJS API</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#find">Queries</a></li>
 </ul>
 </li>
+<li><strong><a href="#ejdb-python3-binding">Python3 binding</a></strong></li>
 <li>
 <strong><a href="https://github.com/Softmotions/ejdb#ejdb-c-library">EJDB C Library</a></strong>
 
