@@ -141,7 +141,8 @@ JSON representation of queries and data implemented with API based on <a href="h
                 <span class="k">while</span> <span class="p">(</span><span class="nx">cursor</span><span class="p">.</span><span class="nx">next</span><span class="p">())</span> <span class="p">{</span>
                     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">cursor</span><span class="p">.</span><span class="nx">field</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="o">+</span> <span class="s2">" likes toys!"</span><span class="p">);</span>
                 <span class="p">}</span>
-                <span class="nx">cursor</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> <span class="c1">//It's not mandatory to close cursor explicitly</span>
+                <span class="c1">//It's not mandatory to close cursor explicitly</span>
+                <span class="nx">cursor</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> 
                 <span class="nx">jb</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> <span class="c1">//Close the database</span>
             <span class="p">});</span>
 <span class="p">});</span>
