@@ -164,23 +164,28 @@ Object.defineProperty(EJDB.prototype.rollbackTransaction, "_help_", {value : "Ro
 Object.defineProperty(EJDB.prototype.getTransactionStatus, "_help_", {value : "Get collection transaction status"});
 
 
-// collection controllers history (for deletion)
+// collection controllers history (for merge)
 var cchistory = [];
 
-var bindColCtls = function(dbctrl, nonupdate) {
-    var octrls = nonupdate ? [] : cchistory;
+// bind collections controlles
+// @param dbctrl - db controller
+// @param forcerebind - if <code>true</code> force rebind all coolection controllers, otherwise check added/deleted collections
+var bindColCtls = function(dbctrl, forcerebind) {
+//    debug
+//    console.log("rebind collection controllers: " + forcerebind);
+    var octrls = forcerebind ? [] : cchistory;
     var nctrls = [];
 
-    // build collection controllers for all known collections
     var dbMeta = cdb.jb.getDBMeta();
     if (dbMeta && dbMeta.collections) {
         for (var j = 0; j < dbMeta.collections.length; ++j) {
             var collection = dbMeta.collections[j];
-            nctrls.push(collection.name);
             var ci;
             if ((ci = octrls.indexOf(collection.name)) != -1) {
+                nctrls.push(collection.name);
                 octrls.splice(ci, 1);
-            } else {
+            } else if (!dbctrl[collection.name]){
+                nctrls.push(collection.name);
                 dbctrl[collection.name] = colctl(dbctrl, collection.name);
             }
         }
@@ -189,12 +194,16 @@ var bindColCtls = function(dbctrl, nonupdate) {
         delete dbctrl[octrls[i]];
     }
 
+    // save current known collections
     cchistory = nctrls;
 };
 
+// collection controller (creation function)
 var colctl = function (db, cname) {
+    // build arguments function: add <cname> as first argument
     var buildargs = function (args) {
         var result = [cname];
+        // args is Object, we need to iterate all fields with numeric key for collecting argumets
         for (var i = 0; args[i]; ++i) {
             result.push(args[i]);
         }
@@ -210,13 +219,10 @@ var colctl = function (db, cname) {
         "ensureNumberIndex", "rebuildNumberIndex", "dropNumberIndex",
         "ensureArrayIndex", "rebuildArrayIndex", "dropArrayIndex"
     ];
-    var mbind = function (mname, ccrebind) {
+    // bind method alias
+    var mbind = function (mname) {
         return function () {
-            var ret = db[mname].apply(db, buildargs(arguments));
-            if (ccrebind) {
-                bindColCtls(db);
-            }
-            return ret;
+            return db[mname].apply(db, buildargs(arguments));
         }
     };
 
@@ -327,21 +333,38 @@ function syncdbctx() {
                     println("\nReturned cursor:");
                 }
             }
+            // rebind collection controlles if need
+            if (!db[arguments[0]]) {
+                bindColCtls(db);
+            }
             return ret;
         };
         Object.defineProperty(db.find, "_help_", {value : EJDB.prototype.find._help_});
 
-        var dbbind = function(db, mname) {
+        // @param db - db controller
+        // @param mname - method name
+        // @param frc - force rebind collections controlles. if <code>false</code> db meta will be reloaded only if method executes on unknown collection.
+        var dbbind = function(db, mname, frc) {
             return function() {
                 var ret = cdb.jb[mname].apply(cdb.jb, arguments);
-                bindColCtls(db);
+                if (frc || !db[arguments[0]]) {
+                    bindColCtls(db);
+                }
                 return ret;
             }
         };
 
-        // reload collections statuses for some methods (rebind collection controllers if need)
-        var rbmnames = ["ensureCollection", "dropCollection", "save"];
-        for (var j = 0; j < rbmnames.length; ++j) {
+        var rbmnames, j;
+        // reload collections statuses for some methods (rebind collection controllers if need, force)
+        rbmnames = ["ensureCollection", "dropCollection"];
+        for (j = 0; j < rbmnames.length; ++j) {
+            db[rbmnames[j]] = dbbind(db, rbmnames[j], true);
+            Object.defineProperty(db[rbmnames[j]], "_help_", {value : EJDB.prototype[rbmnames[j]]._help_});
+        }
+
+        // reload collections statuses for some methods (rebind collection controllers if need, non force)
+        rbmnames = ["save", "update"];
+        for (j = 0; j < rbmnames.length; ++j) {
             db[rbmnames[j]] = dbbind(db, rbmnames[j]);
             Object.defineProperty(db[rbmnames[j]], "_help_", {value : EJDB.prototype[rbmnames[j]]._help_});
         }
