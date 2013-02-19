@@ -168,8 +168,8 @@ Object.defineProperty(EJDB.prototype.getTransactionStatus, "_help_", {value : "G
 var cchistory = [];
 
 // bind collections controlles
-// @param dbctrl - db controller
-// @param forcerebind - if <code>true</code> force rebind all coolection controllers, otherwise check added/deleted collections
+// dbctrl - db controller
+// forcerebind - if <code>true</code> force rebind all coolection controllers, otherwise check added/deleted collections
 var bindColCtls = function(dbctrl, forcerebind) {
 //    debug
 //    console.log("rebind collection controllers: " + forcerebind);
@@ -341,9 +341,9 @@ function syncdbctx() {
         };
         Object.defineProperty(db.find, "_help_", {value : EJDB.prototype.find._help_});
 
-        // @param db - db controller
-        // @param mname - method name
-        // @param frc - force rebind collections controlles. if <code>false</code> db meta will be reloaded only if method executes on unknown collection.
+        // db - db controller
+        // mname - method name
+        // frc - force rebind collections controlles. if <code>false</code> db meta will be reloaded only if method executes on unknown collection.
         var dbbind = function(db, mname, frc) {
             return function() {
                 var ret = cdb.jb[mname].apply(cdb.jb, arguments);
