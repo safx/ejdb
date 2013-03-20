@@ -39,6 +39,9 @@ JSON representation of queries and data implemented with API based on <a href="h
 
 <ul>
 <li>
+<code>2013-03-20</code> <strong><a href="https://github.com/Softmotions/ejdb/blob/master/luaejdb/README.md">Lua binding available</a></strong>
+</li>
+<li>
 <code>2013-02-15</code> <strong><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb/README.md">EJDB Python3 binding available</a></strong>
 </li>
 <li>
@@ -60,6 +63,7 @@ JSON representation of queries and data implemented with API based on <a href="h
 <a href="http://nodejs.org">Node.js</a> binding</li>
 <li><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins</a></li>
 <li><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb/README.md">Python binding</a></li>
+<li><a href="https://github.com/Softmotions/ejdb/blob/master/luaejdb/README.md">Lua binding</a></li>
 </ul><h1>Documentation</h1>
 
 <ul>
@@ -74,6 +78,7 @@ JSON representation of queries and data implemented with API based on <a href="h
 </ul>
 </li>
 <li><strong><a href="https://github.com/Softmotions/ejdb#ejdb-python3-binding">Python3 binding</a></strong></li>
+<li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/luaejdb/README.md">Lua binding</a></strong></li>
 <li>
 <strong><a href="https://github.com/Softmotions/ejdb#ejdb-c-library">EJDB C Library</a></strong>
 
@@ -181,6 +186,73 @@ JSON representation of queries and data implemented with API based on <a href="h
 
 <p><strong><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb/README.md">EJDB Python3 binding page</a></strong></p>
 
+<h1>EJDB Lua binding</h1>
+
+<h2>One snippet intro</h2>
+
+<div class="highlight"><pre><span class="kd">local</span> <span class="n">ejdb</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s2">"</span><span class="s">ejdb"</span><span class="p">)</span>
+<span class="kd">local</span> <span class="n">inspect</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s2">"</span><span class="s">ejdb.inspect"</span><span class="p">)</span>
+<span class="kd">local</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">ejdb</span><span class="p">.</span><span class="n">Q</span>
+
+<span class="c1">-- Used modes:</span>
+<span class="c1">-- 'r' - read</span>
+<span class="c1">-- 'w' - write</span>
+<span class="c1">-- 'c' - create db if not exists</span>
+<span class="c1">-- 't' - truncate existing db</span>
+<span class="kd">local</span> <span class="n">db</span> <span class="o">=</span> <span class="n">ejdb</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"</span><span class="s">zoo"</span><span class="p">,</span> <span class="s2">"</span><span class="s">rwct"</span><span class="p">)</span>
+
+<span class="c1">-- Unordered lua table</span>
+<span class="kd">local</span> <span class="n">parrot1</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="n">name</span> <span class="o">=</span> <span class="s2">"</span><span class="s">Grenny"</span><span class="p">,</span>
+  <span class="nb">type</span> <span class="o">=</span> <span class="s2">"</span><span class="s">African Grey"</span><span class="p">,</span>
+  <span class="n">male</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="n">age</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="n">birthhdate</span> <span class="o">=</span> <span class="n">ejdb</span><span class="p">.</span><span class="n">toDateNow</span><span class="p">(),</span>
+  <span class="n">likes</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">"</span><span class="s">green color"</span><span class="p">,</span> <span class="s2">"</span><span class="s">night"</span><span class="p">,</span> <span class="s2">"</span><span class="s">toys"</span> <span class="p">},</span>
+  <span class="n">extra1</span> <span class="o">=</span> <span class="n">ejdb</span><span class="p">.</span><span class="n">toNull</span><span class="p">()</span>
+<span class="p">}</span>
+
+<span class="c1">-- Preserve order of BSON keys</span>
+<span class="kd">local</span> <span class="n">parrot2</span> <span class="o">=</span> <span class="n">Q</span><span class="p">();</span>
+<span class="n">parrot2</span><span class="p">:</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">name"</span><span class="p">,</span> <span class="s2">"</span><span class="s">Bounty"</span><span class="p">):</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">type"</span><span class="p">,</span> <span class="s2">"</span><span class="s">Cockatoo"</span><span class="p">):</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">male"</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+<span class="n">parrot2</span><span class="p">:</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">age"</span><span class="p">,</span> <span class="mi">15</span><span class="p">):</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">birthdate"</span><span class="p">,</span>
+  <span class="n">ejdb</span><span class="p">.</span><span class="n">toDate</span><span class="p">({</span> <span class="n">year</span> <span class="o">=</span> <span class="mi">2013</span><span class="p">,</span> <span class="n">month</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">day</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">hour</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sec</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">}))</span>
+<span class="n">parrot2</span><span class="p">:</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">likes"</span><span class="p">,</span> <span class="p">{</span> <span class="s2">"</span><span class="s">sugar cane"</span> <span class="p">}):</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">extra1"</span><span class="p">,</span> <span class="n">ejdb</span><span class="p">.</span><span class="n">toNull</span><span class="p">())</span>
+
+<span class="c1">--IF YOU WANT SOME DATA INSPECTIONS:</span>
+<span class="c1">--print(ejdb.print_bson(parrot2:toBSON()))</span>
+<span class="c1">--local obj = ejdb.from_bson(parrot2:toBSON())</span>
+<span class="c1">--print(inspect(obj));</span>
+
+<span class="n">db</span><span class="p">:</span><span class="n">save</span><span class="p">(</span><span class="s2">"</span><span class="s">parrots2"</span><span class="p">,</span> <span class="n">parrot1</span><span class="p">)</span>
+<span class="n">db</span><span class="p">:</span><span class="n">save</span><span class="p">(</span><span class="s2">"</span><span class="s">parrots2"</span><span class="p">,</span> <span class="n">parrot2</span><span class="p">)</span>
+
+<span class="c1">-- Below two equivalent queries:</span>
+<span class="c1">-- Q1</span>
+<span class="kd">local</span> <span class="n">res</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span>
+<span class="n">db</span><span class="p">:</span><span class="n">find</span><span class="p">(</span><span class="s2">"</span><span class="s">parrots2"</span><span class="p">,</span> <span class="n">Q</span><span class="p">(</span><span class="s2">"</span><span class="s">likes"</span><span class="p">,</span> <span class="s2">"</span><span class="s">toys"</span><span class="p">):</span><span class="n">OrderBy</span><span class="p">(</span><span class="s2">"</span><span class="s">name asc"</span><span class="p">,</span> <span class="s2">"</span><span class="s">age desc"</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">#</span><span class="n">res</span> <span class="k">do</span> <span class="c1">-- iterate one</span>
+  <span class="kd">local</span> <span class="n">ob</span> <span class="o">=</span> <span class="n">res</span><span class="p">:</span><span class="n">object</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="s">"</span> <span class="o">..</span> <span class="n">ob</span><span class="p">[</span><span class="s2">"</span><span class="s">name"</span><span class="p">]</span> <span class="o">..</span> <span class="s2">"</span><span class="s"> likes toys #1"</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="c1">-- Q2</span>
+<span class="kd">local</span> <span class="n">res</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span>
+<span class="n">db</span><span class="p">:</span><span class="n">find</span><span class="p">(</span><span class="s2">"</span><span class="s">parrots2"</span><span class="p">,</span> <span class="n">Q</span><span class="p">():</span><span class="n">F</span><span class="p">(</span><span class="s2">"</span><span class="s">likes"</span><span class="p">):</span><span class="n">Eq</span><span class="p">(</span><span class="s2">"</span><span class="s">toys"</span><span class="p">):</span><span class="n">OrderBy</span><span class="p">({</span> <span class="n">name</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">},</span> <span class="p">{</span> <span class="n">age</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="p">}))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">#</span><span class="n">res</span> <span class="k">do</span> <span class="c1">-- iterate one</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="s">"</span> <span class="o">..</span> <span class="n">res</span><span class="p">:</span><span class="n">field</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s2">"</span><span class="s">name"</span><span class="p">)</span> <span class="o">..</span> <span class="s2">"</span><span class="s"> likes toys #2"</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="c1">-- Second way to iterate</span>
+<span class="k">for</span> <span class="n">vobj</span><span class="p">,</span> <span class="n">idx</span> <span class="k">in</span> <span class="n">res</span><span class="p">()</span> <span class="k">do</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="s">"</span> <span class="o">..</span> <span class="n">vobj</span><span class="p">[</span><span class="s2">"</span><span class="s">name"</span><span class="p">]</span> <span class="o">..</span> <span class="s2">"</span><span class="s"> likes toys #3"</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="n">db</span><span class="p">:</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+
+<p><strong><a href="https://github.com/Softmotions/ejdb/blob/master/luaejdb/README.md">EJDB Lua binding page</a></strong></p>
+
 <h2>EJDB C Library snippet intro</h2>
 
 <div class="highlight"><pre><span class="cp">#include &lt;tcejdb/ejdb.h&gt;</span>
@@ -196,7 +268,7 @@ JSON representation of queries and data implemented with API based on <a href="h
     <span class="n">EJCOLL</span> <span class="o">*</span><span class="n">coll</span> <span class="o">=</span> <span class="n">ejdbcreatecoll</span><span class="p">(</span><span class="n">jb</span><span class="p">,</span> <span class="s">"contacts"</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 
     <span class="n">bson</span> <span class="n">bsrec</span><span class="p">;</span>
-    <span class="n">bson_oid_t</span> <span class="n">oid</span><span class="p">;</span>
+    <span class="kt">bson_oid_t</span> <span class="n">oid</span><span class="p">;</span>
 
     <span class="c1">//Insert one record:</span>
     <span class="c1">//JSON: {'name' : 'Bruce', 'phone' : '333-222-333', 'age' : 58}</span>
@@ -271,6 +343,7 @@ gcc -o csnippet csnippet.o  -ltcejdb
 </ul>
 </li>
 <li><strong><a href="https://github.com/Softmotions/ejdb#ejdb-python3-binding">Python3 binding</a></strong></li>
+<li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/luaejdb/README.md">Lua binding</a></strong></li>
 <li>
 <strong><a href="https://github.com/Softmotions/ejdb#ejdb-c-library">EJDB C Library</a></strong>
 
