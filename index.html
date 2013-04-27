@@ -309,7 +309,7 @@ JSON representation of queries and data implemented with API based on <a href="h
     <span class="c1">//Now print the result set records</span>
     <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">TCLISTNUM</span><span class="p">(</span><span class="n">res</span><span class="p">);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
         <span class="kt">void</span> <span class="o">*</span><span class="n">bsdata</span> <span class="o">=</span> <span class="n">TCLISTVALPTR</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
-        <span class="n">bson_print_raw</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="n">bsdata</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="n">bson_print_raw</span><span class="p">(</span><span class="n">bsdata</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
     <span class="p">}</span>
     <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 
