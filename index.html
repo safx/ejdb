@@ -30,14 +30,19 @@
 
       </header>
       <section>
-        <h2>EJDB aims to be a fast <a href="http://mongodb.org">MongoDB</a>-like library which can be embedded into C/C++/NodeJS/Python3/Lua/Java/Ruby applications under terms of LGPL license.</h2>
+        <h2>
+<a name="ejdb-aims-to-be-a-fast-mongodb-like-library-which-can-be-embedded-into-ccnodejspythonluajavaruby-applications-under-terms-of-lgpl-license" class="anchor" href="#ejdb-aims-to-be-a-fast-mongodb-like-library-which-can-be-embedded-into-ccnodejspythonluajavaruby-applications-under-terms-of-lgpl-license"><span class="octicon octicon-link"></span></a>EJDB aims to be a fast <a href="http://mongodb.org">MongoDB</a>-like library which can be embedded into C/C++/NodeJS/Python/Lua/Java/Ruby applications under terms of LGPL license.</h2>
 
 <p>EJDB is the C library based on modified version of <a href="http://fallabs.com/tokyocabinet/">Tokyo Cabinet</a>.
 JSON representation of queries and data implemented with API based on <a href="https://github.com/mongodb/mongo-c-driver/tree/master/src/">C BSON</a></p>
 
-<h1>News</h1>
+<h1>
+<a name="news" class="anchor" href="#news"><span class="octicon octicon-link"></span></a>News</h1>
 
 <ul>
+<li>
+<code>2013-05-29</code> <strong><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb/">EJDB Python 2.7.x binding available</a></strong>
+</li>
 <li>
 <code>2013-05-06</code> <strong><a href="https://github.com/Softmotions/ejdb/blob/master/rbejdb/">Ruby binding available</a></strong>
 </li>
@@ -62,7 +67,8 @@ JSON representation of queries and data implemented with API based on <a href="h
 <li>
 <code>2013-01-22</code> <strong><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins now supported</a></strong>
 </li>
-</ul><h1>Features</h1>
+</ul><h1>
+<a name="features" class="anchor" href="#features"><span class="octicon octicon-link"></span></a>Features</h1>
 
 <ul>
 <li>LGPL license allows you to embed this library into proprietary software.</li>
@@ -76,7 +82,8 @@ JSON representation of queries and data implemented with API based on <a href="h
 <a href="http://nodejs.org">Node.js</a> binding</li>
 <li><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins</a></li>
 <li>Python/Lua/Java/Ruby bindings</li>
-</ul><h1>Documentation</h1>
+</ul><h1>
+<a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h1>
 
 <ul>
 <li><strong><a href="https://github.com/Softmotions/ejdb/wiki/EJDB-Command-line-interface">EJDB Command line interface</a></strong></li>
@@ -89,7 +96,7 @@ JSON representation of queries and data implemented with API based on <a href="h
 <li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-api">NodeJS API</a></li>
 </ul>
 </li>
-<li><strong><a href="https://github.com/Softmotions/ejdb#ejdb-python3-binding">Python3 binding</a></strong></li>
+<li><strong><a href="https://github.com/Softmotions/ejdb#ejdb-python-binding">Python 2.7/3.x binding</a></strong></li>
 <li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/luaejdb/">Lua binding</a></strong></li>
 <li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/jejdb/">Java binding</a></strong></li>
 <li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/rbejdb/">Ruby binding</a></strong></li>
@@ -103,12 +110,14 @@ JSON representation of queries and data implemented with API based on <a href="h
 </ul>
 </li>
 <li><strong><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins</a></strong></li>
-</ul><h1>Community</h1>
+</ul><h1>
+<a name="community" class="anchor" href="#community"><span class="octicon octicon-link"></span></a>Community</h1>
 
 <ul>
 <li><strong>We use <a href="http://groups.google.com/group/ejdb">EJDB Google group</a> as our mailing list.</strong></li>
 <li><a href="https://github.com/Softmotions/ejdb/wiki/Projects-using-EJDB">Projects using EJDB</a></li>
-</ul><h2>NodeJS snippet intro</h2>
+</ul><h2>
+<a name="nodejs-snippet-intro" class="anchor" href="#nodejs-snippet-intro"><span class="octicon octicon-link"></span></a>NodeJS snippet intro</h2>
 
 <div class="highlight"><pre><span class="kd">var</span> <span class="nx">EJDB</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"ejdb"</span><span class="p">);</span>
 <span class="c1">//Open zoo DB</span>
@@ -159,9 +168,11 @@ JSON representation of queries and data implemented with API based on <a href="h
 <span class="p">});</span>
 </pre></div>
 
-<h1>EJDB Python3 binding</h1>
+<h1>
+<a name="ejdb-python-binding" class="anchor" href="#ejdb-python-binding"><span class="octicon octicon-link"></span></a>EJDB Python binding</h1>
 
-<h2>One snippet intro</h2>
+<h2>
+<a name="one-snippet-intro" class="anchor" href="#one-snippet-intro"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
 <div class="highlight"><pre><span class="kn">import</span> <span class="nn">pyejdb</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
@@ -198,11 +209,13 @@ JSON representation of queries and data implemented with API based on <a href="h
 <span class="n">ejdb</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 
-<p><strong><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb/README.md">EJDB Python3 binding page</a></strong></p>
+<p><strong><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb/README.md">EJDB Python 2.7/3.x binding</a></strong></p>
 
-<h1>EJDB Lua binding</h1>
+<h1>
+<a name="ejdb-lua-binding" class="anchor" href="#ejdb-lua-binding"><span class="octicon octicon-link"></span></a>EJDB Lua binding</h1>
 
-<h2>One snippet intro</h2>
+<h2>
+<a name="one-snippet-intro-1" class="anchor" href="#one-snippet-intro-1"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
 <div class="highlight"><pre><span class="kd">local</span> <span class="n">ejdb</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s2">"</span><span class="s">ejdb"</span><span class="p">)</span>
 <span class="kd">local</span> <span class="n">inspect</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s2">"</span><span class="s">ejdb.inspect"</span><span class="p">)</span>
@@ -267,7 +280,8 @@ JSON representation of queries and data implemented with API based on <a href="h
 
 <p><strong><a href="https://github.com/Softmotions/ejdb/blob/master/luaejdb/README.md">EJDB Lua binding page</a></strong></p>
 
-<h2>EJDB C Library snippet intro</h2>
+<h2>
+<a name="ejdb-c-library-snippet-intro" class="anchor" href="#ejdb-c-library-snippet-intro"><span class="octicon octicon-link"></span></a>EJDB C Library snippet intro</h2>
 
 <div class="highlight"><pre><span class="cp">#include &lt;tcejdb/ejdb.h&gt;</span>
 
@@ -338,11 +352,13 @@ JSON representation of queries and data implemented with API based on <a href="h
 gcc -o csnippet csnippet.o  -ltcejdb
 </pre></div>
 
-<h2>Limitations/TODOs</h2>
+<h2>
+<a name="limitationstodos" class="anchor" href="#limitationstodos"><span class="octicon octicon-link"></span></a>Limitations/TODOs</h2>
 
 <ul>
 <li>Collect collection index statistic</li>
-</ul><h2>Documentation links</h2>
+</ul><h2>
+<a name="documentation-links" class="anchor" href="#documentation-links"><span class="octicon octicon-link"></span></a>Documentation links</h2>
 
 <ul>
 <li><strong><a href="https://github.com/Softmotions/ejdb/wiki/EJDB-Command-line-interface">EJDB Command line interface</a></strong></li>
@@ -355,7 +371,7 @@ gcc -o csnippet csnippet.o  -ltcejdb
 <li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-api">NodeJS API</a></li>
 </ul>
 </li>
-<li><strong><a href="https://github.com/Softmotions/ejdb#ejdb-python3-binding">Python3 binding</a></strong></li>
+<li><strong><a href="https://github.com/Softmotions/ejdb#ejdb-python-binding">Python 2.7/3.x binding</a></strong></li>
 <li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/luaejdb/README.md">Lua binding</a></strong></li>
 <li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/jejdb/">Java binding</a></strong></li>
 <li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/rbejdb/">Ruby binding</a></strong></li>
