@@ -53,7 +53,7 @@ JSON representation of queries and data implemented with API based on <a href="h
 <code>2013-05-29</code> <strong><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb/">EJDB Python 2.7.x binding available</a></strong>
 </li>
 <li>
-<code>2013-05-06</code> <strong><a href="https://github.com/Softmotions/ejdb/blob/master/rbejdb/">Ruby binding available</a></strong>
+<code>2013-05-06</code> <strong><a href="https://github.com/Softmotions/ejdb/blob/master/rbejdb/README.md">Ruby binding available</a></strong>
 </li>
 <li>
 <code>2013-05-02</code> <strong><a href="https://github.com/Softmotions/ejdb/blob/master/tcejdb/WIN32.md#ejdb-nodejs-module-installation">NodeJS win32 module available</a></strong>
@@ -83,46 +83,40 @@ JSON representation of queries and data implemented with API based on <a href="h
 <li>LGPL license allows you to embed this library into proprietary software.</li>
 <li><a href="https://github.com/Softmotions/ejdb/blob/master/tcejdb/WIN32.md">EJDB and TokyoCabinet API ported to Windows</a></li>
 <li>MongoDB-like queries and overall philosophy.</li>
+<li><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins</a></li>
 <li>Collection level write locking.</li>
 <li>Collection level transactions.</li>
-<li>String token matching queries: <code>$stror</code> <code>$strand</code>
-</li>
-<li>
-<a href="http://nodejs.org">Node.js</a> binding</li>
-<li><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins</a></li>
-<li>Python/Lua/Java/Ruby/.Net bindings</li>
+<li>Node.js/Python/Lua/Java/Ruby/.Net/Go bindings</li>
 <li><a href="https://github.com/thejustinwalsh/airejdb">Adobe Air Native Extension (ANE) for EJDB</a></li>
 <li><a href="https://github.com/hww3/pike_modules-ejdb">Pike language binding</a></li>
 </ul><h1>
 <a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h1>
 
 <ul>
-<li><strong><a href="http://blog.abigopal.com/post/51616277039/ejdb">The great intro to the EJDB</a></strong></li>
+<li><strong><a href="http://blog.abigopal.com/post/51616277039/ejdb">The brief intro to the EJDB</a></strong></li>
 <li><strong><a href="https://github.com/Softmotions/ejdb/wiki/EJDB-Command-line-interface">EJDB Command line interface</a></strong></li>
-<li><strong><a href="https://github.com/Softmotions/ejdb/tree/master/nejdb">C# .Net</a></strong></li>
 <li>
-<strong><a href="https://github.com/Softmotions/ejdb#nodejs-binding">NodeJS</a></strong>
+<strong><a href="#ejdb-c-library">EJDB C Library</a></strong>
 
 <ul>
-<li><a href="https://github.com/Softmotions/ejdb#installation">Installation</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-samples">Samples</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-api">NodeJS API</a></li>
+<li><a href="#building--installation">Building &amp; Installation</a></li>
+<li><a href="#ejdb-c-samples">Samples</a></li>
+<li><a href="#c-api">C API</a></li>
 </ul>
 </li>
-<li><strong><a href="https://github.com/Softmotions/ejdb#ejdb-python-binding">Python 2.7/3.x</a></strong></li>
+<li>
+<strong>Bindings</strong>
+
+<ul>
+<li><strong><a href="https://github.com/Softmotions/ejdb/tree/master/nejdb">C# .Net</a></strong></li>
+<li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/node/">NodeJS</a></strong></li>
+<li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb/">Python 2.7/3.x</a></strong></li>
 <li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/luaejdb/">Lua</a></strong></li>
 <li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/jejdb/">Java</a></strong></li>
 <li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/rbejdb/">Ruby</a></strong></li>
 <li><strong><a href="https://github.com/mkilling/goejdb/">Go</a></strong></li>
 <li><strong><a href="https://github.com/hww3/pike_modules-ejdb">Pike language</a></strong></li>
 <li><strong><a href="https://github.com/thejustinwalsh/airejdb">Adobe Air</a></strong></li>
-<li>
-<strong><a href="https://github.com/Softmotions/ejdb#ejdb-c-library">EJDB C Library</a></strong>
-
-<ul>
-<li><a href="https://github.com/Softmotions/ejdb#building--installation">Building &amp; Installation</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#ejdb-c-samples">Samples</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#c-api">C API</a></li>
 </ul>
 </li>
 <li><strong><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins</a></strong></li>
@@ -132,8 +126,11 @@ JSON representation of queries and data implemented with API based on <a href="h
 <ul>
 <li><strong>We use <a href="http://groups.google.com/group/ejdb">EJDB Google group</a> as our mailing list.</strong></li>
 <li><a href="https://github.com/Softmotions/ejdb/wiki/Projects-using-EJDB">Projects using EJDB</a></li>
-</ul><h2>
-<a name="nodejs-snippet-intro" class="anchor" href="#nodejs-snippet-intro"><span class="octicon octicon-link"></span></a>NodeJS snippet intro</h2>
+</ul><h1>
+<a name="ejdb-nodejs" class="anchor" href="#ejdb-nodejs"><span class="octicon octicon-link"></span></a>EJDB NodeJS</h1>
+
+<h2>
+<a name="one-snippet-intro" class="anchor" href="#one-snippet-intro"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
 <div class="highlight"><pre><span class="kd">var</span> <span class="nx">EJDB</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"ejdb"</span><span class="p">);</span>
 <span class="c1">//Open zoo DB</span>
@@ -177,18 +174,19 @@ JSON representation of queries and data implemented with API based on <a href="h
                 <span class="k">while</span> <span class="p">(</span><span class="nx">cursor</span><span class="p">.</span><span class="nx">next</span><span class="p">())</span> <span class="p">{</span>
                     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">cursor</span><span class="p">.</span><span class="nx">field</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="o">+</span> <span class="s2">" likes toys!"</span><span class="p">);</span>
                 <span class="p">}</span>
-                <span class="c1">//It's not mandatory to close cursor explicitly</span>
-                <span class="nx">cursor</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> 
+                <span class="nx">cursor</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> <span class="c1">//It's not mandatory to close cursor explicitly</span>
                 <span class="nx">jb</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> <span class="c1">//Close the database</span>
             <span class="p">});</span>
 <span class="p">});</span>
 </pre></div>
 
+<p><strong><a href="https://github.com/Softmotions/ejdb/blob/master/node">EJDB NodeJS binding page</a></strong></p>
+
 <h1>
-<a name="ejdb-python-binding" class="anchor" href="#ejdb-python-binding"><span class="octicon octicon-link"></span></a>EJDB Python binding</h1>
+<a name="ejdb-python" class="anchor" href="#ejdb-python"><span class="octicon octicon-link"></span></a>EJDB Python</h1>
 
 <h2>
-<a name="one-snippet-intro" class="anchor" href="#one-snippet-intro"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
+<a name="one-snippet-intro-1" class="anchor" href="#one-snippet-intro-1"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
 <div class="highlight"><pre><span class="kn">import</span> <span class="nn">pyejdb</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
@@ -225,13 +223,13 @@ JSON representation of queries and data implemented with API based on <a href="h
 <span class="n">ejdb</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 
-<p><strong><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb/README.md">EJDB Python 2.7/3.x binding</a></strong></p>
+<p><strong><a href="https://github.com/Softmotions/ejdb/blob/master/pyejdb">EJDB Python 2.7/3.x binding page</a></strong></p>
 
 <h1>
-<a name="ejdb-lua-binding" class="anchor" href="#ejdb-lua-binding"><span class="octicon octicon-link"></span></a>EJDB Lua binding</h1>
+<a name="ejdb-lua" class="anchor" href="#ejdb-lua"><span class="octicon octicon-link"></span></a>EJDB Lua</h1>
 
 <h2>
-<a name="one-snippet-intro-1" class="anchor" href="#one-snippet-intro-1"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
+<a name="one-snippet-intro-2" class="anchor" href="#one-snippet-intro-2"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
 <div class="highlight"><pre><span class="kd">local</span> <span class="n">ejdb</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s2">"</span><span class="s">ejdb"</span><span class="p">)</span>
 <span class="kd">local</span> <span class="n">inspect</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s2">"</span><span class="s">ejdb.inspect"</span><span class="p">)</span>
@@ -294,10 +292,159 @@ JSON representation of queries and data implemented with API based on <a href="h
 <span class="n">db</span><span class="p">:</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 
-<p><strong><a href="https://github.com/Softmotions/ejdb/blob/master/luaejdb/README.md">EJDB Lua binding page</a></strong></p>
+<p><strong><a href="https://github.com/Softmotions/ejdb/blob/master/luaejdb">EJDB Lua binding page</a></strong></p>
+
+<h1>
+<a name="ejdb-go-binding" class="anchor" href="#ejdb-go-binding"><span class="octicon octicon-link"></span></a>EJDB Go binding</h1>
 
 <h2>
-<a name="ejdb-c-library-snippet-intro" class="anchor" href="#ejdb-c-library-snippet-intro"><span class="octicon octicon-link"></span></a>EJDB C Library snippet intro</h2>
+<a name="one-snippet-intro-3" class="anchor" href="#one-snippet-intro-3"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
+
+<div class="highlight"><pre><span class="kn">package</span> <span class="nx">ejdbtutorial</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">"fmt"</span>
+    <span class="s">"github.com/mkilling/goejdb"</span>
+    <span class="s">"labix.org/v2/mgo/bson"</span>
+    <span class="s">"os"</span>
+<span class="p">)</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// Create a new database file and open it</span>
+    <span class="nx">jb</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">goejdb</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="s">"addressbook"</span><span class="p">,</span> <span class="nx">JBOWRITER</span> <span class="p">|</span> <span class="nx">JBOCREAT</span> <span class="p">|</span> <span class="nx">JBOTRUNC</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+        <span class="nx">os</span><span class="p">.</span><span class="nx">Exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="c1">// Get or create collection 'contacts'</span>
+    <span class="nx">coll</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">jb</span><span class="p">.</span><span class="nx">CreateColl</span><span class="p">(</span><span class="s">"contacts"</span><span class="p">,</span> <span class="kc">nil</span><span class="p">)</span>
+
+    <span class="c1">// Insert one record:</span>
+    <span class="c1">// JSON: {'name' : 'Bruce', 'phone' : '333-222-333', 'age' : 58}</span>
+    <span class="nx">rec</span> <span class="o">:=</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{}</span> <span class="p">{</span><span class="s">"name"</span> <span class="p">:</span> <span class="s">"Bruce"</span><span class="p">,</span> <span class="s">"phone"</span> <span class="p">:</span> <span class="s">"333-222-333"</span><span class="p">,</span> <span class="s">"age"</span> <span class="p">:</span> <span class="mi">58</span><span class="p">}</span>
+    <span class="nx">bsrec</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">bson</span><span class="p">.</span><span class="nx">Marshal</span><span class="p">(</span><span class="nx">rec</span><span class="p">)</span>
+    <span class="nx">coll</span><span class="p">.</span><span class="nx">SaveBson</span><span class="p">(</span><span class="nx">bsrec</span><span class="p">)</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">"\nSaved Bruce"</span><span class="p">)</span>
+
+    <span class="c1">// Now execute query</span>
+    <span class="nx">res</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">coll</span><span class="p">.</span><span class="nx">Find</span><span class="p">(</span><span class="s">`{"name" : {"$begin" : "Bru"}}`</span><span class="p">)</span> <span class="c1">// Name starts with 'Bru' string</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">"\n\nRecords found: %d\n"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">res</span><span class="p">))</span>
+
+    <span class="c1">// Now print the result set records</span>
+    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">bs</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">res</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">m</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{}</span>
+        <span class="nx">bson</span><span class="p">.</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">bs</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">m</span><span class="p">)</span>
+        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">m</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Close database</span>
+    <span class="nx">jb</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+<span class="p">}</span>
+</pre></div>
+
+<p><strong><a href="https://github.com/mkilling/goejdb">EJDB Go binding page</a></strong></p>
+
+<h1>
+<a name="ejdb-ruby-binding" class="anchor" href="#ejdb-ruby-binding"><span class="octicon octicon-link"></span></a>EJDB Ruby binding</h1>
+
+<h2>
+<a name="one-snippet-intro-4" class="anchor" href="#one-snippet-intro-4"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
+
+<div class="highlight"><pre><span class="nb">require</span> <span class="s2">"rbejdb"</span>
+
+<span class="c1">#Open zoo DB</span>
+<span class="n">jb</span> <span class="o">=</span> <span class="no">EJDB</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"zoo"</span><span class="p">,</span> <span class="ss">EJDB</span><span class="p">:</span><span class="ss">:DEFAULT_OPEN_MODE</span> <span class="o">|</span> <span class="ss">EJDB</span><span class="p">:</span><span class="ss">:JBOTRUNC</span><span class="p">)</span>
+
+<span class="n">parrot1</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"name"</span> <span class="o">=&gt;</span> <span class="s2">"Grenny"</span><span class="p">,</span>
+    <span class="s2">"type"</span> <span class="o">=&gt;</span> <span class="s2">"African Grey"</span><span class="p">,</span>
+    <span class="s2">"male"</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+    <span class="s2">"age"</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"birthdate"</span> <span class="o">=&gt;</span> <span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="p">,</span>
+    <span class="s2">"likes"</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="s2">"green color"</span><span class="p">,</span> <span class="s2">"night"</span><span class="p">,</span> <span class="s2">"toys"</span><span class="o">]</span><span class="p">,</span>
+    <span class="s2">"extra1"</span> <span class="o">=&gt;</span> <span class="kp">nil</span>
+<span class="p">}</span>
+<span class="n">parrot2</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"name"</span> <span class="o">=&gt;</span> <span class="s2">"Bounty"</span><span class="p">,</span>
+    <span class="s2">"type"</span> <span class="o">=&gt;</span> <span class="s2">"Cockatoo"</span><span class="p">,</span>
+    <span class="s2">"male"</span> <span class="o">=&gt;</span> <span class="kp">false</span><span class="p">,</span>
+    <span class="s2">"age"</span> <span class="o">=&gt;</span> <span class="mi">15</span><span class="p">,</span>
+    <span class="s2">"birthdate"</span> <span class="o">=&gt;</span> <span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="p">,</span>
+    <span class="s2">"likes"</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="s2">"sugar cane"</span><span class="o">]</span><span class="p">,</span>
+    <span class="s2">"extra1"</span> <span class="o">=&gt;</span> <span class="kp">nil</span>
+<span class="p">}</span>
+
+<span class="n">jb</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"parrots"</span><span class="p">,</span> <span class="n">parrot1</span><span class="p">,</span> <span class="n">parrot2</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="s2">"Grenny OID: </span><span class="si">#{</span><span class="n">parrot1</span><span class="o">[</span><span class="s2">"_id"</span><span class="o">]</span><span class="si">}</span><span class="s2">"</span>
+<span class="nb">puts</span> <span class="s2">"Bounty OID: </span><span class="si">#{</span><span class="n">parrot2</span><span class="o">[</span><span class="s2">"_id"</span><span class="o">]</span><span class="si">}</span><span class="s2">"</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">jb</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"parrots"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"likes"</span> <span class="o">=&gt;</span> <span class="s2">"toys"</span><span class="p">},</span> <span class="p">{</span><span class="s2">"$orderby"</span> <span class="o">=&gt;</span> <span class="p">{</span><span class="s2">"name"</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">}})</span>
+
+<span class="nb">puts</span> <span class="s2">"Found </span><span class="si">#{</span><span class="n">results</span><span class="o">.</span><span class="n">count</span><span class="si">}</span><span class="s2"> parrots"</span>
+
+<span class="n">results</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span> <span class="o">|</span><span class="n">res</span><span class="o">|</span>
+  <span class="nb">puts</span> <span class="s2">"</span><span class="si">#{</span><span class="n">res</span><span class="o">[</span><span class="s1">'name'</span><span class="o">]</span><span class="si">}</span><span class="s2"> likes toys!"</span>
+<span class="p">}</span>
+
+<span class="n">results</span><span class="o">.</span><span class="n">close</span> <span class="c1">#It's not mandatory to close cursor explicitly</span>
+<span class="n">jb</span><span class="o">.</span><span class="n">close</span> <span class="c1">#Close the database</span>
+
+</pre></div>
+
+<p><strong><a href="https://github.com/Softmotions/ejdb/blob/master/rbejdb/">EJDB Ruby binding page</a></strong></p>
+
+<h1>
+<a name="ejdb-adobe-air-binding" class="anchor" href="#ejdb-adobe-air-binding"><span class="octicon octicon-link"></span></a>EJDB Adobe AIR binding</h1>
+
+<h2>
+<a name="one-snippet-intro-5" class="anchor" href="#one-snippet-intro-5"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
+
+<div class="highlight"><pre><span class="c1">// Open the zoo DB</span>
+<span class="kd">var</span> <span class="n">db</span><span class="p">:</span><span class="kt">EJDBDatabase</span> <span class="o">=</span> <span class="n">EJDB</span><span class="o">.</span><span class="na">open</span><span class="o">(</span><span class="s2">"zoo"</span><span class="o">,</span> <span class="n">EJDB</span><span class="o">.</span><span class="na">DEFAULT_OPEN_MODE</span> <span class="o">|</span> <span class="n">EJDB</span><span class="o">.</span><span class="na">JBOTRUNC</span><span class="o">)</span> <span class="k">as</span> <span class="n">EJDBDatabase</span><span class="o">;</span>
+
+<span class="kd">var</span> <span class="n">parrot1</span><span class="p">:</span><span class="kt">Object</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="s2">"name"</span> <span class="o">:</span> <span class="s2">"Grenny"</span><span class="o">,</span>
+    <span class="s2">"type"</span> <span class="o">:</span> <span class="s2">"African Grey"</span><span class="o">,</span>
+    <span class="s2">"male"</span> <span class="o">:</span> <span class="kc">true</span><span class="o">,</span>
+    <span class="s2">"age"</span> <span class="o">:</span> <span class="mi">1</span><span class="o">,</span>
+    <span class="s2">"birthdate"</span> <span class="o">:</span> <span class="k">new</span> <span class="kt">Date</span><span class="o">(),</span>
+    <span class="s2">"likes"</span> <span class="o">:</span> <span class="o">[</span><span class="s2">"green color"</span><span class="o">,</span> <span class="s2">"night"</span><span class="o">,</span> <span class="s2">"toys"</span><span class="o">],</span>
+    <span class="s2">"extra1"</span> <span class="o">:</span> <span class="kc">null</span>
+<span class="o">};</span>
+<span class="kd">var</span> <span class="n">parrot2</span><span class="p">:</span><span class="kt">Object</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="s2">"name"</span> <span class="o">:</span> <span class="s2">"Bounty"</span><span class="o">,</span>
+    <span class="s2">"type"</span> <span class="o">:</span> <span class="s2">"Cockatoo"</span><span class="o">,</span>
+    <span class="s2">"male"</span> <span class="o">:</span> <span class="kc">false</span><span class="o">,</span>
+    <span class="s2">"age"</span> <span class="o">:</span> <span class="mi">15</span><span class="o">,</span>
+    <span class="s2">"birthdate"</span> <span class="o">:</span> <span class="k">new</span> <span class="kt">Date</span><span class="o">(),</span>
+    <span class="s2">"likes"</span> <span class="o">:</span> <span class="o">[</span><span class="s2">"sugar cane"</span><span class="o">]</span>
+<span class="o">};</span>
+
+<span class="kd">var</span> <span class="n">oids</span><span class="p">:</span><span class="kt">Array</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="s2">"parrots"</span><span class="o">,</span> <span class="o">[</span><span class="n">parrot1</span><span class="o">,</span> <span class="n">parrot2</span><span class="o">]);</span>
+<span class="nf">trace</span><span class="o">(</span><span class="s2">"Grenny OID: "</span> <span class="o">+</span> <span class="n">parrot1</span><span class="o">.</span><span class="na">_id</span><span class="o">);</span>
+<span class="nf">trace</span><span class="o">(</span><span class="s2">"Bounty OID: "</span> <span class="o">+</span> <span class="n">parrot2</span><span class="o">.</span><span class="na">_id</span><span class="o">);</span>
+
+<span class="kd">var</span> <span class="n">cursor</span><span class="p">:</span><span class="kt">EJDBCursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="na">find</span><span class="o">(</span><span class="s2">"parrots"</span><span class="o">,</span>
+    <span class="o">{</span><span class="s2">"likes"</span> <span class="o">:</span> <span class="s2">"toys"</span><span class="o">},</span>
+    <span class="o">[],</span>
+    <span class="o">{</span><span class="s2">"$orderby"</span> <span class="o">:</span> <span class="o">{</span><span class="s2">"name"</span> <span class="o">:</span> <span class="mi">1</span><span class="o">}}</span>
+<span class="o">);</span>
+
+<span class="nf">trace</span><span class="o">(</span><span class="s2">"Found "</span> <span class="o">+</span> <span class="n">cursor</span><span class="o">.</span><span class="na">length</span> <span class="o">+</span> <span class="s2">" parrots"</span><span class="o">);</span>
+<span class="k">while</span> <span class="o">(</span><span class="n">cursor</span><span class="o">.</span><span class="na">next</span><span class="o">())</span> <span class="o">{</span>
+    <span class="nf">trace</span><span class="o">(</span><span class="n">cursor</span><span class="o">.</span><span class="na">field</span><span class="o">(</span><span class="s2">"name"</span><span class="o">)</span> <span class="o">+</span> <span class="s2">" likes toys!"</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="n">cursor</span><span class="o">.</span><span class="na">close</span><span class="o">();</span> <span class="c1">// It IS mandatory to close cursor explicitly to free up resources</span>
+<span class="n">db</span><span class="o">.</span><span class="na">close</span><span class="o">();</span> <span class="c1">// Close the database</span>
+</pre></div>
+
+<p><strong><a href="https://github.com/thejustinwalsh/airejdb">Adobe Air Native Extension (ANE) for EJDB</a></strong></p>
+
+<h1>
+<a name="ejdb-c-library" class="anchor" href="#ejdb-c-library"><span class="octicon octicon-link"></span></a>EJDB C Library</h1>
+
+<h2>
+<a name="one-snippet-intro-6" class="anchor" href="#one-snippet-intro-6"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
 <div class="highlight"><pre><span class="cp">#include &lt;tcejdb/ejdb.h&gt;</span>
 
@@ -362,49 +509,194 @@ JSON representation of queries and data implemented with API based on <a href="h
 <span class="p">}</span>
 </pre></div>
 
-<p>You can install ejdb c library then save this code in <code>csnippet.c</code> And build:</p>
+<p>You can save this code in <code>csnippet.c</code> And build:</p>
 
 <div class="highlight"><pre>gcc -std<span class="o">=</span>c99 -Wall -pedantic  -c -o csnippet.o csnippet.c
-gcc -o csnippet csnippet.o  -ltcejdb
+gcc -o csnippet csnippet.o -ltcejdb
 </pre></div>
 
 <h2>
-<a name="limitationstodos" class="anchor" href="#limitationstodos"><span class="octicon octicon-link"></span></a>Limitations/TODOs</h2>
+<a name="building--installation" class="anchor" href="#building--installation"><span class="octicon octicon-link"></span></a>Building &amp; Installation</h2>
+
+<p><a href="https://github.com/Softmotions/ejdb/wiki/Debian-Ubuntu-installation">Installing on Debian/Ubuntu</a></p>
+
+<h2>
+<a name="manual-installation" class="anchor" href="#manual-installation"><span class="octicon octicon-link"></span></a>Manual installation</h2>
+
+<h3>
+<a name="prerequisites" class="anchor" href="#prerequisites"><span class="octicon octicon-link"></span></a>Prerequisites</h3>
+
+<p><strong>System libraries:</strong></p>
+
+<ul>
+<li>gcc</li>
+<li>zlib-dev</li>
+</ul><h3>
+<a name="build-and-install" class="anchor" href="#build-and-install"><span class="octicon octicon-link"></span></a>Build and install</h3>
+
+<div class="highlight"><pre>   <span class="nb">cd</span> ./tcejdb
+   ./configure --prefix<span class="o">=</span>&lt;installation prefix&gt; <span class="o">&amp;&amp;</span> make <span class="o">&amp;&amp;</span> make check
+   make install
+</pre></div>
+
+<ul>
+<li>library name: <strong>tcejdb</strong> (with pkgconfig)</li>
+<li>main include header: <code>&lt;tcejdb/ejdb.h&gt;</code>
+</li>
+</ul><h2>
+<a name="c-api" class="anchor" href="#c-api"><span class="octicon octicon-link"></span></a>C API</h2>
+
+<p>EJDB API presented in <strong><a href="https://github.com/Softmotions/ejdb/blob/master/tcejdb/ejdb.h">ejdb.h</a></strong> C header file.</p>
+
+<p>JSON processing API: <strong><a href="https://github.com/Softmotions/ejdb/blob/master/tcejdb/bson.h">bson.h</a></strong></p>
+
+<h2>
+<a name="queries" class="anchor" href="#queries"><span class="octicon octicon-link"></span></a>Queries</h2>
+
+<pre><code>/**
+ * Create query object.
+ * Sucessfully created queries must be destroyed with ejdbquerydel().
+ *
+ * EJDB queries inspired by MongoDB (mongodb.org) and follows same philosophy.
+ *
+ *  - Supported queries:
+ *      - Simple matching of String OR Number OR Array value:
+ *          -   {'fpath' : 'val', ...}
+ *      - $not Negate operation.
+ *          -   {'fpath' : {'$not' : val}} //Field not equal to val
+ *          -   {'fpath' : {'$not' : {'$begin' : prefix}}} //Field not begins with val
+ *      - $begin String starts with prefix
+ *          -   {'fpath' : {'$begin' : prefix}}
+ *      - $gt, $gte (&gt;, &gt;=) and $lt, $lte for number types:
+ *          -   {'fpath' : {'$gt' : number}, ...}
+ *      - $bt Between for number types:
+ *          -   {'fpath' : {'$bt' : [num1, num2]}}
+ *      - $in String OR Number OR Array val matches to value in specified array:
+ *          -   {'fpath' : {'$in' : [val1, val2, val3]}}
+ *      - $nin - Not IN
+ *      - $strand String tokens OR String array val matches all tokens in specified array:
+ *          -   {'fpath' : {'$strand' : [val1, val2, val3]}}
+ *      - $stror String tokens OR String array val matches any token in specified array:
+ *          -   {'fpath' : {'$stror' : [val1, val2, val3]}}
+ *      - $exists Field existence matching:
+ *          -   {'fpath' : {'$exists' : true|false}}
+ *      - $icase Case insensitive string matching:
+ *          -    {'fpath' : {'$icase' : 'val1'}} //icase matching
+ *          Ignore case matching with '$in' operation:
+ *          -    {'name' : {'$icase' : {'$in' : ['tHéâtre - театр', 'heLLo WorlD']}}}
+ *          For case insensitive matching you can create special index of type: `JBIDXISTR`
+ *     - $elemMatch The $elemMatch operator matches more than one component within an array element.
+ *          -  { array: { $elemMatch: { value1 : 1, value2 : { $gt: 1 } } } }
+ *          Restriction: only one $elemMatch allowed in context of one array field.
+ *
+ *  - Queries can be used to update records:
+ *       $set Field set operation.
+ *           - {.., '$set' : {'field1' : val1, 'fieldN' : valN}}
+ *       $upsert Atomic upsert. If matching records are found it will be '$set' operation,
+ *              otherwise new record will be inserted with fields specified by argment object.
+ *           - {.., '$upsert' : {'field1' : val1, 'fieldN' : valN}}
+ *       $inc Increment operation. Only number types are supported.
+ *           - {.., '$inc' : {'field1' : number, ...,  'field1' : number}
+ *       $dropall In-place record removal operation.
+ *           - {.., '$dropall' : true}
+ *       $addToSet Atomically adds value to the array only if its not in the array already.
+ *                    If containing array is missing it will be created.
+ *           - {.., '$addToSet' : {'fpath' : val1, 'fpathN' : valN, ...}}
+ *       $addToSetAll Batch version if $addToSet
+ *           - {.., '$addToSetAll' : {'fpath' : [array of values to add], ...}}
+ *       $pull Atomically removes all occurrences of value from field, if field is an array.
+ *           - {.., '$pull' : {'fpath' : val1, 'fpathN' : valN, ...}}
+ *       $pullAll Batch version of $pull
+ *           - {.., '$pullAll' : {'fpath' : [array of values to remove], ...}}
+ *
+ *  NOTE: Negate operations: $not and $nin not using indexes
+ *  so they can be slow in comparison to other matching operations.
+ *
+ *  NOTE: Only one index can be used in search query operation.
+ *
+ *  QUERY HINTS (specified by `hints` argument):
+ *      - $max Maximum number in the result set
+ *      - $skip Number of skipped results in the result set
+ *      - $orderby Sorting order of query fields.
+ *      - $fields Set subset of fetched fields
+            If a field presented in $orderby clause it will be forced to include in resulting records.
+ *          Example:
+ *          hints:    {
+ *                      "$orderby" : { //ORDER BY field1 ASC, field2 DESC
+ *                          "field1" : 1,
+ *                          "field2" : -1
+ *                      },
+ *                      "$fields" : { //SELECT ONLY {_id, field1, field2}
+ *                          "field1" : 1,
+ *                          "field2" : 1
+ *                      }
+ *                    }
+ *
+ * Many query examples can be found in `testejdb/t2.c` test case.
+ *
+ * @param EJDB database handle.
+ * @param qobj Main BSON query object.
+ * @param orqobjs Array of additional OR query objects (joined with OR predicate).
+ * @param orqobjsnum Number of OR query objects.
+ * @param hints BSON object with query hints.
+ * @return On success return query handle. On error returns NULL.
+ */
+EJDB_EXPORT EJQ* ejdbcreatequery(EJDB *jb, bson *qobj, bson *orqobjs, int orqobjsnum, bson *hints);
+</code></pre>
+
+<h2>
+<a name="ejdb-c-samples" class="anchor" href="#ejdb-c-samples"><span class="octicon octicon-link"></span></a>EJDB C Samples</h2>
+
+<p>You can find some code samples in:</p>
+
+<ul>
+<li><a href="https://github.com/Softmotions/ejdb/tree/master/tcejdb/samples">tcejdb/samples</a></li>
+<li><a href="https://github.com/Softmotions/ejdb/tree/master/tcejdb/testejdb">tcejdb/testejdb</a></li>
+</ul><h2>
+<a name="basic-ejdb-architecture" class="anchor" href="#basic-ejdb-architecture"><span class="octicon octicon-link"></span></a>Basic EJDB architecture</h2>
+
+<p><strong>EJDB database files structure</strong></p>
+
+<pre><code>.
+├── &lt;dbname&gt;
+├── &lt;dbname&gt;_&lt;collection1&gt;
+├── ...
+├── &lt;dbname&gt;_&lt;collectionN&gt;
+└── &lt;dbname&gt;_&lt;collectionN&gt;_&lt;fieldpath&gt;.&lt;index ext&gt;
+</code></pre>
+
+<p>Where</p>
+
+<ul>
+<li>
+<code>&lt;dbname&gt;</code> - name of database. It is metadata DB.</li>
+<li>
+<code>&lt;collectionN&gt;</code> - name of collection. Collection database.</li>
+<li>
+<code>&lt;fieldpath&gt;</code> - JSON field path used in index</li>
+<li>
+<code>&lt;index ext&gt;</code> - Collection index extension:
+
+<ul>
+<li>
+<code>.lex</code> String index</li>
+<li>
+<code>.dec</code> Number index</li>
+<li>
+<code>.tok</code> Array index</li>
+</ul>
+</li>
+</ul><h2>
+<a name="limitations" class="anchor" href="#limitations"><span class="octicon octicon-link"></span></a>Limitations</h2>
+
+<ul>
+<li>One ejdb database can handle up to 1024 collections.</li>
+<li>Indexes for objects in nested arrays currently not supported (#37)</li>
+</ul><h2>
+<a name="todo" class="anchor" href="#todo"><span class="octicon octicon-link"></span></a>TODO</h2>
 
 <ul>
 <li>Collect collection index statistic</li>
-</ul><h2>
-<a name="documentation-links" class="anchor" href="#documentation-links"><span class="octicon octicon-link"></span></a>Documentation links</h2>
-
-<ul>
-<li><strong><a href="https://github.com/Softmotions/ejdb/wiki/EJDB-Command-line-interface">EJDB Command line interface</a></strong></li>
-<li><strong><a href="https://github.com/Softmotions/ejdb/tree/master/nejdb">C# .Net</a></strong></li>
-<li>
-<strong><a href="https://github.com/Softmotions/ejdb#nodejs-binding">NodeJS</a></strong>
-
-<ul>
-<li><a href="https://github.com/Softmotions/ejdb#installation">Installation</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-samples">Samples</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#ejdb-nodejs-api">NodeJS API</a></li>
-</ul>
-</li>
-<li><strong><a href="https://github.com/Softmotions/ejdb#ejdb-python-binding">Python 2.7/3.x</a></strong></li>
-<li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/luaejdb/README.md">Lua</a></strong></li>
-<li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/jejdb/">Java</a></strong></li>
-<li><strong><a href="https://github.com/Softmotions/ejdb/blob/master/rbejdb/">Ruby</a></strong></li>
-<li><strong><a href="https://github.com/mkilling/goejdb/">Go</a></strong></li>
-<li><strong><a href="https://github.com/hww3/pike_modules-ejdb">Pike language</a></strong></li>
-<li><strong><a href="https://github.com/thejustinwalsh/airejdb">Adobe Air</a></strong></li>
-<li>
-<strong><a href="https://github.com/Softmotions/ejdb#ejdb-c-library">EJDB C Library</a></strong>
-
-<ul>
-<li><a href="https://github.com/Softmotions/ejdb#building--installation">Building &amp; Installation</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#ejdb-c-samples">Samples</a></li>
-<li><a href="https://github.com/Softmotions/ejdb#c-api">C API</a></li>
-</ul>
-</li>
-<li><strong><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins</a></strong></li>
 </ul>
       </section>
       <footer>
