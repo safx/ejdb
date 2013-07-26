@@ -47,7 +47,6 @@ typedef struct { /* type of structure for a hash database */
     volatile bool fatal; /* whether a fatal error occured */
     bool ba64; /* using of 64-bit bucket array */
     bool zmode; /* whether compression is used */
-    bool async; /* whether asynchronous storing is called */
     uint8_t type; /* database type */
     uint8_t flags; /* additional flags */
     uint8_t apow; /* power of record alignment */
@@ -63,8 +62,6 @@ typedef struct { /* type of structure for a hash database */
     char *path; /* path of the database file */
     void *fbpool; /* free block pool */
     char *map; /* pointer to the mapped memory */
-    TCXSTR *drpool; /* delayed record pool */
-    TCXSTR *drpdef; /* deferred records of the delayed record pool */
     TCCODEC enc; /* pointer to the encoding function */
     TCCODEC dec; /* pointer to the decoding function */
     TCMDB *recc; /* cache for records */
@@ -97,7 +94,6 @@ typedef struct { /* type of structure for a hash database */
     uint64_t msiz; /* size of the mapped memory */
     uint64_t xmsiz; /* size of the extra mapped memory */
     uint64_t xfsiz; /* extra size of the file for mapped memory */
-    uint64_t drpoff; /* offset of the delayed record pool */
     uint64_t inode; /* inode number */
     uint64_t walend; /* end offset of write ahead logging */
 
@@ -112,9 +108,6 @@ typedef struct { /* type of structure for a hash database */
     volatile int64_t cnt_dividefbp; /* tesing counter for FBP divide times */
     volatile int64_t cnt_mergefbp; /* tesing counter for FBP merge times */
     volatile int64_t cnt_reducefbp; /* tesing counter for FBP reduce times */
-    volatile int64_t cnt_appenddrp; /* tesing counter for DRP append times */
-    volatile int64_t cnt_deferdrp; /* tesing counter for DRP defer times */
-    volatile int64_t cnt_flushdrp; /* tesing counter for DRP flush times */
     volatile int64_t cnt_adjrecc; /* tesing counter for record cache adjust times */
     volatile int64_t cnt_defrag; /* tesing counter for defragmentation times */
     volatile int64_t cnt_shiftrec; /* tesing counter for record shift times */
@@ -313,28 +306,6 @@ EJDB_EXPORT bool tchdbputcat(TCHDB *hdb, const void *kbuf, int ksiz, const void 
    If successful, the return value is true, else, it is false.
    If there is no corresponding record, a new record is created. */
 EJDB_EXPORT bool tchdbputcat2(TCHDB *hdb, const char *kstr, const char *vstr);
-
-
-/* Store a record into a hash database object in asynchronous fashion.
-   `hdb' specifies the hash database object connected as a writer.
-   `kbuf' specifies the pointer to the region of the key.
-   `ksiz' specifies the size of the region of the key.
-   `vbuf' specifies the pointer to the region of the value.
-   `vsiz' specifies the size of the region of the value.
-   If successful, the return value is true, else, it is false.
-   If a record with the same key exists in the database, it is overwritten.  Records passed to
-   this function are accumulated into the inner buffer and wrote into the file at a blast. */
-EJDB_EXPORT bool tchdbputasync(TCHDB *hdb, const void *kbuf, int ksiz, const void *vbuf, int vsiz);
-
-
-/* Store a string record into a hash database object in asynchronous fashion.
-   `hdb' specifies the hash database object connected as a writer.
-   `kstr' specifies the string of the key.
-   `vstr' specifies the string of the value.
-   If successful, the return value is true, else, it is false.
-   If a record with the same key exists in the database, it is overwritten.  Records passed to
-   this function are accumulated into the inner buffer and wrote into the file at a blast. */
-EJDB_EXPORT bool tchdbputasync2(TCHDB *hdb, const char *kstr, const char *vstr);
 
 
 /* Remove a record of a hash database object.

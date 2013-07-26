@@ -180,7 +180,6 @@ static bool tchdbreadrecbody(TCHDB *hdb, TCHREC *rec);
 static bool tchdbremoverec(TCHDB *hdb, TCHREC *rec, char *rbuf, uint64_t bidx, off_t entoff);
 static bool tchdbshiftrec(TCHDB *hdb, TCHREC *rec, char *rbuf, off_t destoff);
 static int tcreckeycmp(const char *abuf, int asiz, const char *bbuf, int bsiz);
-static bool tchdbflushdrp(TCHDB *hdb);
 static void tchdbcacheadjust(TCHDB *hdb);
 static bool tchdbwalinit(TCHDB *hdb);
 static bool tchdbwalwrite(TCHDB *hdb, uint64_t off, int64_t size);
@@ -190,10 +189,6 @@ static bool tchdbopenimpl(TCHDB *hdb, const char *path, int omode);
 static bool tchdbcloseimpl(TCHDB *hdb);
 static bool tchdbputimpl(TCHDB *hdb, const char *kbuf, int ksiz, uint64_t bidx, uint8_t hash,
         const char *vbuf, int vsiz, int dmode);
-static void tchdbdrpappend(TCHDB *hdb, const char *kbuf, int ksiz, const char *vbuf, int vsiz,
-        uint8_t hash);
-static bool tchdbputasyncimpl(TCHDB *hdb, const char *kbuf, int ksiz, uint64_t bidx,
-        uint8_t hash, const char *vbuf, int vsiz);
 static bool tchdboutimpl(TCHDB *hdb, const char *kbuf, int ksiz, uint64_t bidx, uint8_t hash);
 static char *tchdbgetimpl(TCHDB *hdb, const char *kbuf, int ksiz, uint64_t bidx, uint8_t hash,
         int *sp);
@@ -456,10 +451,6 @@ bool tchdbput(TCHDB *hdb, const void *kbuf, int ksiz, const void *vbuf, int vsiz
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
     if (!HDBLOCKRECORD(hdb, bidx, true)) {
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -512,10 +503,6 @@ bool tchdbputkeep(TCHDB *hdb, const void *kbuf, int ksiz, const void *vbuf, int 
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
     if (!HDBLOCKRECORD(hdb, bidx, true)) {
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -563,10 +550,6 @@ bool tchdbputcat(TCHDB *hdb, const void *kbuf, int ksiz, const void *vbuf, int v
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
     if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
@@ -638,47 +621,6 @@ bool tchdbputcat2(TCHDB *hdb, const char *kstr, const char *vstr) {
     return tchdbputcat(hdb, kstr, strlen(kstr), vstr, strlen(vstr));
 }
 
-/* Store a record into a hash database object in asynchronous fashion. */
-bool tchdbputasync(TCHDB *hdb, const void *kbuf, int ksiz, const void *vbuf, int vsiz) {
-    assert(hdb && kbuf && ksiz >= 0 && vbuf && vsiz >= 0);
-    if (!HDBLOCKMETHOD(hdb, true)) return false;
-    uint8_t hash;
-    char *zbuf = NULL;
-    uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
-    hdb->async = true;
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
-        tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
-    if (hdb->zmode) {
-        if (hdb->opts & HDBTDEFLATE) {
-            zbuf = _tc_deflate(vbuf, vsiz, &vsiz, _TCZMRAW);
-        } else if (hdb->opts & HDBTBZIP) {
-            zbuf = _tc_bzcompress(vbuf, vsiz, &vsiz);
-        } else if (hdb->opts & HDBTTCBS) {
-            zbuf = tcbsencode(vbuf, vsiz, &vsiz);
-        } else {
-            zbuf = hdb->enc(vbuf, vsiz, &vsiz, hdb->encop);
-        }
-        if (!zbuf) {
-            tchdbsetecode(hdb, TCEMISC, __FILE__, __LINE__, __func__);
-            HDBUNLOCKMETHOD(hdb);
-            return false;
-        }
-    }
-    bool rv = tchdbputasyncimpl(hdb, kbuf, ksiz, bidx, hash, (zbuf ? zbuf : vbuf), vsiz);
-    if (zbuf) TCFREE(zbuf);
-    HDBUNLOCKMETHOD(hdb);
-    return rv;
-}
-
-/* Store a string record into a hash database object in asynchronous fashion. */
-bool tchdbputasync2(TCHDB *hdb, const char *kstr, const char *vstr) {
-    assert(hdb && kstr && vstr);
-    return tchdbputasync(hdb, kstr, strlen(kstr), vstr, strlen(vstr));
-}
-
 /* Remove a record of a hash database object. */
 bool tchdbout(TCHDB *hdb, const void *kbuf, int ksiz) {
     assert(hdb && kbuf && ksiz >= 0);
@@ -687,10 +629,6 @@ bool tchdbout(TCHDB *hdb, const void *kbuf, int ksiz) {
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
     if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
@@ -727,10 +665,6 @@ void *tchdbget(TCHDB *hdb, const void *kbuf, int ksiz, int *sp) {
         HDBUNLOCKMETHOD(hdb);
         return NULL;
     }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
-        HDBUNLOCKMETHOD(hdb);
-        return NULL;
-    }
     if (!HDBLOCKRECORD(hdb, bidx, false)) {
         HDBUNLOCKMETHOD(hdb);
         return NULL;
@@ -748,10 +682,6 @@ int tchdbgetintoxstr(TCHDB *hdb, const void *kbuf, int ksiz, TCXSTR *xstr) {
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
     if (INVALIDHANDLE(hdb->fd)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return -1;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return -1;
     }
@@ -784,10 +714,6 @@ int tchdbget3(TCHDB *hdb, const void *kbuf, int ksiz, void *vbuf, int max) {
         HDBUNLOCKMETHOD(hdb);
         return -1;
     }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
-        HDBUNLOCKMETHOD(hdb);
-        return -1;
-    }
     if (!HDBLOCKRECORD(hdb, bidx, false)) {
         HDBUNLOCKMETHOD(hdb);
         return -1;
@@ -806,10 +732,6 @@ int tchdbvsiz(TCHDB *hdb, const void *kbuf, int ksiz) {
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
     if (INVALIDHANDLE(hdb->fd)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return -1;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return -1;
     }
@@ -838,10 +760,6 @@ bool tchdbiterinit(TCHDB *hdb) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
     hdb->iter = hdb->frec;
     HDBUNLOCKMETHOD(hdb);
     return true;
@@ -853,10 +771,6 @@ TCHDBITER* tchdbiter2init(TCHDB *hdb) {
     if (!HDBLOCKMETHOD(hdb, true)) return NULL;
     if (INVALIDHANDLE(hdb->fd)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return NULL;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return NULL;
     }
@@ -905,10 +819,6 @@ EJDB_EXPORT bool tchdbiter2next(TCHDB *hdb, TCHDBITER* iter, TCXSTR *kxstr, TCXS
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
     bool rv = tchdbiternextintoxstr2(hdb, &iter->pos, kxstr, vxstr);
     HDBUNLOCKMETHOD(hdb);
     return rv;
@@ -920,10 +830,6 @@ void *tchdbiternext(TCHDB *hdb, int *sp) {
     if (!HDBLOCKMETHOD(hdb, true)) return NULL;
     if (INVALIDHANDLE(hdb->fd) || hdb->iter < 1) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return NULL;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return NULL;
     }
@@ -948,10 +854,6 @@ bool tchdbiternext3(TCHDB *hdb, TCXSTR *kxstr, TCXSTR *vxstr) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
     bool rv = tchdbiternextintoxstr(hdb, kxstr, vxstr);
     HDBUNLOCKMETHOD(hdb);
     return rv;
@@ -964,10 +866,6 @@ TCLIST *tchdbfwmkeys(TCHDB *hdb, const void *pbuf, int psiz, int max) {
     if (!HDBLOCKMETHOD(hdb, true)) return keys;
     if (INVALIDHANDLE(hdb->fd)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return keys;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return keys;
     }
@@ -1002,10 +900,6 @@ int tchdbaddint(TCHDB *hdb, const void *kbuf, int ksiz, int num) {
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
     if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return INT_MIN;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return INT_MIN;
     }
@@ -1076,10 +970,6 @@ double tchdbadddouble(TCHDB *hdb, const void *kbuf, int ksiz, double num) {
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
     if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return nan("");
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return nan("");
     }
@@ -1156,10 +1046,6 @@ bool tchdbsync(TCHDB *hdb) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
     bool rv = tchdbmemsync(hdb, true);
     HDBUNLOCKMETHOD(hdb);
     return rv;
@@ -1176,10 +1062,6 @@ bool tchdboptimize(TCHDB *hdb, int64_t bnum, int8_t apow, int8_t fpow, uint8_t o
     }
     if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
@@ -1203,10 +1085,6 @@ bool tchdbvanish(TCHDB *hdb) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
     HDBTHREADYIELD(hdb);
     bool rv = tchdbvanishimpl(hdb);
     HDBUNLOCKMETHOD(hdb);
@@ -1219,10 +1097,6 @@ bool tchdbcopy(TCHDB *hdb, const char *path) {
     if (!HDBLOCKMETHOD(hdb, false)) return false;
     if (INVALIDHANDLE(hdb->fd)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
@@ -1251,10 +1125,6 @@ bool tchdbtranbegin(TCHDB *hdb) {
         HDBUNLOCKMETHOD(hdb);
         if (wsec > 1.0) wsec = 1.0;
         tcsleep(wsec);
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
-        HDBUNLOCKMETHOD(hdb);
-        return false;
     }
     if (!tchdbmemsync(hdb, (hdb->omode & HDBOTSYNC))) {
         HDBUNLOCKMETHOD(hdb);
@@ -1304,7 +1174,6 @@ bool tchdbtrancommit(TCHDB *hdb) {
         return false;
     }
     bool err = false;
-    if (hdb->async && !tchdbflushdrp(hdb)) err = true;
     if (!tchdbmemsync(hdb, (hdb->omode & HDBOTSYNC))) err = true;
     if (HDBLOCKWAL(hdb)) {
         if (!err && !tcftruncate(hdb->walfd, 0)) {
@@ -1335,7 +1204,6 @@ bool tchdbtranabort(TCHDB *hdb) {
         return false;
     }
     bool err = false;
-    if (hdb->async && !tchdbflushdrp(hdb)) err = true;
     if (!tchdbmemsync(hdb, false)) err = true;
     if (!tchdbwalrestore(hdb, hdb->path)) err = true;
     hdb->dfcur = hdb->frec;
@@ -1763,10 +1631,6 @@ bool tchdbdefrag(TCHDB *hdb, int64_t step) {
             HDBUNLOCKMETHOD(hdb);
             return false;
         }
-        if (hdb->async && !tchdbflushdrp(hdb)) {
-            HDBUNLOCKMETHOD(hdb);
-            return false;
-        }
         bool rv = tchdbdefragimpl(hdb, step);
         HDBUNLOCKMETHOD(hdb);
         return rv;
@@ -1774,10 +1638,6 @@ bool tchdbdefrag(TCHDB *hdb, int64_t step) {
     if (!HDBLOCKMETHOD(hdb, false)) return false;
     if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
@@ -1827,10 +1687,6 @@ bool tchdbputproc(TCHDB *hdb, const void *kbuf, int ksiz, const void *vbuf, int 
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
     if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
@@ -1947,10 +1803,6 @@ void *tchdbgetnext(TCHDB *hdb, const void *kbuf, int ksiz, int *sp) {
         HDBUNLOCKMETHOD(hdb);
         return NULL;
     }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
-        HDBUNLOCKMETHOD(hdb);
-        return NULL;
-    }
     char *rv = tchdbgetnextimpl(hdb, kbuf, ksiz, sp, NULL, NULL);
     HDBUNLOCKMETHOD(hdb);
     return rv;
@@ -1972,10 +1824,6 @@ char *tchdbgetnext3(TCHDB *hdb, const char *kbuf, int ksiz, int *sp, const char 
         HDBUNLOCKMETHOD(hdb);
         return NULL;
     }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
-        HDBUNLOCKMETHOD(hdb);
-        return NULL;
-    }
     char *rv = tchdbgetnextimpl(hdb, kbuf, ksiz, sp, vbp, vsp);
     HDBUNLOCKMETHOD(hdb);
     return rv;
@@ -1987,10 +1835,6 @@ bool tchdbiterinit2(TCHDB *hdb, const void *kbuf, int ksiz) {
     if (!HDBLOCKMETHOD(hdb, true)) return false;
     if (INVALIDHANDLE(hdb->fd)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
@@ -2011,10 +1855,6 @@ bool tchdbforeach(TCHDB *hdb, TCITER iter, void *op) {
     if (!HDBLOCKMETHOD(hdb, false)) return false;
     if (INVALIDHANDLE(hdb->fd)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
-        HDBUNLOCKMETHOD(hdb);
-        return false;
-    }
-    if (hdb->async && !tchdbflushdrp(hdb)) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
@@ -2336,10 +2176,6 @@ static void tchdbclear(TCHDB *hdb) {
     hdb->fbpool = NULL;
     hdb->fbpnum = 0;
     hdb->fbpmis = 0;
-    hdb->async = false;
-    hdb->drpool = NULL;
-    hdb->drpdef = NULL;
-    hdb->drpoff = 0;
     hdb->recc = NULL;
     hdb->rcnum = 0;
     hdb->enc = NULL;
@@ -2368,9 +2204,6 @@ static void tchdbclear(TCHDB *hdb) {
     hdb->cnt_dividefbp = -1;
     hdb->cnt_mergefbp = -1;
     hdb->cnt_reducefbp = -1;
-    hdb->cnt_appenddrp = -1;
-    hdb->cnt_deferdrp = -1;
-    hdb->cnt_flushdrp = -1;
     hdb->cnt_adjrecc = -1;
     hdb->cnt_defrag = -1;
     hdb->cnt_shiftrec = -1;
@@ -2390,9 +2223,6 @@ static void tchdbclear(TCHDB *hdb) {
     TCDODEBUG(hdb->cnt_dividefbp = 0);
     TCDODEBUG(hdb->cnt_mergefbp = 0);
     TCDODEBUG(hdb->cnt_reducefbp = 0);
-    TCDODEBUG(hdb->cnt_appenddrp = 0);
-    TCDODEBUG(hdb->cnt_deferdrp = 0);
-    TCDODEBUG(hdb->cnt_flushdrp = 0);
     TCDODEBUG(hdb->cnt_adjrecc = 0);
     TCDODEBUG(hdb->cnt_defrag = 0);
     TCDODEBUG(hdb->cnt_shiftrec = 0);
@@ -3388,83 +3218,6 @@ static int tcreckeycmp(const char *abuf, int asiz, const char *bbuf, int bsiz) {
     return memcmp(abuf, bbuf, asiz);
 }
 
-/* Flush the delayed record pool.
-   `hdb' specifies the hash database object.
-   The return value is true if successful, else, it is false.
-    #METHOD ANY LOCK
- */
-static bool tchdbflushdrp(TCHDB *hdb) {
-    assert(hdb);
-    bool err = false;
-    if (!HDBLOCKDB(hdb)) return false;
-    if (!hdb->drpool) {
-        HDBUNLOCKDB(hdb);
-        return true;
-    }
-    HDBUNLOCKDB(hdb);
-    if (!HDBLOCKALLRECORDS(hdb, true)) {
-        return false;
-    }
-    if (!HDBLOCKDB(hdb)) {
-        HDBUNLOCKALLRECORDS(hdb);
-        return false;
-    }
-    if (!hdb->drpool) {
-        HDBUNLOCKDB(hdb);
-        HDBUNLOCKALLRECORDS(hdb);
-        return true;
-    }
-    HDBUNLOCKDB(hdb);
-    TCDODEBUG(hdb->cnt_flushdrp++);
-    if (!tchdbseekwrite(hdb, hdb->drpoff, TCXSTRPTR(hdb->drpool), TCXSTRSIZE(hdb->drpool))) {
-        HDBUNLOCKALLRECORDS(hdb);
-        return false;
-    }
-    const char *rp = TCXSTRPTR(hdb->drpdef);
-    int size = TCXSTRSIZE(hdb->drpdef);
-    while (size > 0) {
-        int ksiz, vsiz;
-        memcpy(&ksiz, rp, sizeof (int));
-        rp += sizeof (int);
-        memcpy(&vsiz, rp, sizeof (int));
-        rp += sizeof (int);
-        const char *kbuf = rp;
-        rp += ksiz;
-        const char *vbuf = rp;
-        rp += vsiz;
-        uint8_t hash;
-        uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
-        if (!tchdbputimpl(hdb, kbuf, ksiz, bidx, hash, vbuf, vsiz, HDBPDOVER)) {
-            tcxstrdel(hdb->drpdef);
-            tcxstrdel(hdb->drpool);
-            hdb->drpool = NULL;
-            hdb->drpdef = NULL;
-            hdb->drpoff = 0;
-            HDBUNLOCKALLRECORDS(hdb);
-            return false;
-        }
-        size -= sizeof (int) * 2 + ksiz + vsiz;
-    }
-    tcxstrdel(hdb->drpdef);
-    tcxstrdel(hdb->drpool);
-    hdb->drpool = NULL;
-    hdb->drpdef = NULL;
-    hdb->drpoff = 0;
-    if (HDBLOCKSMEMPTR(hdb, false)) {
-        uint64_t llnum;
-        llnum = hdb->rnum;
-        llnum = TCHTOILL(llnum);
-        memcpy((void *) (hdb->map + HDBRNUMOFF), &llnum, sizeof (llnum));
-        llnum = hdb->fsiz;
-        llnum = TCHTOILL(llnum);
-        memcpy((void *) (hdb->map + HDBFSIZOFF), &llnum, sizeof (llnum));
-        HDBUNLOCKSMEMPTR(hdb);
-    } else {
-        err = true;
-    }
-    HDBUNLOCKALLRECORDS(hdb);
-    return !err;
-}
 
 /* Adjust the caches for leaves and nodes.
    `hdb' specifies the hash tree database object. */
@@ -3856,10 +3609,6 @@ static bool tchdbopenimpl(TCHDB *hdb, const char *path, int omode) {
     }
     hdb->fbpnum = 0;
     hdb->fbpmis = 0;
-    hdb->async = false;
-    hdb->drpool = NULL;
-    hdb->drpdef = NULL;
-    hdb->drpoff = 0;
     hdb->recc = (hdb->rcnum > 0) ? tcmdbnew2(hdb->rcnum * 2 + 1) : NULL;
     hdb->path = tcstrdup(path);
     hdb->dfcur = hdb->frec;
@@ -3920,9 +3669,6 @@ static bool tchdbopenimpl(TCHDB *hdb, const char *path, int omode) {
 static bool tchdbcloseimpl(TCHDB *hdb) {
     assert(hdb);
     bool err = false;
-    if ((hdb->omode & HDBOWRITER)) {
-        if (!tchdbflushdrp(hdb)) err = true;
-    }
     if (hdb->tran) {
         if (!tchdbwalrestore(hdb, hdb->path)) err = true;
         hdb->tran = false;
@@ -4187,129 +3933,6 @@ static bool tchdbputimpl(TCHDB *hdb, const char *kbuf, int ksiz, uint64_t bidx, 
     rec.kbuf = kbuf;
     rec.vbuf = vbuf;
     return tchdbwriterec(hdb, &rec, bidx, entoff, true);
-}
-
-/* Append a record to the delayed record pool.
-   `hdb' specifies the hash database object.
-   `kbuf' specifies the pointer to the region of the key.
-   `ksiz' specifies the size of the region of the key.
-   `vbuf' specifies the pointer to the region of the value.
-   `vsiz' specifies the size of the region of the value.
-   `hash' specifies the second hash value.
-    #METHOD WLOCK */
-static void tchdbdrpappend(TCHDB *hdb, const char *kbuf, int ksiz, const char *vbuf, int vsiz,
-        uint8_t hash) {
-    assert(hdb && kbuf && ksiz >= 0 && vbuf && vsiz >= 0);
-    TCDODEBUG(hdb->cnt_appenddrp++);
-    char rbuf[HDBIOBUFSIZ];
-    char *wp = rbuf;
-    *(uint8_t *) (wp++) = HDBMAGICREC;
-    *(uint8_t *) (wp++) = hash;
-    if (hdb->ba64) {
-        memset(wp, 0, sizeof (uint64_t) * 2);
-        wp += sizeof (uint64_t) * 2;
-    } else {
-        memset(wp, 0, sizeof (uint32_t) * 2);
-        wp += sizeof (uint32_t) * 2;
-    }
-    uint16_t snum;
-    char *pwp = wp;
-    wp += sizeof (snum);
-    int step;
-    TCSETVNUMBUF(step, wp, ksiz);
-    wp += step;
-    TCSETVNUMBUF(step, wp, vsiz);
-    wp += step;
-    int32_t hsiz = wp - rbuf;
-    int32_t rsiz = hsiz + ksiz + vsiz;
-
-    uint16_t psiz = tchdbpadsize(hdb, hdb->fsiz + rsiz);
-    hdb->fsiz += rsiz + psiz;
-    snum = TCHTOIS(psiz);
-    memcpy(pwp, &snum, sizeof (snum));
-    TCXSTR *drpool = hdb->drpool;
-    TCXSTRCAT(drpool, rbuf, hsiz);
-    TCXSTRCAT(drpool, kbuf, ksiz);
-    TCXSTRCAT(drpool, vbuf, vsiz);
-    if (psiz > 0) {
-        char pbuf[psiz];
-        memset(pbuf, 0, psiz);
-        TCXSTRCAT(drpool, pbuf, psiz);
-    }
-    hdb->rnum++;
-}
-
-/* Store a record in asynchronus fashion.
-   `hdb' specifies the hash database object.
-   `kbuf' specifies the pointer to the region of the key.
-   `ksiz' specifies the size of the region of the key.
-   `bidx' specifies the index of the bucket array.
-   `hash' specifies the hash value for the collision tree.
-   `vbuf' specifies the pointer to the region of the value.
-   `vsiz' specifies the size of the region of the value.
-   If successful, the return value is true, else, it is false.
-   #METHOD WLOCK */
-static bool tchdbputasyncimpl(TCHDB *hdb, const char *kbuf, int ksiz, uint64_t bidx,
-        uint8_t hash, const char *vbuf, int vsiz) {
-    assert(hdb && kbuf && ksiz >= 0 && vbuf && vsiz >= 0);
-    if (hdb->recc) tcmdbout(hdb->recc, kbuf, ksiz);
-    if (!hdb->drpool) {
-        hdb->drpool = tcxstrnew3(HDBDRPUNIT + HDBDRPLAT);
-        hdb->drpdef = tcxstrnew3(HDBDRPUNIT);
-        hdb->drpoff = hdb->fsiz;
-    }
-    off_t off = tchdbgetbucket(hdb, bidx);
-    if (off == -1) return false;
-    off_t entoff = 0;
-    TCHREC rec;
-    char rbuf[HDBIOBUFSIZ];
-    while (off > 0) {
-        if (off >= hdb->drpoff - hdb->runit) {
-            TCDODEBUG(hdb->cnt_deferdrp++);
-            TCXSTR *drpdef = hdb->drpdef;
-            TCXSTRCAT(drpdef, &ksiz, sizeof (ksiz));
-            TCXSTRCAT(drpdef, &vsiz, sizeof (vsiz));
-            TCXSTRCAT(drpdef, kbuf, ksiz);
-            TCXSTRCAT(drpdef, vbuf, vsiz);
-            if (TCXSTRSIZE(hdb->drpdef) > HDBDRPUNIT && !tchdbflushdrp(hdb)) return false;
-            return true;
-        }
-        rec.off = off;
-        if (!tchdbreadrec(hdb, &rec, rbuf)) return false;
-        if (hash > rec.hash) {
-            off = rec.left;
-            entoff = rec.off + (sizeof (uint8_t) + sizeof (uint8_t));
-        } else if (hash < rec.hash) {
-            off = rec.right;
-            entoff = rec.off + (sizeof (uint8_t) + sizeof (uint8_t)) +
-                    (hdb->ba64 ? sizeof (uint64_t) : sizeof (uint32_t));
-        } else {
-            TCDODEBUG(hdb->cnt_deferdrp++);
-            TCXSTR *drpdef = hdb->drpdef;
-            TCXSTRCAT(drpdef, &ksiz, sizeof (ksiz));
-            TCXSTRCAT(drpdef, &vsiz, sizeof (vsiz));
-            TCXSTRCAT(drpdef, kbuf, ksiz);
-            TCXSTRCAT(drpdef, vbuf, vsiz);
-            if (TCXSTRSIZE(hdb->drpdef) > HDBDRPUNIT && !tchdbflushdrp(hdb)) return false;
-            return true;
-        }
-    }
-    if (entoff > 0) {
-        if (hdb->ba64) {
-            uint64_t llnum = hdb->fsiz >> hdb->apow;
-            llnum = TCHTOILL(llnum);
-            if (!tchdbseekwrite(hdb, entoff, &llnum, sizeof (uint64_t))) return false;
-        } else {
-            uint32_t lnum = hdb->fsiz >> hdb->apow;
-            lnum = TCHTOIL(lnum);
-            if (!tchdbseekwrite(hdb, entoff, &lnum, sizeof (uint32_t))) return false;
-        }
-    } else {
-        tchdbsetbucket(hdb, bidx, hdb->fsiz);
-    }
-    tchdbdrpappend(hdb, kbuf, ksiz, vbuf, vsiz, hash);
-    if (TCXSTRSIZE(hdb->drpool) > HDBDRPUNIT && !tchdbflushdrp(hdb)) return false;
-    return true;
 }
 
 /* Remove a record of a hash database object.
@@ -5765,9 +5388,6 @@ void tchdbprintmeta(TCHDB *hdb) {
     wp += sprintf(wp, " fbpool=%p", (void *) hdb->fbpool);
     wp += sprintf(wp, " fbpnum=%d", hdb->fbpnum);
     wp += sprintf(wp, " fbpmis=%d", hdb->fbpmis);
-    wp += sprintf(wp, " drpool=%p", (void *) hdb->drpool);
-    wp += sprintf(wp, " drpdef=%p", (void *) hdb->drpdef);
-    wp += sprintf(wp, " drpoff=%" PRIuMAX "", (uint64_t) hdb->drpoff);
     wp += sprintf(wp, " recc=%p", (void *) hdb->recc);
     wp += sprintf(wp, " rcnum=%u", hdb->rcnum);
     wp += sprintf(wp, " ecode=%d", hdb->ecode);
@@ -5795,9 +5415,6 @@ void tchdbprintmeta(TCHDB *hdb) {
     wp += sprintf(wp, " cnt_dividefbp=%" PRIdMAX "", (int64_t) hdb->cnt_dividefbp);
     wp += sprintf(wp, " cnt_mergefbp=%" PRIdMAX "", (int64_t) hdb->cnt_mergefbp);
     wp += sprintf(wp, " cnt_reducefbp=%" PRIdMAX "", (int64_t) hdb->cnt_reducefbp);
-    wp += sprintf(wp, " cnt_appenddrp=%" PRIdMAX "", (int64_t) hdb->cnt_appenddrp);
-    wp += sprintf(wp, " cnt_deferdrp=%" PRIdMAX "", (int64_t) hdb->cnt_deferdrp);
-    wp += sprintf(wp, " cnt_flushdrp=%" PRIdMAX "", (int64_t) hdb->cnt_flushdrp);
     wp += sprintf(wp, " cnt_adjrecc=%" PRIdMAX "", (int64_t) hdb->cnt_adjrecc);
     wp += sprintf(wp, " cnt_defrag=%" PRIdMAX "", (int64_t) hdb->cnt_defrag);
     wp += sprintf(wp, " cnt_shiftrec=%" PRIdMAX "", (int64_t) hdb->cnt_shiftrec);

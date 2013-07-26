@@ -23,7 +23,6 @@
 typedef struct { // type of structure for write thread
     TCHDB *hdb;
     int rnum;
-    bool as;
     bool rnd;
     int id;
 } TARGWRITE;
@@ -90,7 +89,7 @@ static int runwicked(int argc, char **argv);
 static int runtypical(int argc, char **argv);
 static int runrace(int argc, char **argv);
 static int procwrite(const char *path, int tnum, int rnum, int bnum, int apow, int fpow,
-        int opts, int rcnum, int xmsiz, int dfunit, int omode, bool as, bool rnd);
+        int opts, int rcnum, int xmsiz, int dfunit, int omode, bool rnd);
 static int procread(const char *path, int tnum, int rcnum, int xmsiz, int dfunit, int omode,
         bool wb, bool rnd);
 static int procremove(const char *path, int tnum, int rcnum, int xmsiz, int dfunit, int omode,
@@ -210,9 +209,6 @@ static void mprint(TCHDB *hdb) {
     iprintf("cnt_dividefbp: %" PRIdMAX "\n", (int64_t) hdb->cnt_dividefbp);
     iprintf("cnt_mergefbp: %" PRIdMAX "\n", (int64_t) hdb->cnt_mergefbp);
     iprintf("cnt_reducefbp: %" PRIdMAX "\n", (int64_t) hdb->cnt_reducefbp);
-    iprintf("cnt_appenddrp: %" PRIdMAX "\n", (int64_t) hdb->cnt_appenddrp);
-    iprintf("cnt_deferdrp: %" PRIdMAX "\n", (int64_t) hdb->cnt_deferdrp);
-    iprintf("cnt_flushdrp: %" PRIdMAX "\n", (int64_t) hdb->cnt_flushdrp);
     iprintf("cnt_adjrecc: %" PRIdMAX "\n", (int64_t) hdb->cnt_adjrecc);
     iprintf("cnt_defrag: %" PRIdMAX "\n", (int64_t) hdb->cnt_defrag);
     iprintf("cnt_shiftrec: %" PRIdMAX "\n", (int64_t) hdb->cnt_shiftrec);
@@ -273,7 +269,6 @@ static int runwrite(int argc, char **argv) {
     int xmsiz = -1;
     int dfunit = 0;
     int omode = 0;
-    bool as = false;
     bool rnd = false;
     for (int i = 2; i < argc; i++) {
         if (!path && argv[i][0] == '-') {
@@ -300,8 +295,6 @@ static int runwrite(int argc, char **argv) {
                 omode |= HDBONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
                 omode |= HDBOLCKNB;
-            } else if (!strcmp(argv[i], "-as")) {
-                as = true;
             } else if (!strcmp(argv[i], "-rnd")) {
                 rnd = true;
             } else {
@@ -330,8 +323,7 @@ static int runwrite(int argc, char **argv) {
     int bnum = bstr ? tcatoix(bstr) : -1;
     int apow = astr ? tcatoix(astr) : -1;
     int fpow = fstr ? tcatoix(fstr) : -1;
-    int rv = procwrite(path, tnum, rnum, bnum, apow, fpow, opts, rcnum, xmsiz, dfunit, omode,
-            as, rnd);
+    int rv = procwrite(path, tnum, rnum, bnum, apow, fpow, opts, rcnum, xmsiz, dfunit, omode, rnd);
     return rv;
 }
 
@@ -615,11 +607,10 @@ static int runrace(int argc, char **argv) {
 
 /* perform write command */
 static int procwrite(const char *path, int tnum, int rnum, int bnum, int apow, int fpow,
-        int opts, int rcnum, int xmsiz, int dfunit, int omode, bool as, bool rnd) {
+        int opts, int rcnum, int xmsiz, int dfunit, int omode, bool rnd) {
     iprintf("<Writing Test>\n  seed=%u  path=%s  tnum=%d  rnum=%d  bnum=%d  apow=%d  fpow=%d"
-            "  opts=%d  rcnum=%d  xmsiz=%d  dfunit=%d  omode=%d  as=%d  rnd=%d\n\n",
-            g_randseed, path, tnum, rnum, bnum, apow, fpow, opts, rcnum, xmsiz, dfunit, omode,
-            as, rnd);
+            "  opts=%d  rcnum=%d  xmsiz=%d  dfunit=%d  omode=%d rnd=%d\n\n",
+            g_randseed, path, tnum, rnum, bnum, apow, fpow, opts, rcnum, xmsiz, dfunit, omode, rnd);
     bool err = false;
     double stime = tctime();
     TCHDB *hdb = tchdbnew();
@@ -657,7 +648,6 @@ static int procwrite(const char *path, int tnum, int rnum, int bnum, int apow, i
     if (tnum == 1) {
         targs[0].hdb = hdb;
         targs[0].rnum = rnum;
-        targs[0].as = as;
         targs[0].rnd = rnd;
         targs[0].id = 0;
         if (threadwrite(targs) != NULL) err = true;
@@ -665,7 +655,6 @@ static int procwrite(const char *path, int tnum, int rnum, int bnum, int apow, i
         for (int i = 0; i < tnum; i++) {
             targs[i].hdb = hdb;
             targs[i].rnum = rnum;
-            targs[i].as = as;
             targs[i].rnd = rnd;
             targs[i].id = i;
             if (pthread_create(threads + i, NULL, threadwrite, targs + i) != 0) {
@@ -1154,7 +1143,6 @@ static int procrace(const char *path, int tnum, int rnum, int bnum, int apow, in
 static void *threadwrite(void *targ) {
     TCHDB *hdb = ((TARGWRITE *) targ)->hdb;
     int rnum = ((TARGWRITE *) targ)->rnum;
-    bool as = ((TARGWRITE *) targ)->as;
     bool rnd = ((TARGWRITE *) targ)->rnd;
     int id = ((TARGWRITE *) targ)->id;
     bool err = false;
@@ -1162,18 +1150,10 @@ static void *threadwrite(void *targ) {
     for (int i = 1; i <= rnum; i++) {
         char buf[RECBUFSIZ];
         int len = sprintf(buf, "%08d", base + (rnd ? myrand(i) : i));
-        if (as) {
-            if (!tchdbputasync(hdb, buf, len, buf, len)) {
-                eprint(hdb, __LINE__, "tchdbputasync");
-                err = true;
-                break;
-            }
-        } else {
-            if (!tchdbput(hdb, buf, len, buf, len)) {
-                eprint(hdb, __LINE__, "tchdbput");
-                err = true;
-                break;
-            }
+        if (!tchdbput(hdb, buf, len, buf, len)) {
+            eprint(hdb, __LINE__, "tchdbput");
+            err = true;
+            break;
         }
         if (id == 0 && rnum > 250 && i % (rnum / 250) == 0) {
             iputchar('.');
@@ -1311,31 +1291,17 @@ static void *threadwicked(void *targ) {
                 break;
             case 6:
                 if (id == 0) iputchar('6');
-                if (i > rnum / 4 * 3) {
-                    if (!tchdbputasync(hdb, kbuf, ksiz, vbuf, vsiz)) {
-                        eprint(hdb, __LINE__, "tchdbputasync");
-                        err = true;
-                    }
-                } else {
-                    if (!tchdbput(hdb, kbuf, ksiz, vbuf, vsiz)) {
-                        eprint(hdb, __LINE__, "tchdbput");
-                        err = true;
-                    }
+                if (!tchdbput(hdb, kbuf, ksiz, vbuf, vsiz)) {
+                    eprint(hdb, __LINE__, "tchdbput");
+                    err = true;
                 }
                 if (!nc) tcmapput(map, kbuf, ksiz, vbuf, vsiz);
                 break;
             case 7:
                 if (id == 0) iputchar('7');
-                if (i > rnum / 4 * 3) {
-                    if (!tchdbputasync2(hdb, kbuf, vbuf)) {
-                        eprint(hdb, __LINE__, "tchdbputasync2");
-                        err = true;
-                    }
-                } else {
-                    if (!tchdbput2(hdb, kbuf, vbuf)) {
-                        eprint(hdb, __LINE__, "tchdbput2");
-                        err = true;
-                    }
+                if (!tchdbput2(hdb, kbuf, vbuf)) {
+                    eprint(hdb, __LINE__, "tchdbput2");
+                    err = true;
                 }
                 if (!nc) tcmapput2(map, kbuf, vbuf);
                 break;
@@ -1536,16 +1502,9 @@ static void *threadtypical(void *targ) {
             }
             if (map) tcmapputcat(map, buf, len, buf, len);
         } else if (rnd < 25) {
-            if (i > rnum / 10 * 9) {
-                if (!tchdbputasync(hdb, buf, len, buf, len)) {
-                    eprint(hdb, __LINE__, "tchdbputasync");
-                    err = true;
-                }
-            } else {
-                if (!tchdbput(hdb, buf, len, buf, len)) {
-                    eprint(hdb, __LINE__, "tchdbput");
-                    err = true;
-                }
+            if (!tchdbput(hdb, buf, len, buf, len)) {
+                eprint(hdb, __LINE__, "tchdbput");
+                err = true;
             }
             if (map) tcmapput(map, buf, len, buf, len);
         } else if (rnd < 30) {
@@ -1647,11 +1606,6 @@ static void *threadrace(void *targ) {
         } else if (rnd < 30) {
             if (!tchdbout(hdb, buf, len) && tchdbecode(hdb) != TCENOREC) {
                 eprint(hdb, __LINE__, "tchdbout");
-                err = true;
-            }
-        } else if (rnd < 31) {
-            if (!tchdbputasync(hdb, buf, len, buf, len)) {
-                eprint(hdb, __LINE__, "tchdbputasync");
                 err = true;
             }
         } else {

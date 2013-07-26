@@ -257,7 +257,7 @@ check-hdb :
 	$(RUNENV) $(RUNCMD) ./tchtest write -mt -tl -td -rc 50 -xm 500000 casket 50000 5000 5 5
 	$(RUNENV) $(RUNCMD) ./tchtest read -mt -nb -rc 50 -xm 500000 casket
 	$(RUNENV) $(RUNCMD) ./tchtest remove -mt -rc 50 -xm 500000 casket
-	$(RUNENV) $(RUNCMD) ./tchtest write -as -tb -rc 50 -xm 500000 casket 50000 50000 5 5
+	$(RUNENV) $(RUNCMD) ./tchtest write -tb -rc 50 -xm 500000 casket 50000 50000 5 5
 	$(RUNENV) $(RUNCMD) ./tchtest read -nl -rc 50 -xm 500000 casket
 	$(RUNENV) $(RUNCMD) ./tchtest remove -rc 50 -xm 500000 -df 5 casket
 	$(RUNENV) $(RUNCMD) ./tchtest rcat -pn 500 -xm 50000 -df 5 casket 50000 5000 5 5

@@ -45,8 +45,7 @@ static int runrcat(int argc, char **argv);
 static int runmisc(int argc, char **argv);
 static int runwicked(int argc, char **argv);
 static int procwrite(const char *path, int rnum, int bnum, int apow, int fpow,
-        bool mt, int opts, int rcnum, int xmsiz, int dfunit, int omode,
-        bool as, bool rnd);
+        bool mt, int opts, int rcnum, int xmsiz, int dfunit, int omode, bool rnd);
 static int procread(const char *path, bool mt, int rcnum, int xmsiz, int dfunit, int omode,
         bool wb, bool rnd);
 static int procremove(const char *path, bool mt, int rcnum, int xmsiz, int dfunit, int omode,
@@ -164,9 +163,6 @@ static void mprint(TCHDB *hdb) {
     iprintf("cnt_dividefbp: %" PRIdMAX "\n", (int64_t) hdb->cnt_dividefbp);
     iprintf("cnt_mergefbp: %" PRIdMAX "\n", (int64_t) hdb->cnt_mergefbp);
     iprintf("cnt_reducefbp: %" PRIdMAX "\n", (int64_t) hdb->cnt_reducefbp);
-    iprintf("cnt_appenddrp: %" PRIdMAX "\n", (int64_t) hdb->cnt_appenddrp);
-    iprintf("cnt_deferdrp: %" PRIdMAX "\n", (int64_t) hdb->cnt_deferdrp);
-    iprintf("cnt_flushdrp: %" PRIdMAX "\n", (int64_t) hdb->cnt_flushdrp);
     iprintf("cnt_adjrecc: %" PRIdMAX "\n", (int64_t) hdb->cnt_adjrecc);
     iprintf("cnt_defrag: %" PRIdMAX "\n", (int64_t) hdb->cnt_defrag);
     iprintf("cnt_shiftrec: %" PRIdMAX "\n", (int64_t) hdb->cnt_shiftrec);
@@ -248,7 +244,6 @@ static int runwrite(int argc, char **argv) {
     int xmsiz = -1;
     int dfunit = 0;
     int omode = 0;
-    bool as = false;
     bool rnd = false;
     for (int i = 2; i < argc; i++) {
         if (!path && argv[i][0] == '-') {
@@ -277,11 +272,10 @@ static int runwrite(int argc, char **argv) {
                 omode |= HDBONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
                 omode |= HDBOLCKNB;
-            } else if (!strcmp(argv[i], "-as")) {
-                as = true;
             } else if (!strcmp(argv[i], "-rnd")) {
                 rnd = true;
             } else {
+                fprintf(stderr, "\n!!!! %s", argv[i]);
                 usage();
             }
         } else if (!path) {
@@ -305,7 +299,7 @@ static int runwrite(int argc, char **argv) {
     int apow = astr ? tcatoix(astr) : -1;
     int fpow = fstr ? tcatoix(fstr) : -1;
     int rv = procwrite(path, rnum, bnum, apow, fpow,
-            mt, opts, rcnum, xmsiz, dfunit, omode, as, rnd);
+            mt, opts, rcnum, xmsiz, dfunit, omode, rnd);
     return rv;
 }
 
@@ -568,12 +562,11 @@ static int runwicked(int argc, char **argv) {
 
 /* perform write command */
 static int procwrite(const char *path, int rnum, int bnum, int apow, int fpow,
-        bool mt, int opts, int rcnum, int xmsiz, int dfunit, int omode,
-        bool as, bool rnd) {
+        bool mt, int opts, int rcnum, int xmsiz, int dfunit, int omode,bool rnd) {
     iprintf("<Writing Test>\n  seed=%u  path=%s  rnum=%d  bnum=%d  apow=%d  fpow=%d  mt=%d"
-            "  opts=%d  rcnum=%d  xmsiz=%d  dfunit=%d  omode=%d  as=%d  rnd=%d\n\n",
+            "  opts=%d  rcnum=%d  xmsiz=%d  dfunit=%d  omode=%d  rnd=%d\n\n",
             g_randseed, path, rnum, bnum, apow, fpow, mt, opts, rcnum, xmsiz, dfunit,
-            omode, as, rnd);
+            omode, rnd);
     bool err = false;
     double stime = tctime();
     TCHDB *hdb = tchdbnew();
@@ -610,18 +603,10 @@ static int procwrite(const char *path, int rnum, int bnum, int apow, int fpow,
     for (int i = 1; i <= rnum; i++) {
         char buf[RECBUFSIZ];
         int len = sprintf(buf, "%08d", rnd ? myrand(rnum) + 1 : i);
-        if (as) {
-            if (!tchdbputasync(hdb, buf, len, buf, len)) {
-                eprint(hdb, __LINE__, "tchdbput");
-                err = true;
-                break;
-            }
-        } else {
-            if (!tchdbput(hdb, buf, len, buf, len)) {
-                eprint(hdb, __LINE__, "tchdbput");
-                err = true;
-                break;
-            }
+        if (!tchdbput(hdb, buf, len, buf, len)) {
+            eprint(hdb, __LINE__, "tchdbput");
+            err = true;
+            break;
         }
         if (rnum > 250 && i % (rnum / 250) == 0) {
             iputchar('.');
@@ -990,8 +975,8 @@ static int procmisc(const char *path, int rnum, bool mt, int opts, int omode) {
                 break;
             }
         } else {
-            if (!tchdbputasync(hdb, buf, len, buf, len)) {
-                eprint(hdb, __LINE__, "tchdbputasync");
+            if (!tchdbput(hdb, buf, len, buf, len)) {
+                eprint(hdb, __LINE__, "tchdbput");
                 err = true;
                 break;
             }
@@ -1155,7 +1140,7 @@ static int procmisc(const char *path, int rnum, bool mt, int opts, int omode) {
             for (int j = 0; j < vsiz; j++) {
                 vbuf[j] = myrand(256);
             }
-            switch (myrand(4)) {
+            switch (myrand(3)) {
                 case 0:
                     if (!tchdbput(hdb, kbuf, ksiz, vbuf, vsiz)) {
                         eprint(hdb, __LINE__, "tchdbput");
@@ -1169,12 +1154,6 @@ static int procmisc(const char *path, int rnum, bool mt, int opts, int omode) {
                     }
                     break;
                 case 2:
-                    if (!tchdbputasync(hdb, kbuf, ksiz, vbuf, vsiz)) {
-                        eprint(hdb, __LINE__, "tchdbputasync");
-                        err = true;
-                    }
-                    break;
-                case 3:
                     if (!tchdbout(hdb, kbuf, ksiz) && tchdbecode(hdb) != TCENOREC) {
                         eprint(hdb, __LINE__, "tchdbout");
                         err = true;
@@ -1741,7 +1720,7 @@ static int procwicked(const char *path, int rnum, bool mt, int opts, int omode) 
         memset(vbuf, '*', vsiz);
         vbuf[vsiz] = '\0';
         char *rbuf;
-        switch (myrand(16)) {
+        switch (myrand(14)) {
             case 0:
                 iputchar('0');
                 if (!tchdbput(hdb, kbuf, ksiz, vbuf, vsiz)) {
@@ -1791,22 +1770,6 @@ static int procwicked(const char *path, int rnum, bool mt, int opts, int omode) 
                 tcmapputcat2(map, kbuf, vbuf);
                 break;
             case 6:
-                iputchar('6');
-                if (!tchdbputasync(hdb, kbuf, ksiz, vbuf, vsiz)) {
-                    eprint(hdb, __LINE__, "tchdbputasync");
-                    err = true;
-                }
-                tcmapput(map, kbuf, ksiz, vbuf, vsiz);
-                break;
-            case 7:
-                iputchar('7');
-                if (!tchdbputasync2(hdb, kbuf, vbuf)) {
-                    eprint(hdb, __LINE__, "tchdbputasync2");
-                    err = true;
-                }
-                tcmapput2(map, kbuf, vbuf);
-                break;
-            case 8:
                 iputchar('8');
                 if (myrand(10) == 0) {
                     if (!tchdbout(hdb, kbuf, ksiz) && tchdbecode(hdb) != TCENOREC) {
@@ -1816,7 +1779,7 @@ static int procwicked(const char *path, int rnum, bool mt, int opts, int omode) 
                     tcmapout(map, kbuf, ksiz);
                 }
                 break;
-            case 9:
+            case 7:
                 iputchar('9');
                 if (myrand(10) == 0) {
                     if (!tchdbout2(hdb, kbuf) && tchdbecode(hdb) != TCENOREC) {
@@ -1826,7 +1789,7 @@ static int procwicked(const char *path, int rnum, bool mt, int opts, int omode) 
                     tcmapout2(map, kbuf);
                 }
                 break;
-            case 10:
+            case 8:
                 iputchar('A');
                 if (!(rbuf = tchdbget(hdb, kbuf, ksiz, &vsiz))) {
                     if (tchdbecode(hdb) != TCENOREC) {
@@ -1849,7 +1812,7 @@ static int procwicked(const char *path, int rnum, bool mt, int opts, int omode) 
                 tcmapput(map, kbuf, ksiz, rbuf, vsiz);
                 tcfree(rbuf);
                 break;
-            case 11:
+            case 9:
                 iputchar('B');
                 if (!(rbuf = tchdbget(hdb, kbuf, ksiz, &vsiz)) && tchdbecode(hdb) != TCENOREC) {
                     eprint(hdb, __LINE__, "tchdbget");
@@ -1857,7 +1820,7 @@ static int procwicked(const char *path, int rnum, bool mt, int opts, int omode) 
                 }
                 tcfree(rbuf);
                 break;
-            case 12:
+            case 10:
                 iputchar('C');
                 if (!(rbuf = tchdbget2(hdb, kbuf)) && tchdbecode(hdb) != TCENOREC) {
                     eprint(hdb, __LINE__, "tchdbget2");
@@ -1865,7 +1828,7 @@ static int procwicked(const char *path, int rnum, bool mt, int opts, int omode) 
                 }
                 tcfree(rbuf);
                 break;
-            case 13:
+            case 11:
                 iputchar('D');
                 if (myrand(1) == 0) vsiz = 1;
                 if ((vsiz = tchdbget3(hdb, kbuf, ksiz, vbuf, vsiz)) < 0 && tchdbecode(hdb) != TCENOREC) {
@@ -1873,7 +1836,7 @@ static int procwicked(const char *path, int rnum, bool mt, int opts, int omode) 
                     err = true;
                 }
                 break;
-            case 14:
+            case 12:
                 iputchar('E');
                 if (myrand(rnum / 50) == 0) {
                     if (!tchdbiterinit(hdb)) {

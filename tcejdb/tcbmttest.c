@@ -219,9 +219,6 @@ static void mprint(TCBDB *bdb) {
     iprintf("cnt_dividefbp: %" PRIdMAX "\n", (int64_t) bdb->hdb->cnt_dividefbp);
     iprintf("cnt_mergefbp: %" PRIdMAX "\n", (int64_t) bdb->hdb->cnt_mergefbp);
     iprintf("cnt_reducefbp: %" PRIdMAX "\n", (int64_t) bdb->hdb->cnt_reducefbp);
-    iprintf("cnt_appenddrp: %" PRIdMAX "\n", (int64_t) bdb->hdb->cnt_appenddrp);
-    iprintf("cnt_deferdrp: %" PRIdMAX "\n", (int64_t) bdb->hdb->cnt_deferdrp);
-    iprintf("cnt_flushdrp: %" PRIdMAX "\n", (int64_t) bdb->hdb->cnt_flushdrp);
     iprintf("cnt_adjrecc: %" PRIdMAX "\n", (int64_t) bdb->hdb->cnt_adjrecc);
     iprintf("cnt_defrag: %" PRIdMAX "\n", (int64_t) bdb->hdb->cnt_defrag);
     iprintf("cnt_shiftrec: %" PRIdMAX "\n", (int64_t) bdb->hdb->cnt_shiftrec);
