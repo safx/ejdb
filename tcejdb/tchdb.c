@@ -40,7 +40,7 @@
 #define HDBB32(TC_hdb)  ((uint32_t *) ((TC_hdb)->map + HDBHEADSIZ))
 
 #define HDBDEFBNUM     131071            // default bucket number
-#define HDBDEFAPOW     4                 // default alignment power
+#define HDBDEFAPOW     6                 // default alignment power
 #define HDBMAXAPOW     16                // maximum alignment power
 #define HDBDEFFPOW     10                // default free block pool power
 #define HDBMAXFPOW     20                // maximum free block pool power
@@ -5453,6 +5453,13 @@ void tchdbprintrec(TCHDB *hdb, TCHREC *rec) {
     *(wp++) = '\n';
     tcwrite(dbgfd, buf, wp - buf);
 }
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////
+//                              TCH FPOOL
+//////////////////////////////////////////////////////////////////////////////////////
+
 
 
 

@@ -829,7 +829,7 @@ myconf.o : basedefs.h myconf.h
 
 tcutil.o : basedefs.h myconf.h tcutil.h md5.h
 
-tchdb.o : basedefs.h myconf.h tcutil.h tchdb.h
+tchdb.o : basedefs.h myconf.h tcutil.h tchdb.h tcbpool.h
 
 tcbdb.o : basedefs.h myconf.h tcutil.h tchdb.h tcbdb.h
 
@@ -853,6 +853,8 @@ tcatest.o tcamttest.o tcamgr.o tcawmgr.o : \
   basedefs.h myconf.h tcutil.h tchdb.h tcbdb.h tcfdb.h tctdb.h tcadb.h
 
 ejdb.o : basedefs.h myconf.h ejdb.h ejdb_private.h ejdbutl.h
+
+tcbpool.o : basedefs.h myconf.h tcbpool.h
 
 bson.o : basedefs.h myconf.h bson.h nxjson.h
 
