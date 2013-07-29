@@ -269,9 +269,9 @@ static int runwrite(int argc, char **argv) {
                 if (++i >= argc) usage();
                 dfunit = tcatoix(argv[i]);
             } else if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else if (!strcmp(argv[i], "-rnd")) {
                 rnd = true;
             } else {
@@ -327,9 +327,9 @@ static int runread(int argc, char **argv) {
                 if (++i >= argc) usage();
                 dfunit = tcatoix(argv[i]);
             } else if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else if (!strcmp(argv[i], "-wb")) {
                 wb = true;
             } else if (!strcmp(argv[i], "-rnd")) {
@@ -371,9 +371,9 @@ static int runremove(int argc, char **argv) {
                 if (++i >= argc) usage();
                 dfunit = tcatoix(argv[i]);
             } else if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else if (!strcmp(argv[i], "-rnd")) {
                 rnd = true;
             } else {
@@ -432,9 +432,9 @@ static int runrcat(int argc, char **argv) {
                 if (++i >= argc) usage();
                 dfunit = tcatoix(argv[i]);
             } else if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else if (!strcmp(argv[i], "-pn")) {
                 if (++i >= argc) usage();
                 pnum = tcatoix(argv[i]);
@@ -496,9 +496,9 @@ static int runmisc(int argc, char **argv) {
             } else if (!strcmp(argv[i], "-tx")) {
                 opts |= HDBTEXCODEC;
             } else if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else {
                 usage();
             }
@@ -539,9 +539,9 @@ static int runwicked(int argc, char **argv) {
             } else if (!strcmp(argv[i], "-tx")) {
                 opts |= HDBTEXCODEC;
             } else if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else {
                 usage();
             }
@@ -595,8 +595,8 @@ static int procwrite(const char *path, int rnum, int bnum, int apow, int fpow,
         eprint(hdb, __LINE__, "tchdbsetdfunit");
         err = true;
     }
-    if (!rnd) omode |= HDBOTRUNC;
-    if (!tchdbopen(hdb, path, HDBOWRITER | HDBOCREAT | omode)) {
+    if (!rnd) omode |= TCOTRUNC;
+    if (!tchdbopen(hdb, path, TCOWRITER | TCOCREAT | omode)) {
         eprint(hdb, __LINE__, "tchdbopen");
         err = true;
     }
@@ -656,7 +656,7 @@ static int procread(const char *path, bool mt, int rcnum, int xmsiz, int dfunit,
         eprint(hdb, __LINE__, "tchdbsetdfunit");
         err = true;
     }
-    if (!tchdbopen(hdb, path, HDBOREADER | omode)) {
+    if (!tchdbopen(hdb, path, TCOREADER | omode)) {
         eprint(hdb, __LINE__, "tchdbopen");
         err = true;
     }
@@ -730,7 +730,7 @@ static int procremove(const char *path, bool mt, int rcnum, int xmsiz, int dfuni
         eprint(hdb, __LINE__, "tchdbsetdfunit");
         err = true;
     }
-    if (!tchdbopen(hdb, path, HDBOWRITER | omode)) {
+    if (!tchdbopen(hdb, path, TCOWRITER | omode)) {
         eprint(hdb, __LINE__, "tchdbopen");
         err = true;
     }
@@ -800,7 +800,7 @@ static int procrcat(const char *path, int rnum, int bnum, int apow, int fpow,
         eprint(hdb, __LINE__, "tchdbsetdfunit");
         err = true;
     }
-    if (!tchdbopen(hdb, path, HDBOWRITER | HDBOCREAT | HDBOTRUNC | omode)) {
+    if (!tchdbopen(hdb, path, TCOWRITER | TCOCREAT | TCOTRUNC | omode)) {
         eprint(hdb, __LINE__, "tchdbopen");
         err = true;
     }
@@ -949,13 +949,13 @@ static int procmisc(const char *path, int rnum, bool mt, int opts, int omode) {
         eprint(hdb, __LINE__, "tchdbsetdfunit");
         err = true;
     }
-    if (!tchdbopen(hdb, path, HDBOWRITER | HDBOCREAT | HDBOTRUNC | omode)) {
+    if (!tchdbopen(hdb, path, TCOWRITER | TCOCREAT | TCOTRUNC | omode)) {
         eprint(hdb, __LINE__, "tchdbopen");
         err = true;
     }
     if (1) {
         TCHDB *hdbdup = tchdbnew();
-        if (tchdbopen(hdbdup, path, HDBOREADER)) {
+        if (tchdbopen(hdbdup, path, TCOREADER)) {
             eprint(hdb, __LINE__, "(validation)");
             err = true;
         } else if (tchdbecode(hdbdup) != TCETHREAD) {
@@ -1184,7 +1184,7 @@ static int procmisc(const char *path, int rnum, bool mt, int opts, int omode) {
         eprint(hdb, __LINE__, "tchdbclose");
         err = true;
     }
-    if (!tchdbopen(hdb, path, HDBOWRITER | omode)) {
+    if (!tchdbopen(hdb, path, TCOWRITER | omode)) {
         eprint(hdb, __LINE__, "tchdbopen");
         err = true;
     }
@@ -1703,7 +1703,7 @@ static int procwicked(const char *path, int rnum, bool mt, int opts, int omode) 
         eprint(hdb, __LINE__, "tchdbsetdfunit");
         err = true;
     }
-    if (!tchdbopen(hdb, path, HDBOWRITER | HDBOCREAT | HDBOTRUNC | omode)) {
+    if (!tchdbopen(hdb, path, TCOWRITER | TCOCREAT | TCOTRUNC | omode)) {
         eprint(hdb, __LINE__, "tchdbopen");
         err = true;
     }
@@ -1902,7 +1902,7 @@ static int procwicked(const char *path, int rnum, bool mt, int opts, int omode) 
                 eprint(hdb, __LINE__, "tchdbclose");
                 err = true;
             }
-            if (!tchdbopen(hdb, path, HDBOWRITER | omode)) {
+            if (!tchdbopen(hdb, path, TCOWRITER | omode)) {
                 eprint(hdb, __LINE__, "tchdbopen");
                 err = true;
             }
@@ -1917,7 +1917,7 @@ static int procwicked(const char *path, int rnum, bool mt, int opts, int omode) 
                 eprint(nhdb, __LINE__, "tchdbsetcodecfunc");
                 err = true;
             }
-            if (!tchdbopen(nhdb, npath, HDBOREADER | omode)) {
+            if (!tchdbopen(nhdb, npath, TCOREADER | omode)) {
                 eprint(nhdb, __LINE__, "tchdbopen");
                 err = true;
             }

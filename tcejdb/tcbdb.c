@@ -2835,18 +2835,18 @@ static void tcbdbcachepurge(TCBDB *bdb) {
    If successful, the return value is true, else, it is false. */
 static bool tcbdbopenimpl(TCBDB *bdb, const char *path, int omode) {
     assert(bdb && path);
-    int homode = HDBOREADER;
+    int homode = TCOREADER;
     if (omode & BDBOWRITER) {
-        homode = HDBOWRITER;
-        if (omode & BDBOCREAT) homode |= HDBOCREAT;
-        if (omode & BDBOTRUNC) homode |= HDBOTRUNC;
+        homode = TCOWRITER;
+        if (omode & BDBOCREAT) homode |= TCOCREAT;
+        if (omode & BDBOTRUNC) homode |= TCOTRUNC;
         bdb->wmode = true;
     } else {
         bdb->wmode = false;
     }
-    if (omode & BDBONOLCK) homode |= HDBONOLCK;
-    if (omode & BDBOLCKNB) homode |= HDBOLCKNB;
-    if (omode & BDBOTSYNC) homode |= HDBOTSYNC;
+    if (omode & BDBONOLCK) homode |= TCONOLCK;
+    if (omode & BDBOLCKNB) homode |= TCOLCKNB;
+    if (omode & BDBOTSYNC) homode |= TCOTSYNC;
     tchdbsettype(bdb->hdb, TCDBTBTREE);
     if (!tchdbopen(bdb->hdb, path, homode)) return false;
     bdb->root = 0;

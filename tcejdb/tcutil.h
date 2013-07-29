@@ -2623,6 +2623,15 @@ EJDB_EXPORT int tcdayofweek(int year, int mon, int day);
  * miscellaneous utilities (for experts)
  *************************************************************************************************/
 
+typedef enum { /* common open modes of db resources */
+    TCOREADER = 1 << 0, /* open as a reader */
+    TCOWRITER = 1 << 1, /* open as a writer */
+    TCOCREAT = 1 << 2, /* writer creating */
+    TCOTRUNC = 1 << 3, /* writer truncating */
+    TCONOLCK = 1 << 4, /* open without locking */
+    TCOLCKNB = 1 << 5, /* lock without blocking */
+    TCOTSYNC = 1 << 6  /* synchronize every transaction on resource */
+} tcomode_t;
 
 enum { /* enumeration for UCS normalization */
     TCUNSPACE = 1 << 0, /* white space normalization */

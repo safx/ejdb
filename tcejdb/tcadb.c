@@ -247,11 +247,11 @@ bool tcadbopen(TCADB *adb, const char *name) {
         tchdbsetcache(hdb, rcnum);
         if (xmsiz >= 0) tchdbsetxmsiz(hdb, xmsiz);
         if (dfunit >= 0) tchdbsetdfunit(hdb, dfunit);
-        int omode = owmode ? HDBOWRITER : HDBOREADER;
-        if (ocmode) omode |= HDBOCREAT;
-        if (otmode) omode |= HDBOTRUNC;
-        if (onlmode) omode |= HDBONOLCK;
-        if (onbmode) omode |= HDBOLCKNB;
+        int omode = owmode ? TCOWRITER : TCOREADER;
+        if (ocmode) omode |= TCOCREAT;
+        if (otmode) omode |= TCOTRUNC;
+        if (onlmode) omode |= TCONOLCK;
+        if (onbmode) omode |= TCOLCKNB;
         if (!tchdbopen(hdb, path, omode)) {
             tchdbdel(hdb);
             if (idxs) tclistdel(idxs);

@@ -446,7 +446,7 @@ bool tchdbput(TCHDB *hdb, const void *kbuf, int ksiz, const void *vbuf, int vsiz
     uint8_t hash;
     char *zbuf = NULL;
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -498,7 +498,7 @@ bool tchdbputkeep(TCHDB *hdb, const void *kbuf, int ksiz, const void *vbuf, int 
     uint8_t hash;
     char *zbuf = NULL;
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -548,7 +548,7 @@ bool tchdbputcat(TCHDB *hdb, const void *kbuf, int ksiz, const void *vbuf, int v
     if (!HDBLOCKMETHOD(hdb, false)) return false;
     uint8_t hash;
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -627,7 +627,7 @@ bool tchdbout(TCHDB *hdb, const void *kbuf, int ksiz) {
     if (!HDBLOCKMETHOD(hdb, false)) return false;
     uint8_t hash;
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -898,7 +898,7 @@ int tchdbaddint(TCHDB *hdb, const void *kbuf, int ksiz, int num) {
     if (!HDBLOCKMETHOD(hdb, false)) return INT_MIN;
     uint8_t hash;
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return INT_MIN;
@@ -968,7 +968,7 @@ double tchdbadddouble(TCHDB *hdb, const void *kbuf, int ksiz, double num) {
     if (!HDBLOCKMETHOD(hdb, false)) return nan("");
     uint8_t hash;
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return nan("");
@@ -1041,7 +1041,7 @@ bool tchdbsync(TCHDB *hdb) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -1060,7 +1060,7 @@ bool tchdboptimize(TCHDB *hdb, int64_t bnum, int8_t apow, int8_t fpow, uint8_t o
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -1080,7 +1080,7 @@ bool tchdbvanish(TCHDB *hdb) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -1116,7 +1116,7 @@ bool tchdbtranbegin(TCHDB *hdb) {
     assert(hdb);
     for (double wsec = 1.0 / sysconf_SC_CLK_TCK; true; wsec *= 2) {
         if (!HDBLOCKMETHOD(hdb, true)) return false;
-        if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER) || hdb->fatal) {
+        if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER) || hdb->fatal) {
             tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
             HDBUNLOCKMETHOD(hdb);
             return false;
@@ -1126,7 +1126,7 @@ bool tchdbtranbegin(TCHDB *hdb) {
         if (wsec > 1.0) wsec = 1.0;
         tcsleep(wsec);
     }
-    if (!tchdbmemsync(hdb, (hdb->omode & HDBOTSYNC))) {
+    if (!tchdbmemsync(hdb, (hdb->omode & TCOTSYNC))) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
@@ -1168,13 +1168,13 @@ bool tchdbtrancommit(TCHDB *hdb) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER) || hdb->fatal) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER) || hdb->fatal) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
     bool err = false;
-    if (!tchdbmemsync(hdb, (hdb->omode & HDBOTSYNC))) err = true;
+    if (!tchdbmemsync(hdb, (hdb->omode & TCOTSYNC))) err = true;
     if (HDBLOCKWAL(hdb)) {
         if (!err && !tcftruncate(hdb->walfd, 0)) {
             tchdbsetecode(hdb, TCETRUNC, __FILE__, __LINE__, __func__);
@@ -1198,7 +1198,7 @@ bool tchdbtranabort(TCHDB *hdb) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -1306,7 +1306,7 @@ void tchdbsetecode2(TCHDB *hdb, int ecode, const char *filename, int line, const
         {
             if (!notfatal) {
                 hdb->fatal = true;
-                if (!INVALIDHANDLE(hdb->fd) && (hdb->omode & HDBOWRITER)) tchdbsetflag(hdb, HDBFFATAL, true);
+                if (!INVALIDHANDLE(hdb->fd) && (hdb->omode & TCOWRITER)) tchdbsetflag(hdb, HDBFFATAL, true);
             }
             break;
         }
@@ -1387,7 +1387,7 @@ bool tchdbmemsync(TCHDB *hdb, bool phys) {
     assert(hdb);
     bool err = false;
     char hbuf[HDBHEADSIZ];
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         return false;
     }
@@ -1626,7 +1626,7 @@ bool tchdbdefrag(TCHDB *hdb, int64_t step) {
     assert(hdb);
     if (step > 0) {
         if (!HDBLOCKMETHOD(hdb, true)) return false;
-        if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+        if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
             tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
             HDBUNLOCKMETHOD(hdb);
             return false;
@@ -1636,7 +1636,7 @@ bool tchdbdefrag(TCHDB *hdb, int64_t step) {
         return rv;
     }
     if (!HDBLOCKMETHOD(hdb, false)) return false;
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -1685,7 +1685,7 @@ bool tchdbputproc(TCHDB *hdb, const void *kbuf, int ksiz, const void *vbuf, int 
     if (!HDBLOCKMETHOD(hdb, false)) return false;
     uint8_t hash;
     uint64_t bidx = tchdbbidx(hdb, kbuf, ksiz, &hash);
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER)) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER)) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -1878,7 +1878,7 @@ bool tchdbtranvoid(TCHDB *hdb) {
         HDBUNLOCKMETHOD(hdb);
         return false;
     }
-    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & HDBOWRITER) || hdb->fatal) {
+    if (INVALIDHANDLE(hdb->fd) || !(hdb->omode & TCOWRITER) || hdb->fatal) {
         tchdbsetecode(hdb, TCEINVALID, __FILE__, __LINE__, __func__);
         HDBUNLOCKMETHOD(hdb);
         return false;
@@ -3297,7 +3297,7 @@ static bool tchdbwalwrite(TCHDB *hdb, uint64_t off, int64_t size) {
         return false;
     }
     if (buf != stack) TCFREE(buf);
-    if ((hdb->omode & HDBOTSYNC) && fsync(hdb->walfd)) {
+    if ((hdb->omode & TCOTSYNC) && fsync(hdb->walfd)) {
         tchdbsetecode(hdb, TCESYNC, __FILE__, __LINE__, __func__);
         HDBUNLOCKWAL(hdb);
         return false;
@@ -3335,7 +3335,7 @@ static bool tchdbwalrestore(TCHDB *hdb, const char *path) {
     if (!fstat(walfd, &sbuf)) {
         walsiz = sbuf.st_size;
     }
-    if (!(hdb->omode & HDBOWRITER) || walsiz < sizeof (walsiz) + HDBHEADSIZ) {
+    if (!(hdb->omode & TCOWRITER) || walsiz < sizeof (walsiz) + HDBHEADSIZ) {
         HDBUNLOCKWAL(hdb);
         err = true;
         goto finish;
@@ -3408,7 +3408,7 @@ static bool tchdbwalrestore(TCHDB *hdb, const char *path) {
     } else {
         err = true;
     }
-    if (!tchdbmemsync(hdb, (hdb->omode & HDBOTSYNC))) {
+    if (!tchdbmemsync(hdb, (hdb->omode & TCOTSYNC))) {
         tchdbsetecode(hdb, TCESYNC, __FILE__, __LINE__, __func__);
         err = true;
     }
@@ -3449,20 +3449,20 @@ static bool tchdbopenimpl(TCHDB *hdb, const char *path, int omode) {
     HANDLE fd;
 #ifndef _WIN32
     int mode = O_RDONLY;
-    if (omode & HDBOWRITER) {
+    if (omode & TCOWRITER) {
         mode = O_RDWR;
-        if (omode & HDBOCREAT) mode |= O_CREAT;
+        if (omode & TCOCREAT) mode |= O_CREAT;
     }
     fd = open(path, mode, HDBFILEMODE);
 #else
     DWORD mode, cmode;
     mode = GENERIC_READ;
     cmode = OPEN_EXISTING;
-    if (omode & HDBOWRITER) {
+    if (omode & TCOWRITER) {
         mode |= GENERIC_WRITE;
-        if (omode & HDBOTRUNC) {
+        if (omode & TCOTRUNC) {
             cmode = CREATE_ALWAYS;
-        } else if (omode & HDBOCREAT) {
+        } else if (omode & TCOCREAT) {
             cmode = OPEN_ALWAYS;
         }
     }
@@ -3478,14 +3478,14 @@ static bool tchdbopenimpl(TCHDB *hdb, const char *path, int omode) {
     hdb->fd = fd;
 
 
-    if (!(omode & HDBONOLCK)) {
-        if (!tclock(fd, omode & HDBOWRITER, omode & HDBOLCKNB)) {
+    if (!(omode & TCONOLCK)) {
+        if (!tclock(fd, omode & TCOWRITER, omode & TCOLCKNB)) {
             tchdbsetecode(hdb, TCELOCK, __FILE__, __LINE__, __func__);
             CLOSEFH2(hdb->fd);
             return false;
         }
     }
-    if ((omode & HDBOWRITER) && (omode & HDBOTRUNC)) {
+    if ((omode & TCOWRITER) && (omode & TCOTRUNC)) {
         if (!tchdbftruncate2(hdb, 0, HDBTRALLOWSHRINK)) {
             tchdbsetecode(hdb, TCETRUNC, __FILE__, __LINE__, __func__);
             CLOSEFH2(hdb->fd);
@@ -3503,7 +3503,7 @@ static bool tchdbopenimpl(TCHDB *hdb, const char *path, int omode) {
         return false;
     }
     char hbuf[HDBHEADSIZ];
-    if ((omode & HDBOWRITER) && (sbuf.st_size < 1 || (omode & HDBOTRUNC))) {
+    if ((omode & TCOWRITER) && (sbuf.st_size < 1 || (omode & TCOTRUNC))) {
         hdb->flags = 0;
         hdb->rnum = 0;
         uint32_t fbpmax = 1 << hdb->fpow;
@@ -3566,7 +3566,7 @@ static bool tchdbopenimpl(TCHDB *hdb, const char *path, int omode) {
     }
     int besiz = (hdb->opts & HDBTLARGE) ? sizeof (int64_t) : sizeof (int32_t);
     size_t msiz = HDBHEADSIZ + hdb->bnum * besiz;
-    if (!(omode & HDBONOLCK)) {
+    if (!(omode & TCONOLCK)) {
         if (memcmp(hbuf, HDBMAGICDATA, strlen(HDBMAGICDATA)) || hdb->type != type ||
                 hdb->frec < msiz + HDBFBPBSIZ || hdb->frec > hdb->fsiz || sbuf.st_size < hdb->fsiz) {
             tchdbsetecode(hdb, TCEMETA, __FILE__, __LINE__, __func__);
@@ -3583,8 +3583,8 @@ static bool tchdbopenimpl(TCHDB *hdb, const char *path, int omode) {
     }
 #ifndef _WIN32
     size_t xmsiz = (hdb->xmsiz > msiz) ? hdb->xmsiz : msiz;
-    if (!(omode & HDBOWRITER) && xmsiz > hdb->fsiz) xmsiz = hdb->fsiz;
-    void *map = mmap(0, xmsiz, PROT_READ | ((omode & HDBOWRITER) ? PROT_WRITE : 0),
+    if (!(omode & TCOWRITER) && xmsiz > hdb->fsiz) xmsiz = hdb->fsiz;
+    void *map = mmap(0, xmsiz, PROT_READ | ((omode & TCOWRITER) ? PROT_WRITE : 0),
             MAP_SHARED, fd, 0);
     if (map == MAP_FAILED) {
         tchdbsetecode(hdb, TCEMMAP, __FILE__, __LINE__, __func__);
@@ -3602,7 +3602,7 @@ static bool tchdbopenimpl(TCHDB *hdb, const char *path, int omode) {
     }
 #endif
     hdb->fbpmax = 1 << hdb->fpow;
-    if (omode & HDBOWRITER) {
+    if (omode & TCOWRITER) {
         TCMALLOC(hdb->fbpool, hdb->fbpmax * HDBFBPALWRAT * sizeof (HDBFB));
     } else {
         hdb->fbpool = NULL;
@@ -3636,7 +3636,7 @@ static bool tchdbopenimpl(TCHDB *hdb, const char *path, int omode) {
     hdb->tran = false;
     hdb->walfd = INVALID_HANDLE_VALUE;
     hdb->walend = 0;
-    if (hdb->omode & HDBOWRITER) {
+    if (hdb->omode & TCOWRITER) {
         bool err = false;
         if (!(hdb->flags & HDBFOPEN) && !tchdbloadfbp(hdb)) err = true;
         memset(hbuf, 0, 2);
@@ -3678,7 +3678,7 @@ static bool tchdbcloseimpl(TCHDB *hdb) {
         tcmdbdel(hdb->recc);
         hdb->recc = NULL;
     }
-    if ((hdb->omode & HDBOWRITER)) {
+    if ((hdb->omode & TCOWRITER)) {
         if (!tchdbsavefbp(hdb)) err = true;
         TCFREE(hdb->fbpool);
         tchdbsetflag(hdb, HDBFOPEN, false);
@@ -3691,7 +3691,7 @@ static bool tchdbcloseimpl(TCHDB *hdb) {
 
 #ifndef _WIN32
     size_t xmsiz = (hdb->xmsiz > hdb->msiz) ? hdb->xmsiz : hdb->msiz;
-    if (!(hdb->omode & HDBOWRITER) && xmsiz > hdb->fsiz) xmsiz = hdb->fsiz;
+    if (!(hdb->omode & TCOWRITER) && xmsiz > hdb->fsiz) xmsiz = hdb->fsiz;
     if (!hdb->map || munmap(hdb->map, xmsiz)) {
 #else
     if (hdb->map) {
@@ -4654,7 +4654,7 @@ static bool tchdboptimizeimpl(TCHDB *hdb, int64_t bnum, int8_t apow, int8_t fpow
     assert(hdb);
     bool err = false;
     char *tpath = tcsprintf("%s%ctmp%c%" PRIuMAX "", hdb->path, MYEXTCHR, MYEXTCHR, hdb->inode);
-    int omode = (hdb->omode & ~HDBOCREAT) & ~HDBOTRUNC;
+    int omode = (hdb->omode & ~TCOCREAT) & ~TCOTRUNC;
     TCHDB *thdb = tchdbnew();
     thdb->dbgfd = hdb->dbgfd;
     thdb->enc = hdb->enc;
@@ -4669,7 +4669,7 @@ static bool tchdboptimizeimpl(TCHDB *hdb, int64_t bnum, int8_t apow, int8_t fpow
     if (fpow < 0) fpow = hdb->fpow;
     if (opts == UINT8_MAX) opts = hdb->opts;
     tchdbtune(thdb, bnum, apow, fpow, opts);
-    if (!tchdbopen(thdb, tpath, HDBOWRITER | HDBOCREAT | HDBOTRUNC) ||
+    if (!tchdbopen(thdb, tpath, TCOWRITER | TCOCREAT | TCOTRUNC) ||
             !tchdbcopyopaque(thdb, hdb, 0, HDBOPAQUESZ)) {
         tchdbdel(thdb);
         TCFREE(tpath);
@@ -4729,7 +4729,7 @@ static bool tchdboptimizeimpl(TCHDB *hdb, int64_t bnum, int8_t apow, int8_t fpow
         err = true;
     }
     bool esc = false;
-    if (err && (hdb->omode & HDBONOLCK) && !thdb->fatal) {
+    if (err && (hdb->omode & TCONOLCK) && !thdb->fatal) {
         err = false;
         esc = true;
     }
@@ -4783,7 +4783,7 @@ static bool tchdbvanishimpl(TCHDB *hdb) {
     int omode = hdb->omode;
     bool err = false;
     if (!tchdbcloseimpl(hdb)) err = true;
-    if (!tchdbopenimpl(hdb, path, HDBOTRUNC | omode)) {
+    if (!tchdbopenimpl(hdb, path, TCOTRUNC | omode)) {
         tcpathunlock(hdb->rpath);
         TCFREE(hdb->rpath);
         err = true;
@@ -4800,7 +4800,7 @@ static bool tchdbvanishimpl(TCHDB *hdb) {
 static bool tchdbcopyimpl(TCHDB *hdb, const char *path) {
     assert(hdb && path);
     bool err = false;
-    if (hdb->omode & HDBOWRITER) {
+    if (hdb->omode & TCOWRITER) {
         if (!tchdbsavefbp(hdb)) err = true;
         if (!tchdbmemsync(hdb, false)) err = true;
         tchdbsetflag(hdb, HDBFOPEN, false);
@@ -4819,7 +4819,7 @@ static bool tchdbcopyimpl(TCHDB *hdb, const char *path) {
             err = true;
         }
     }
-    if (hdb->omode & HDBOWRITER) tchdbsetflag(hdb, HDBFOPEN, true);
+    if (hdb->omode & TCOWRITER) tchdbsetflag(hdb, HDBFOPEN, true);
     return !err;
 }
 
@@ -5229,7 +5229,7 @@ static bool tchdbftruncate2(TCHDB *hdb, off_t length, int opts) {
     uint64_t xfsiz = __atomic_load_n(&hdb->xfsiz, __ATOMIC_ACQUIRE);
 #ifndef _WIN32
     length = length ? tcpagealign(length) : 0;
-    if (!(hdb->omode & HDBOWRITER) || (length <= xfsiz && !(opts & HDBTRALLOWSHRINK))) {
+    if (!(hdb->omode & TCOWRITER) || (length <= xfsiz && !(opts & HDBTRALLOWSHRINK))) {
         return true;
     }
     if (length > xfsiz && !(opts & HDBTRALLOWSHRINK)) {
@@ -5247,16 +5247,16 @@ static bool tchdbftruncate2(TCHDB *hdb, off_t length, int opts) {
     bool err = false;
     LARGE_INTEGER size;
     //MSDN: Applications should test for files with a length of 0 (zero) and reject those files.
-    size.QuadPart = (hdb->omode & HDBOWRITER) ? tcpagealign((length == 0) ? 1 : length) : length;
+    size.QuadPart = (hdb->omode & TCOWRITER) ? tcpagealign((length == 0) ? 1 : length) : length;
     if (hdb->map &&
             length > 0 &&
-            (!(hdb->omode & HDBOWRITER) || (size.QuadPart <= xfsiz && !(opts & HDBTRALLOWSHRINK)))) {
+            (!(hdb->omode & TCOWRITER) || (size.QuadPart <= xfsiz && !(opts & HDBTRALLOWSHRINK)))) {
         return true;
     }
     if (!(opts & HDBOPTNOSMLOCK) && !HDBLOCKSMEMPTR2(hdb, true)) {
         return false;
     }
-    if ((hdb->omode & HDBOWRITER) && size.QuadPart > xfsiz && !(opts & HDBTRALLOWSHRINK)) {
+    if ((hdb->omode & TCOWRITER) && size.QuadPart > xfsiz && !(opts & HDBTRALLOWSHRINK)) {
         off_t o1 = tcpagealign((_maxof(off_t) - (off_t) size.QuadPart < HDBXFSIZINC) ? size.QuadPart : size.QuadPart + HDBXFSIZINC);
         off_t o2 = tcpagealign((((uint64_t) size.QuadPart) * 3) >> 1);
         size.QuadPart = MAX(o1, o2);
@@ -5271,7 +5271,7 @@ static bool tchdbftruncate2(TCHDB *hdb, off_t length, int opts) {
         hdb->map = NULL;
         hdb->w32hmap = INVALID_HANDLE_VALUE;
     }
-    if (hdb->omode & HDBOWRITER) {
+    if (hdb->omode & TCOWRITER) {
         if (!SetFilePointerEx(hdb->fd, size, NULL, FILE_BEGIN) || !SetEndOfFile(hdb->fd)) {
             tchdbsetecode(hdb, TCESEEK, __FILE__, __LINE__, __func__);
             err = true;
@@ -5279,7 +5279,7 @@ static bool tchdbftruncate2(TCHDB *hdb, off_t length, int opts) {
         }
     }
     hdb->w32hmap = CreateFileMapping(hdb->fd, NULL,
-            ((hdb->omode & HDBOWRITER) ? PAGE_READWRITE : PAGE_READONLY),
+            ((hdb->omode & TCOWRITER) ? PAGE_READWRITE : PAGE_READONLY),
             size.HighPart, size.LowPart, NULL);
     if (INVALIDHANDLE(hdb->w32hmap)) {
         tchdbsetecode(hdb, TCEMMAP, __FILE__, __LINE__, __func__);
@@ -5287,7 +5287,7 @@ static bool tchdbftruncate2(TCHDB *hdb, off_t length, int opts) {
         goto finish;
     }
     hdb->map = MapViewOfFile(hdb->w32hmap,
-            ((hdb->omode & HDBOWRITER) ? FILE_MAP_WRITE : FILE_MAP_READ),
+            ((hdb->omode & TCOWRITER) ? FILE_MAP_WRITE : FILE_MAP_READ),
             0, 0, 0);
     if (hdb->map == NULL) {
         tchdbsetecode(hdb, TCEMMAP, __FILE__, __LINE__, __func__);

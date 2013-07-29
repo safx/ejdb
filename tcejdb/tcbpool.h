@@ -14,10 +14,7 @@
  *  Boston, MA 02111-1307 USA.
  *************************************************************************************************/
 
-#include "basedefs.h"
-#include "stdint.h"
-#include "stdbool.h"
-
+#include "tcutil.h"
 
 #ifndef TCBPOOL_H
 #define	TCBPOOL_H
@@ -32,21 +29,12 @@ typedef enum { /** error codes */
 } bpret_t;
 
 typedef enum {
-    TCBPOREAD = 1, /**< read open mode */
-    TCBPOWRITE = 1 << 1, /**< write open mode */
-    TCBPOCREATE = 1 << 2, /**< witer create */
-    TCBONOLOCK = 1 << 3, /**< open in nolock mode */
-    TCBONOBLK = 1 << 4, /**< open in noblock mode */
-    TCBOTRUNC = 1 << 5 /**< truncate BP */
-} bpomode_t;
-
-typedef enum {
     TCBPLOSED = 0, /**< BP in closed state */
     TCBPOPEN = 1  /**< BP in open state */
 } bpstate_t;
 
 typedef struct { /** BP options */
-    bpomode_t omode; /**< The buffer files open mode */
+    tcomode_t omode; /**< The buffer files open mode */
     uint8_t bpow; /**< The power of buffer aligment */
     uint64_t umaxsiz; /**< The maximum size of BP extent */
 } BPOPTS;
@@ -65,7 +53,7 @@ typedef struct { /** BP itself */
     BPEXT *ext; /**< First BP extent */
 } BPOOL;
 
-typedef bool (*TCBPINIT) (HANDLE fd, bpomode_t omode, uint32_t *hdrsiz, BPOPTS *opts, void *opaque);
+typedef bool (*TCBPINIT) (HANDLE fd, tcomode_t omode, uint32_t *hdrsiz, BPOPTS *opts, void *opaque);
 
 /**
  * Creates new zero initalized `TCBPOOL` structure instance.
@@ -80,7 +68,7 @@ BPOOL* tcbpnew();
  * @param init
  * @return
  */
-bpret_t tcbpopen(BPOOL *bp, const char *fpath, bpomode_t omode, TCBPINIT init, void *initop);
+bpret_t tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop);
 
 /**
  * Closes buffer pool.

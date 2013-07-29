@@ -1361,8 +1361,8 @@ static int proccompare(const char *name, int tnum, int rnum){
     err = true;
   }
   sprintf(path, "%s.tch", name);
-  int homode = HDBOWRITER | HDBOCREAT | HDBOTRUNC;
-  if(myrand(100) == 1) homode |= HDBOTSYNC;
+  int homode = TCOWRITER | TCOCREAT | TCOTRUNC;
+  if(myrand(100) == 1) homode |= TCOTSYNC;
   if(!tchdbopen(hdb, path, homode)){
     eprint(NULL, __LINE__, "tchdbopen");
     err = true;
@@ -1681,7 +1681,7 @@ static int proccompare(const char *name, int tnum, int rnum){
           err = true;
         }
         sprintf(path, "%s.tch", name);
-        if(!tchdbopen(hdb, path, HDBOWRITER)){
+        if(!tchdbopen(hdb, path, TCOWRITER)){
           eprint(NULL, __LINE__, "tchdbopen");
           err = true;
         }

@@ -207,9 +207,9 @@ static int runinform(int argc, char **argv) {
     for (int i = 2; i < argc; i++) {
         if (!path && argv[i][0] == '-') {
             if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else {
                 usage();
             }
@@ -235,9 +235,9 @@ static int runput(int argc, char **argv) {
     for (int i = 2; i < argc; i++) {
         if (!path && argv[i][0] == '-') {
             if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else if (!strcmp(argv[i], "-dk")) {
                 dmode = -1;
             } else if (!strcmp(argv[i], "-dc")) {
@@ -288,9 +288,9 @@ static int runout(int argc, char **argv) {
     for (int i = 2; i < argc; i++) {
         if (!path && argv[i][0] == '-') {
             if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else if (!strcmp(argv[i], "-sx")) {
                 sx = true;
             } else {
@@ -329,9 +329,9 @@ static int runget(int argc, char **argv) {
     for (int i = 2; i < argc; i++) {
         if (!path && argv[i][0] == '-') {
             if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else if (!strcmp(argv[i], "-sx")) {
                 sx = true;
             } else if (!strcmp(argv[i], "-px")) {
@@ -374,9 +374,9 @@ static int runlist(int argc, char **argv) {
     for (int i = 2; i < argc; i++) {
         if (!path && argv[i][0] == '-') {
             if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else if (!strcmp(argv[i], "-m")) {
                 if (++i >= argc) usage();
                 max = tcatoix(argv[i]);
@@ -430,9 +430,9 @@ static int runoptimize(int argc, char **argv) {
             } else if (!strcmp(argv[i], "-tz")) {
                 if (opts == UINT8_MAX) opts = 0;
             } else if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else if (!strcmp(argv[i], "-df")) {
                 df = true;
             } else {
@@ -467,9 +467,9 @@ static int runimporttsv(int argc, char **argv) {
     for (int i = 2; i < argc; i++) {
         if (!path && argv[i][0] == '-') {
             if (!strcmp(argv[i], "-nl")) {
-                omode |= HDBONOLCK;
+                omode |= TCONOLCK;
             } else if (!strcmp(argv[i], "-nb")) {
-                omode |= HDBOLCKNB;
+                omode |= TCOLCKNB;
             } else if (!strcmp(argv[i], "-sc")) {
                 sc = true;
             } else {
@@ -504,7 +504,7 @@ static int proccreate(const char *path, int bnum, int apow, int fpow, int opts) 
         tchdbdel(hdb);
         return 1;
     }
-    if (!tchdbopen(hdb, path, HDBOWRITER | HDBOCREAT | HDBOTRUNC)) {
+    if (!tchdbopen(hdb, path, TCOWRITER | TCOCREAT | TCOTRUNC)) {
         printerr(hdb);
         tchdbdel(hdb);
         return 1;
@@ -523,7 +523,7 @@ static int procinform(const char *path, int omode) {
     TCHDB *hdb = tchdbnew();
     if (!INVALIDHANDLE(g_dbgfd)) tchdbsetdbgfd(hdb, g_dbgfd);
     tchdbsetcodecfunc(hdb, _tc_recencode, NULL, _tc_recdecode, NULL);
-    if (!tchdbopen(hdb, path, HDBOREADER | omode)) {
+    if (!tchdbopen(hdb, path, TCOREADER | omode)) {
         printerr(hdb);
         tchdbdel(hdb);
         return 1;
@@ -584,7 +584,7 @@ static int procput(const char *path, const char *kbuf, int ksiz, const char *vbu
     TCHDB *hdb = tchdbnew();
     if (!INVALIDHANDLE(g_dbgfd)) tchdbsetdbgfd(hdb, g_dbgfd);
     if (!tchdbsetcodecfunc(hdb, _tc_recencode, NULL, _tc_recdecode, NULL)) printerr(hdb);
-    if (!tchdbopen(hdb, path, HDBOWRITER | omode)) {
+    if (!tchdbopen(hdb, path, TCOWRITER | omode)) {
         printerr(hdb);
         tchdbdel(hdb);
         return 1;
@@ -643,7 +643,7 @@ static int procout(const char *path, const char *kbuf, int ksiz, int omode) {
     TCHDB *hdb = tchdbnew();
     if (!INVALIDHANDLE(g_dbgfd)) tchdbsetdbgfd(hdb, g_dbgfd);
     if (!tchdbsetcodecfunc(hdb, _tc_recencode, NULL, _tc_recdecode, NULL)) printerr(hdb);
-    if (!tchdbopen(hdb, path, HDBOWRITER | omode)) {
+    if (!tchdbopen(hdb, path, TCOWRITER | omode)) {
         printerr(hdb);
         tchdbdel(hdb);
         return 1;
@@ -666,7 +666,7 @@ static int procget(const char *path, const char *kbuf, int ksiz, int omode, bool
     TCHDB *hdb = tchdbnew();
     if (!INVALIDHANDLE(g_dbgfd)) tchdbsetdbgfd(hdb, g_dbgfd);
     if (!tchdbsetcodecfunc(hdb, _tc_recencode, NULL, _tc_recdecode, NULL)) printerr(hdb);
-    if (!tchdbopen(hdb, path, HDBOREADER | omode)) {
+    if (!tchdbopen(hdb, path, TCOREADER | omode)) {
         printerr(hdb);
         tchdbdel(hdb);
         return 1;
@@ -695,7 +695,7 @@ static int proclist(const char *path, int omode, int max, bool pv, bool px, cons
     TCHDB *hdb = tchdbnew();
     if (!INVALIDHANDLE(g_dbgfd)) tchdbsetdbgfd(hdb, g_dbgfd);
     if (!tchdbsetcodecfunc(hdb, _tc_recencode, NULL, _tc_recdecode, NULL)) printerr(hdb);
-    if (!tchdbopen(hdb, path, HDBOREADER | omode)) {
+    if (!tchdbopen(hdb, path, TCOREADER | omode)) {
         printerr(hdb);
         tchdbdel(hdb);
         return 1;
@@ -753,7 +753,7 @@ static int procoptimize(const char *path, int bnum, int apow, int fpow, int opts
     TCHDB *hdb = tchdbnew();
     if (!INVALIDHANDLE(g_dbgfd)) tchdbsetdbgfd(hdb, g_dbgfd);
     if (!tchdbsetcodecfunc(hdb, _tc_recencode, NULL, _tc_recdecode, NULL)) printerr(hdb);
-    if (!tchdbopen(hdb, path, HDBOWRITER | omode)) {
+    if (!tchdbopen(hdb, path, TCOWRITER | omode)) {
         printerr(hdb);
         tchdbdel(hdb);
         return 1;
@@ -788,7 +788,7 @@ static int procimporttsv(const char *path, const char *file, int omode, bool sc)
     TCHDB *hdb = tchdbnew();
     if (!INVALIDHANDLE(g_dbgfd)) tchdbsetdbgfd(hdb, g_dbgfd);
     if (!tchdbsetcodecfunc(hdb, _tc_recencode, NULL, _tc_recdecode, NULL)) printerr(hdb);
-    if (!tchdbopen(hdb, path, HDBOWRITER | HDBOCREAT | omode)) {
+    if (!tchdbopen(hdb, path, TCOWRITER | TCOCREAT | omode)) {
         printerr(hdb);
         tchdbdel(hdb);
         if (ifp != stdin) fclose(ifp);

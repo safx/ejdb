@@ -1839,17 +1839,17 @@ static bool tctdbopenimpl(TCTDB *tdb, const char *path, int omode) {
     TCCODEC enc, dec;
     void *encop, *decop;
     tchdbcodecfunc(tdb->hdb, &enc, &encop, &dec, &decop);
-    int homode = HDBOREADER;
+    int homode = TCOREADER;
     int bomode = BDBOREADER;
     if (omode & TDBOWRITER) {
-        homode = HDBOWRITER;
+        homode = TCOWRITER;
         bomode = BDBOWRITER;
         if (omode & TDBOCREAT) {
-            homode |= HDBOCREAT;
+            homode |= TCOCREAT;
             bomode |= BDBOCREAT;
         }
         if (omode & TDBOTRUNC) {
-            homode |= HDBOTRUNC;
+            homode |= TCOTRUNC;
             bomode |= BDBOTRUNC;
         }
         tdb->wmode = true;
@@ -1857,15 +1857,15 @@ static bool tctdbopenimpl(TCTDB *tdb, const char *path, int omode) {
         tdb->wmode = false;
     }
     if (omode & TDBONOLCK) {
-        homode |= HDBONOLCK;
+        homode |= TCONOLCK;
         bomode |= BDBONOLCK;
     }
     if (omode & TDBOLCKNB) {
-        homode |= HDBOLCKNB;
+        homode |= TCOLCKNB;
         bomode |= BDBOLCKNB;
     }
     if (omode & TDBOTSYNC) {
-        homode |= HDBOTSYNC;
+        homode |= TCOTSYNC;
         bomode |= BDBOTSYNC;
     }
     tchdbsettype(tdb->hdb, TCDBTTABLE);
@@ -2209,7 +2209,7 @@ static bool tctdboptimizeimpl(TCTDB *tdb, int64_t bnum, int8_t apow, int8_t fpow
     if (opts & TDBTTCBS) hopts |= HDBTTCBS;
     if (opts & TDBTEXCODEC) hopts |= HDBTEXCODEC;
     tchdbtune(thdb, bnum, apow, fpow, hopts);
-    if (tchdbopen(thdb, tpath, HDBOWRITER | HDBOCREAT | HDBOTRUNC) && tchdbcopyopaque(thdb, hdb, 0, -1)) {
+    if (tchdbopen(thdb, tpath, TCOWRITER | TCOCREAT | TCOTRUNC) && tchdbcopyopaque(thdb, hdb, 0, -1)) {
         if (!tchdbiterinit(hdb)) err = true;
         TCXSTR *kxstr = tcxstrnew();
         TCXSTR *vxstr = tcxstrnew();
@@ -2231,7 +2231,7 @@ static bool tctdboptimizeimpl(TCTDB *tdb, int64_t bnum, int8_t apow, int8_t fpow
         }
         if (!err) {
             char *npath = tcstrdup(path);
-            int omode = (tchdbomode(hdb) & ~HDBOCREAT) & ~HDBOTRUNC;
+            int omode = (tchdbomode(hdb) & ~TCOCREAT) & ~TCOTRUNC;
             if (!tchdbclose(hdb)) err = true;
             if (!tcunlinkfile(npath)) {
                 tctdbsetecode(tdb, TCEUNLINK, __FILE__, __LINE__, __func__);
@@ -2590,9 +2590,9 @@ static bool tctdbsetindeximpl(TCTDB *tdb, const char *name, int type, TDBRVALOAD
     TDBIDX *idx = tdb->idxs + inum;
     int homode = tchdbomode(tdb->hdb);
     int bomode = BDBOWRITER | BDBOCREAT | BDBOTRUNC;
-    if (homode & HDBONOLCK) bomode |= BDBONOLCK;
-    if (homode & HDBOLCKNB) bomode |= BDBOLCKNB;
-    if (homode & HDBOTSYNC) bomode |= BDBOTSYNC;
+    if (homode & TCONOLCK) bomode |= BDBONOLCK;
+    if (homode & TCOLCKNB) bomode |= BDBOLCKNB;
+    if (homode & TCOTSYNC) bomode |= BDBOTSYNC;
     HANDLE dbgfd = tchdbdbgfd(tdb->hdb);
     TCCODEC enc, dec;
     void *encop, *decop;

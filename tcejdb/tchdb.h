@@ -129,17 +129,6 @@ enum { /* enumeration for tuning options */
     HDBTEXCODEC = 1 << 4 /* compress each record with custom functions */
 };
 
-enum { /* enumeration for open modes */
-    HDBOREADER = 1 << 0, /* open as a reader */
-    HDBOWRITER = 1 << 1, /* open as a writer */
-    HDBOCREAT = 1 << 2, /* writer creating */
-    HDBOTRUNC = 1 << 3, /* writer truncating */
-    HDBONOLCK = 1 << 4, /* open without locking */
-    HDBOLCKNB = 1 << 5, /* lock without blocking */
-    HDBOTSYNC = 1 << 6 /* synchronize every transaction */
-};
-
-
 /* Get the message string corresponding to an error code.
    `ecode' specifies the error code.
    The return value is the message string of the error code. */
@@ -229,13 +218,13 @@ EJDB_EXPORT bool tchdbsetdfunit(TCHDB *hdb, int32_t dfunit);
 /* Open a database file and connect a hash database object.
    `hdb' specifies the hash database object which is not opened.
    `path' specifies the path of the database file.
-   `omode' specifies the connection mode: `HDBOWRITER' as a writer, `HDBOREADER' as a reader.
-   If the mode is `HDBOWRITER', the following may be added by bitwise-or: `HDBOCREAT', which
-   means it creates a new database if not exist, `HDBOTRUNC', which means it creates a new
-   database regardless if one exists, `HDBOTSYNC', which means every transaction synchronizes
-   updated contents with the device.  Both of `HDBOREADER' and `HDBOWRITER' can be added to by
-   bitwise-or: `HDBONOLCK', which means it opens the database file without file locking, or
-   `HDBOLCKNB', which means locking is performed without blocking.
+   `omode' specifies the connection mode: `TCOWRITER' as a writer, `TCOREADER' as a reader.
+   If the mode is `TCOWRITER', the following may be added by bitwise-or: `TCOCREAT', which
+   means it creates a new database if not exist, `TCOTRUNC', which means it creates a new
+   database regardless if one exists, `TCOTSYNC', which means every transaction synchronizes
+   updated contents with the device.  Both of `TCOREADER' and `TCOWRITER' can be added to by
+   bitwise-or: `TCONOLCK', which means it opens the database file without file locking, or
+   `TCOLCKNB', which means locking is performed without blocking.
    If successful, the return value is true, else, it is false. */
 EJDB_EXPORT bool tchdbopen(TCHDB *hdb, const char *path, int omode);
 

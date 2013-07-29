@@ -22,7 +22,7 @@
 
 #define BPFILEMODE    00644             // permission of created files
 
-static bpret_t _openext(BPEXT *ext, const char *fpath, bpomode_t omode, TCBPINIT init, void *initop);
+static bpret_t _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop);
 static bpret_t _closext(BPEXT *ext);
 static BPEXT* _creatext();
 
@@ -45,11 +45,11 @@ void tcbpdel(BPOOL *bp) {
     TCFREE(bp);
 }
 
-bpret_t tcbpopen(BPOOL *bp, const char *fpath, bpomode_t omode, TCBPINIT init, void *initop) {
+bpret_t tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop) {
     assert(bp && init);
     bpret_t rv = TCBPOK;
     if (omode == 0) {
-        omode = TCBPOREAD | TCBPOWRITE | TCBPOCREATE;
+        omode = TCOREADER | TCOWRITER | TCOCREAT;
     }
     //Initialize main extent
     bp->ext = _creatext();
@@ -83,16 +83,16 @@ static bpret_t _closext(BPEXT *ext) {
     //todo
 }
 
-static bpret_t _openext(BPEXT *ext, const char *fpath, bpomode_t omode, TCBPINIT init, void *initop) {
+static bpret_t _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop) {
     HANDLE fd;
     bpret_t rv = TCBPOK;
     BPOPTS opts;
 
 #ifndef _WIN32
     int mode = O_RDONLY;
-    if (omode & TCBPOWRITE) {
+    if (omode & TCOWRITER ) {
         mode = O_RDWR;
-        if (omode & TCBPOCREATE) mode |= O_CREAT;
+        if (omode & TCOCREAT) mode |= O_CREAT;
     }
     fd = open(fpath, mode, BPFILEMODE);
 #else
@@ -116,7 +116,7 @@ static bpret_t _openext(BPEXT *ext, const char *fpath, bpomode_t omode, TCBPINIT
     }
 
     if (init) {
-        //typedef bool (*TCBPINIT) (HANDLE fd, bpomode_t omode, uint32_t *hdrsiz, BPOPTS *opts, void *opaque);
+        //typedef bool (*TCBPINIT) (HANDLE fd, tcomode_t omode, uint32_t *hdrsiz, BPOPTS *opts, void *opaque);
         uint32_t hdrsiz = 0;
         //if (!init(fd, omode, &hdrsiz, opts, ))
 
