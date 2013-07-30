@@ -22,12 +22,12 @@
 
 #define BPFILEMODE    00644             // permission of created files
 
-#define BPHDRMAGIC 0xfb0a05             //BP extent magic data
-#define BPHDRSIZ  256                   //BPEXT: magic(3) + maxsize(64) + size(64) + nextext(1) + extra(124)
+#define BPHDRMAGIC 0xdc2a               //BP extent magic data
+#define BPHDRSIZ  256                   //BPEXT: magic(2) + maxsize(64) + size(64) + ppow(1) + nextext(1) + extra(124)
 #define BPHDREXTRAOFF 132               //Offset of extra extent header data
 
 #define BPBPOWDEF 6                     //Default BP buffer aligment power 64B
-#define BPBPOWMAX 14                 //Maximum of BP buffer aligment power 16K
+#define BPBPOWMAX 14                    //Maximum of BP buffer aligment power 16K
 #define BPDEFMAXSIZE   0x80000000       //Default extent max size 2147483648
 
 
@@ -100,13 +100,13 @@ int tcbpclose(BPOOL *bp) {
 static int loadmeta(BPEXT *ext, const char *buf) {
     //BPEXT: magic(3) + maxsize(64) + size(64) + nextext(1) + extra(124)
     int rp = 0;
-    int magic = 0;
-    memcpy(&magic, buf + rp, 3);
+    uint16_t magic = 0;
+    memcpy(&magic, buf + rp, sizeof(magic));
     magic = TCITOHL(magic);
     if (magic != BPHDRMAGIC) {
         return TCEMETA;
     }
-    rp += 3;
+    rp += sizeof(magic);
     memcpy(&(ext->maxsize), buf + rp, sizeof(ext->maxsize));
     ext->maxsize = TCITOHLL(ext->maxsize);
     rp += sizeof(ext->maxsize);
@@ -114,6 +114,12 @@ static int loadmeta(BPEXT *ext, const char *buf) {
     memcpy(&(ext->size), buf + rp, sizeof(ext->size));
     ext->size = TCITOHLL(ext->size);
     rp += sizeof(ext->size);
+
+    memcpy(&(ext->ppow), buf + rp, sizeof(ext->ppow));
+    rp += sizeof(ext->ppow);
+    if (ext->ppow == 0 || ext->ppow > BPBPOWMAX) {
+        return TCEMETA;
+    }
 
     memcpy(&(ext->nextext), buf, sizeof(ext->nextext));
     rp += sizeof(ext->nextext);
@@ -126,11 +132,11 @@ static int loadmeta(BPEXT *ext, const char *buf) {
 static int dumpmeta(BPEXT *ext, char *buf) {
     memset(buf, 0, BPHDRSIZ - BPHDREXTRAOFF);
     int wp = 0;
-    uint32_t lnum;
-    lnum = BPHDRMAGIC;
-    lnum = TCHTOIL(lnum);
-    memcpy(buf, &lnum, 3);
-    wp += 3;
+    uint16_t snum;
+    snum = BPHDRMAGIC;
+    snum = TCHTOIS(snum);
+    memcpy(buf, &snum, sizeof(snum));
+    wp += sizeof(snum);
 
     uint64_t llnum;
     llnum = ext->maxsize;
@@ -142,6 +148,9 @@ static int dumpmeta(BPEXT *ext, char *buf) {
     llnum = TCHTOILL(llnum);
     memcpy(buf + wp, &llnum, sizeof(llnum));
     wp += sizeof(llnum);
+
+    memcpy(buf + wp, &(ext->ppow), sizeof(ext->ppow));
+    wp += sizeof(ext->ppow);
 
     memcpy(buf + wp, &(ext->nextext), sizeof(ext->nextext));
     return TCESUCCESS;
@@ -157,6 +166,7 @@ static BPEXT* creatext() {
 static int closext(BPEXT *ext) {
     assert(ext);
     //todo
+    return TCESUCCESS;
 }
 
 static int openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop) {
