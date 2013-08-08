@@ -2252,6 +2252,61 @@ void testQuery25() { //$or
     }
 }
 
+void testQuery25_2() { //$or alternative
+    EJCOLL *contacts = ejdbcreatecoll(jb, "contacts", NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(contacts);
+
+    bson bsq1;
+    bson_init_as_query(&bsq1);
+    bson_append_start_array(&bsq1, "$or");
+
+    bson_append_start_object(&bsq1, "0");
+    bson_append_string(&bsq1, "name", "Ivanov");
+    bson_append_finish_object(&bsq1);
+
+    bson_append_start_object(&bsq1, "1");
+    bson_append_string(&bsq1, "name", "Антонов");
+    bson_append_finish_object(&bsq1);
+
+    bson_append_finish_array(&bsq1);
+    bson_finish(&bsq1);
+    CU_ASSERT_FALSE_FATAL(bsq1.err);
+
+    EJQ *q1 = ejdbcreatequery(jb, &bsq1, NULL, 0, NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(q1);
+
+    uint32_t count = 0;
+    TCXSTR *log = tcxstrnew();
+    TCLIST *q1res = ejdbqryexecute(contacts, q1, &count, 0, log);
+    //fprintf(stderr, "%s", TCXSTRPTR(log));
+
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "MAX: 4294967295"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "SKIP: 0"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "COUNT ONLY: NO"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "MAIN IDX: 'NONE'"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "ORDER FIELDS: 0"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "ACTIVE CONDITIONS: 0"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "$OR QUERIES: 2"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "FETCH ALL: NO"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "RUN FULLSCAN"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "RS SIZE: 2"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "RS COUNT: 2"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "FINAL SORTING: NO"));
+    CU_ASSERT_EQUAL(count, 2);
+    CU_ASSERT_TRUE(TCLISTNUM(q1res) == 2);
+
+    for (int i = 0; i < TCLISTNUM(q1res); ++i) {
+        CU_ASSERT_TRUE(
+                !bson_compare_string("Ivanov", TCLISTVALPTR(q1res, i), "name") ||
+                !bson_compare_string("Антонов", TCLISTVALPTR(q1res, i), "name"));
+
+    }
+    bson_destroy(&bsq1);
+    tclistdel(q1res);
+    tcxstrdel(log);
+    ejdbquerydel(q1);
+}
+
 void testQuery26() { //$not $nin
     EJCOLL *contacts = ejdbcreatecoll(jb, "contacts", NULL);
     CU_ASSERT_PTR_NOT_NULL_FATAL(contacts);
@@ -3145,7 +3200,7 @@ void testTicket88() { //https://github.com/Softmotions/ejdb/issues/88
 
     bson r;
     bson_oid_t oid;
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 10; ++i) {
         bson_init(&r);
         bson_append_start_array(&r, "arr1");
         bson_append_start_object(&r, "0");
@@ -3163,6 +3218,7 @@ void testTicket88() { //https://github.com/Softmotions/ejdb/issues/88
     bson bsq1;
     bson_init_as_query(&bsq1);
     bson_append_start_object(&bsq1, "$set");
+    bson_append_string(&bsq1, "arr1.0.f2", "x");
     bson_append_int(&bsq1, "arr1.1", 1111);
     bson_append_string(&bsq1, "a.b", "c");
     bson_append_finish_object(&bsq1);
@@ -3173,20 +3229,70 @@ void testTicket88() { //https://github.com/Softmotions/ejdb/issues/88
     uint32_t count = 0;
     ejdbqryexecute(ccoll, q1, &count, JBQRYCOUNT, NULL);
     CU_ASSERT_TRUE(ejdbecode(jb) == 0);
-    CU_ASSERT_EQUAL(count, 1000);
+    CU_ASSERT_EQUAL(count, 10);
     ejdbquerydel(q1);
     bson_destroy(&bsq1);
 
     bson bsq2;
     bson_init_as_query(&bsq2);
+    bson_append_string(&bsq2, "arr1.0.f2", "x");
     bson_append_int(&bsq2, "arr1.1", 1111);
     bson_append_string(&bsq2, "a.b", "c");
     bson_finish(&bsq2);
     q1 = ejdbcreatequery(jb, &bsq2, NULL, 0, NULL);
     ejdbqryexecute(ccoll, q1, &count, JBQRYCOUNT, NULL);
-    CU_ASSERT_EQUAL(count, 1000);
+    CU_ASSERT_EQUAL(count, 10);
     ejdbquerydel(q1);
     bson_destroy(&bsq2);
+}
+
+void testTicket89() { //https://github.com/Softmotions/ejdb/issues/89
+    EJCOLL *ccoll = ejdbcreatecoll(jb, "ticket89", NULL);
+    CU_ASSERT_PTR_NOT_NULL(ccoll);
+
+    bson r;
+    bson_oid_t oid;
+
+    bson_init(&r);
+    //{"test":[["aaa"],["bbb"]]}
+    bson_append_start_array(&r, "test");
+    bson_append_start_array(&r, "0");
+    bson_append_string(&r, "0", "aaa");
+    bson_append_finish_array(&r);
+    bson_append_start_array(&r, "1");
+    bson_append_string(&r, "0", "bbb");
+    bson_append_finish_array(&r);
+    bson_append_finish_array(&r);
+    bson_finish(&r);
+    CU_ASSERT_TRUE(ejdbsavebson(ccoll, &r, &oid));
+    bson_destroy(&r);
+
+    bson bsq1;
+    bson_init_as_query(&bsq1);
+    bson_append_start_object(&bsq1, "$addToSet");
+    bson_append_string(&bsq1, "test.0", "bbb");
+    bson_append_finish_object(&bsq1);
+    bson_finish(&bsq1);
+
+    EJQ *q1 = ejdbcreatequery(jb, &bsq1, NULL, 0, NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(q1);
+    uint32_t count = 0;
+    ejdbqryexecute(ccoll, q1, &count, JBQRYCOUNT, NULL);
+    CU_ASSERT_TRUE(ejdbecode(jb) == 0);
+    CU_ASSERT_EQUAL(count, 1);
+    ejdbquerydel(q1);
+    bson_destroy(&bsq1);
+
+    bson_init_as_query(&bsq1);
+    bson_append_string(&bsq1, "test.0.1", "bbb");
+    bson_finish(&bsq1);
+    q1 = ejdbcreatequery(jb, &bsq1, NULL, 0, NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(q1);
+    ejdbqryexecute(ccoll, q1, &count, JBQRYCOUNT, NULL);
+    CU_ASSERT_TRUE(ejdbecode(jb) == 0);
+    CU_ASSERT_EQUAL(count, 1);
+    ejdbquerydel(q1);
+    bson_destroy(&bsq1);
 }
 
 void testQueryBool() {
@@ -4293,8 +4399,113 @@ void testMetaInfo() {
     bson_del(meta);
 }
 
-int main() {
+void testTicket81() {
+    EJCOLL *coll = ejdbcreatecoll(jb, "ticket81", NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(coll);
 
+    bson b;
+    bson_oid_t oid;
+
+    bson_init(&b); //true
+    bson_append_int(&b, "z", 33);
+    bson_append_int(&b, "a", 1);
+    bson_append_int(&b, "b", 3);
+    bson_append_int(&b, "c", 10);
+    bson_append_int(&b, "d", 7);
+    bson_finish(&b);
+    CU_ASSERT_TRUE(ejdbsavebson(coll, &b, &oid));
+    bson_destroy(&b);
+
+    bson_init(&b); //false
+    bson_append_int(&b, "z", 33);
+    bson_append_int(&b, "a", 11);
+    bson_append_int(&b, "b", 22);
+    bson_append_int(&b, "c", 5);
+    bson_append_int(&b, "d", 7);
+    bson_finish(&b);
+    CU_ASSERT_TRUE(ejdbsavebson(coll, &b, &oid));
+    bson_destroy(&b);
+
+    bson_init(&b); //true
+    bson_append_int(&b, "z", 33);
+    bson_append_int(&b, "b", 2);
+    bson_append_int(&b, "d", 7);
+    bson_finish(&b);
+    CU_ASSERT_TRUE(ejdbsavebson(coll, &b, &oid));
+    bson_destroy(&b);
+
+    bson_init(&b); //true
+    bson_append_int(&b, "z", 22);
+    bson_append_int(&b, "a", 1);
+    bson_append_int(&b, "b", 3);
+    bson_append_int(&b, "c", 10);
+    bson_append_int(&b, "d", 7);
+    bson_finish(&b);
+    CU_ASSERT_TRUE(ejdbsavebson(coll, &b, &oid));
+    bson_destroy(&b);
+
+    //z=33 AND (a=1 OR b=2) AND (c=5 OR d=7)
+    //{z : 33, $and : [ {$or : [{a : 1}, {b : 2}]}, {$or : [{c : 5}, {d : 7}]} ] }
+    bson_init_as_query(&b);
+    bson_append_int(&b, "z", 33);
+    bson_append_start_array(&b, "$and");
+
+    //{$or : [{a : 1}, {b : 2}]}
+    bson_append_start_object(&b, "0");
+    bson_append_start_array(&b, "$or");
+    //{a : 1}
+    bson_append_start_object(&b, "0");
+    bson_append_int(&b, "a", 1);
+    bson_append_finish_object(&b);
+    //{b : 2}
+    bson_append_start_object(&b, "1");
+    bson_append_int(&b, "b", 2);
+    bson_append_finish_object(&b);
+    bson_append_finish_array(&b);
+    bson_append_finish_object(&b); //eof {$or : [{a : 1}, {b : 2}]}
+
+    //{$or : [{c : 5}, {d : 7}]}
+    bson_append_start_object(&b, "1");
+    bson_append_start_array(&b, "$or");
+    //{c : 5}
+    bson_append_start_object(&b, "0");
+    bson_append_int(&b, "c", 5);
+    bson_append_finish_object(&b);
+    //{d : 7}
+    bson_append_start_object(&b, "1");
+    bson_append_int(&b, "d", 7);
+    bson_append_finish_object(&b);
+    bson_append_finish_array(&b);
+    bson_append_finish_object(&b); //eof {$or : [{c : 5}, {d : 7}]}
+    bson_append_finish_array(&b); //eof $and
+    bson_finish(&b);
+
+    TCXSTR *log = tcxstrnew();
+    uint32_t count = 0;
+    EJQ *q1 = ejdbcreatequery(jb, &b, NULL, 0, NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(q1);
+    bson_destroy(&b);
+
+    TCLIST *q1res = ejdbqryexecute(coll, q1, &count, 0, log);
+    //fprintf(stderr, "%s", TCXSTRPTR(log));
+    CU_ASSERT_PTR_NOT_NULL_FATAL(q1res);
+    CU_ASSERT_EQUAL(count, 2);
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "ACTIVE CONDITIONS: 1"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "$AND QUERIES: 2"));
+
+    for (int i = 0; i < TCLISTNUM(q1res); ++i) {
+        //z=33 AND (a=1 OR b=2) AND (c=5 OR d=7)
+        CU_ASSERT_FALSE(bson_compare_long(33, TCLISTVALPTR(q1res, i), "z"));
+        CU_ASSERT_TRUE(!bson_compare_long(1, TCLISTVALPTR(q1res, i), "a") || !bson_compare_long(2, TCLISTVALPTR(q1res, i), "b"));
+        CU_ASSERT_TRUE(!bson_compare_long(5, TCLISTVALPTR(q1res, i), "c") || !bson_compare_long(7, TCLISTVALPTR(q1res, i), "d"));
+    }
+    tclistdel(q1res);
+    ejdbquerydel(q1);
+    bson_destroy(&b);
+    tcxstrdel(log);
+}
+
+int main() {
     setlocale(LC_ALL, "en_US.UTF-8");
     CU_pSuite pSuite = NULL;
 
@@ -4338,6 +4549,7 @@ int main() {
             (NULL == CU_add_test(pSuite, "testQuery23", testQuery23)) ||
             (NULL == CU_add_test(pSuite, "testQuery24", testQuery24)) ||
             (NULL == CU_add_test(pSuite, "testQuery25", testQuery25)) ||
+            (NULL == CU_add_test(pSuite, "testQuery25_2", testQuery25_2)) ||
             (NULL == CU_add_test(pSuite, "testQuery26", testQuery26)) ||
             (NULL == CU_add_test(pSuite, "testQuery27", testQuery27)) ||
             (NULL == CU_add_test(pSuite, "testOIDSMatching", testOIDSMatching)) ||
@@ -4347,7 +4559,6 @@ int main() {
             (NULL == CU_add_test(pSuite, "testTicket8", testTicket8)) ||
             (NULL == CU_add_test(pSuite, "testUpdate1", testUpdate1)) ||
             (NULL == CU_add_test(pSuite, "testUpdate2", testUpdate2)) ||
-            (NULL == CU_add_test(pSuite, "testTicket88", testTicket88)) ||
             (NULL == CU_add_test(pSuite, "testQueryBool", testQueryBool)) ||
             (NULL == CU_add_test(pSuite, "testDropAll", testDropAll)) ||
             (NULL == CU_add_test(pSuite, "testTokens$begin", testTokens$begin)) ||
@@ -4364,6 +4575,9 @@ int main() {
             (NULL == CU_add_test(pSuite, "testTicket38", testTicket38)) ||
             (NULL == CU_add_test(pSuite, "testTicket43", testTicket43)) ||
             (NULL == CU_add_test(pSuite, "testTicket54", testTicket54)) ||
+            (NULL == CU_add_test(pSuite, "testTicket88", testTicket88)) ||
+            (NULL == CU_add_test(pSuite, "testTicket89", testTicket89)) ||
+            (NULL == CU_add_test(pSuite, "testTicket81", testTicket81)) ||
             (NULL == CU_add_test(pSuite, "testMetaInfo", testMetaInfo))
             ) {
         CU_cleanup_registry();

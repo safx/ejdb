@@ -118,8 +118,12 @@ static bool _qrycondcheckstrand(const char *vbuf, const TCLIST *tokens);
 static bool _qrycondcheckstror(const char *vbuf, const TCLIST *tokens);
 static bool _qrybsvalmatch(const EJQF *qf, bson_iterator *it, bool expandarrays);
 static bool _qrybsmatch(EJQF *qf, const void *bsbuf, int bsbufsz);
-static bool _qryormatch(EJCOLL *jcoll, EJQ *ejq, const void *pkbuf, int pkbufsz);
+static bool _qry_$and_$or_match(EJCOLL *jcoll, EJQ *ejq, const void *pkbuf, int pkbufsz);
+static bool _qryormatch2(EJCOLL *jcoll, EJQ *ejq, const void *bsbuf, int bsbufsz);
+static bool _qryormatch3(EJCOLL *jcoll, EJQ *ejq, EJQ *oq, const void *bsbuf, int bsbufsz);
+static bool _qryandmatch2(EJCOLL *jcoll, EJQ *ejq, const void *bsbuf, int bsbufsz);
 static bool _qryallcondsmatch(EJQ *ejq, int anum, EJCOLL *jcoll, EJQF **qfs, int qfsz, const void *pkbuf, int pkbufsz);
+static EJQ* _qryaddand(EJDB *jb, EJQ *q, const void *andbsdata);
 static bool _qrydup(const EJQ *src, EJQ *target, uint32_t qflags);
 static void _qrydel(EJQ *q, bool freequery);
 static bool _pushprocessedbson(EJDB *jb, EJQ *q, TCLIST *rs, TCMAP *dfields, TCMAP *ifields, bool imode, const void *bsbuf, int bsbufsz);
@@ -429,18 +433,13 @@ EJQ* ejdbcreatequery(EJDB *jb, bson *qobj, bson *orqobjs, int orqobjsnum, bson *
             goto error;
         }
     }
-    if (orqobjs && orqobjsnum) {
-        q->orqobjsnum = orqobjsnum;
-        TCMALLOC(q->orqobjs, sizeof (*(q->orqobjs)) * q->orqobjsnum);
+    if (orqobjs && orqobjsnum > 0) {
         for (int i = 0; i < orqobjsnum; ++i) {
             bson *oqb = (orqobjs + i);
             assert(oqb);
-            EJQ *oq = ejdbcreatequery(jb, oqb, NULL, 0, NULL);
-            if (oq == NULL) {
+            if (ejdbqueryaddor(jb, q, bson_data(oqb)) == NULL) {
                 goto error;
             }
-            q->orqobjs[i] = *oq; //copy struct
-            TCFREE(oq);
         }
     }
     if (hints) {
@@ -478,7 +477,7 @@ error:
 }
 
 EJQ* ejdbqueryaddor(EJDB *jb, EJQ *q, const void *orbsdata) {
-    assert(jb && q);
+    assert(jb && q && orbsdata);
     if (!orbsdata) {
         _ejdbsetecode(jb, JBEINVALIDBSON, __FILE__, __LINE__, __func__);
         return NULL;
@@ -487,13 +486,10 @@ EJQ* ejdbqueryaddor(EJDB *jb, EJQ *q, const void *orbsdata) {
     if (oq == NULL) {
         return NULL;
     }
-    q->orqobjsnum++;
-    if (q->orqobjsnum == 1) {
-        TCMALLOC(q->orqobjs, sizeof (*(q->orqobjs)) * q->orqobjsnum);
-    } else {
-        TCREALLOC(q->orqobjs, q->orqobjs, sizeof (*(q->orqobjs)) * q->orqobjsnum);
+    if (q->orqlist == NULL) {
+        q->orqlist = tclistnew2(TCLISTINYNUM);
     }
-    q->orqobjs[q->orqobjsnum - 1] = *oq; //copy
+    tclistpush(q->orqlist, oq, sizeof (*oq)); //copy root EJQ struct
     TCFREE(oq);
     return q;
 }
@@ -1624,14 +1620,25 @@ static void _qrydel(EJQ *q, bool freequery) {
         tclistdel(q->qobjlist);
         q->qobjlist = NULL;
     }
-    if (q->orqobjsnum) {
-        for (int i = 0; i < q->orqobjsnum; ++i) {
-            _qrydel(q->orqobjs + i, false);
+
+    if (q->orqlist) {
+        for (int i = 0; i < TCLISTNUM(q->orqlist); ++i) {
+            EJQ *oq = TCLISTVALPTR(q->orqlist, i);
+            _qrydel(oq, false);
         }
-        TCFREE(q->orqobjs);
-        q->orqobjsnum = 0;
-        q->orqobjs = NULL;
+        tclistdel(q->orqlist);
+        q->orqlist = NULL;
     }
+
+    if (q->andqlist) {
+        for (int i = 0; i < TCLISTNUM(q->andqlist); ++i) {
+            EJQ *aq = TCLISTVALPTR(q->andqlist, i);
+            _qrydel(aq, false);
+        }
+        tclistdel(q->andqlist);
+        q->andqlist = NULL;
+    }
+
     if (q->hints) {
         bson_del(q->hints);
         q->hints = NULL;
@@ -2078,12 +2085,15 @@ static bool _qrybsmatch(EJQF *qf, const void *bsbuf, int bsbufsz) {
     return _qrybsrecurrmatch(qf, &ffpctx, 0);
 }
 
-static bool _qryormatch(EJCOLL *jcoll, EJQ *ejq, const void *pkbuf, int pkbufsz) {
-    if (ejq->orqobjsnum <= 0 || !ejq->orqobjs) {
+static bool _qry_$and_$or_match(EJCOLL *jcoll, EJQ *ejq, const void *pkbuf, int pkbufsz) {
+    bool isor = (ejq->orqlist && TCLISTNUM(ejq->orqlist) > 0);
+    bool isand  = (ejq->andqlist && TCLISTNUM(ejq->andqlist) > 0);
+    if (!isor && !isand) {
         return true;
     }
     void *bsbuf = TCXSTRPTR(ejq->bsbuf);
     int bsbufsz = TCXSTRSIZE(ejq->bsbuf);
+
     if (!bsbuf || bsbufsz <= 0) {
         tcxstrclear(ejq->colbuf);
         tcxstrclear(ejq->bsbuf);
@@ -2096,29 +2106,92 @@ static bool _qryormatch(EJCOLL *jcoll, EJQ *ejq, const void *pkbuf, int pkbufsz)
         bsbufsz = TCXSTRSIZE(ejq->bsbuf);
         bsbuf = TCXSTRPTR(ejq->bsbuf);
     }
-    if (ejq->lastmatchedorqf && _qrybsmatch(ejq->lastmatchedorqf, bsbuf, bsbufsz)) {
+    if (isand && !_qryandmatch2(jcoll, ejq, bsbuf, bsbufsz)) {
+        return false;
+    } else if (isor) {
+        return _qryormatch2(jcoll, ejq, bsbuf, bsbufsz);
+    } else {
         return true;
     }
-    for (int i = 0; i < ejq->orqobjsnum; ++i) {
-        const EJQ *oq = (ejq->orqobjs + i);
-        assert(oq && oq->qobjlist);
-        for (int j = 0; j < TCLISTNUM(oq->qobjlist); ++j) {
-            EJQF *qf = TCLISTVALPTR(oq->qobjlist, j);
-            qf->mflags = qf->flags;
+}
+
+static bool _qryormatch3(EJCOLL *jcoll, EJQ *ejq, EJQ *oq, const void *bsbuf, int bsbufsz) {
+    int j = 0;
+    int jm = TCLISTNUM(oq->qobjlist);
+    for (; j < jm; ++j) {
+        EJQF *qf = TCLISTVALPTR(oq->qobjlist, j);
+        assert(qf);
+        qf->mflags = qf->flags;
+        if (qf->mflags & EJFEXCLUDED) {
+            continue;
         }
-        for (int j = 0; j < TCLISTNUM(oq->qobjlist); ++j) {
-            EJQF *qf = TCLISTVALPTR(oq->qobjlist, j);
-            assert(qf);
-            if (qf == ejq->lastmatchedorqf || qf->mflags & EJFEXCLUDED) {
-                continue;
-            }
-            if (_qrybsmatch(qf, bsbuf, bsbufsz)) {
-                ejq->lastmatchedorqf = qf;
-                return true;
-            }
+        if (!_qrybsmatch(qf, bsbuf, bsbufsz)) {
+            break;
+        }
+    }
+    if (j == jm) { //all fields in oq are matched
+        if (oq->andqlist && TCLISTNUM(oq->andqlist) > 0 &&
+                !_qryandmatch2(jcoll, oq, bsbuf, bsbufsz)) { //we have nested $and fields
+            return false;
+        }
+        if (oq->orqlist && TCLISTNUM(oq->orqlist) &&
+                !_qryormatch2(jcoll, oq, bsbuf, bsbufsz)) { //we have nested $or fields
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+static bool _qryormatch2(EJCOLL *jcoll, EJQ *ejq, const void *bsbuf, int bsbufsz) {
+    if (!ejq->orqlist || TCLISTNUM(ejq->orqlist) < 1) {
+        return true;
+    }
+    if (ejq->lastmatchedorq && _qryormatch3(jcoll, ejq, ejq->lastmatchedorq, bsbuf, bsbufsz)) {
+        return true;
+    }
+    for (int i = 0; i < TCLISTNUM(ejq->orqlist); ++i) {
+        EJQ *oq = TCLISTVALPTR(ejq->orqlist, i);
+        assert(oq && oq->qobjlist);
+        if (ejq->lastmatchedorq == oq) {
+            continue;
+        }
+        if (_qryormatch3(jcoll, ejq, oq, bsbuf, bsbufsz)) {
+            ejq->lastmatchedorq = oq;
+            return true;
         }
     }
     return false;
+}
+
+static bool _qryandmatch2(EJCOLL *jcoll, EJQ *ejq, const void *bsbuf, int bsbufsz) {
+    if (!ejq->andqlist || TCLISTNUM(ejq->andqlist) < 1) {
+        return true;
+    }
+    for (int i = 0; i < TCLISTNUM(ejq->andqlist); ++i) {
+        EJQ *aq = TCLISTVALPTR(ejq->andqlist, i);
+        assert(aq && aq->qobjlist);
+        for (int j = 0; j < TCLISTNUM(aq->qobjlist); ++j) {
+            EJQF *qf = TCLISTVALPTR(aq->qobjlist, j);
+            assert(qf);
+            qf->mflags = qf->flags;
+            if (qf->mflags & EJFEXCLUDED) {
+                continue;
+            }
+            if (!_qrybsmatch(qf, bsbuf, bsbufsz)) {
+                return false;
+            }
+        }
+        if (aq->andqlist && TCLISTNUM(aq->andqlist) > 0 &&
+                !_qryandmatch2(jcoll, aq, bsbuf, bsbufsz)) { //we have nested $and fields
+            return false;
+        }
+        if (aq->orqlist && TCLISTNUM(aq->orqlist) > 0 &&
+                !_qryormatch2(jcoll, aq, bsbuf, bsbufsz)) { //we have nested $or fields
+            return false;
+        }
+    }
+    return true;
 }
 
 /** Return true if all main query conditions matched */
@@ -2150,6 +2223,24 @@ static bool _qryallcondsmatch(
         }
     }
     return true;
+}
+
+static EJQ* _qryaddand(EJDB *jb, EJQ *q, const void *andbsdata) {
+    assert(jb && q && andbsdata);
+    if (!andbsdata) {
+        _ejdbsetecode(jb, JBEINVALIDBSON, __FILE__, __LINE__, __func__);
+        return NULL;
+    }
+    EJQ *oq = ejdbcreatequery2(jb, andbsdata);
+    if (oq == NULL) {
+        return NULL;
+    }
+    if (q->andqlist == NULL) {
+        q->andqlist = tclistnew2(TCLISTINYNUM);
+    }
+    tclistpush(q->andqlist, oq, sizeof (*oq)); //copy root EJQ struct
+    TCFREE(oq);
+    return q;
 }
 
 typedef struct {
@@ -2251,7 +2342,6 @@ static bool _qrydup(const EJQ *src, EJQ *target, uint32_t qflags) {
     target->flags = src->flags | qflags;
     target->max = src->max;
     target->skip = src->skip;
-    target->orqobjsnum = src->orqobjsnum;
     if (src->qobjlist) {
         target->qobjlist = tclistnew2(TCLISTNUM(src->qobjlist));
         for (int i = 0; i < TCLISTNUM(src->qobjlist); ++i) {
@@ -2264,10 +2354,22 @@ static bool _qrydup(const EJQ *src, EJQ *target, uint32_t qflags) {
     if (src->hints) {
         target->hints = bson_dup(src->hints);
     }
-    if (src->orqobjsnum > 0 && src->orqobjs) {
-        TCMALLOC(target->orqobjs, sizeof (*(target->orqobjs)) * src->orqobjsnum);
-        for (int i = 0; i < src->orqobjsnum; ++i) {
-            _qrydup(src->orqobjs + i, target->orqobjs + i, qflags);
+    if (src->orqlist) {
+        target->orqlist = tclistnew2(TCLISTNUM(src->orqlist));
+        for (int i = 0; i < TCLISTNUM(src->orqlist); ++i) {
+            EJQ q;
+            if (_qrydup(TCLISTVALPTR(src->orqlist, i), &q, qflags)) {
+                tclistpush(target->orqlist, &q, sizeof (q));
+            }
+        }
+    }
+    if (src->andqlist) {
+        target->andqlist = tclistnew2(TCLISTNUM(src->andqlist));
+        for (int i = 0; i < TCLISTNUM(src->andqlist); ++i) {
+            EJQ q;
+            if (_qrydup(TCLISTVALPTR(src->andqlist, i), &q, qflags)) {
+                tclistpush(target->andqlist, &q, sizeof (q));
+            }
         }
     }
     return true;
@@ -2909,7 +3011,9 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
         for (int i = 0; i < ofsz; ++i) assert(ofs[i] != NULL);
     }
 
-    if ((ejq->flags & EJQONLYCOUNT) && qfsz == 0 && ejq->orqobjsnum == 0) { //primitive count(*) query
+    if ((ejq->flags & EJQONLYCOUNT) && qfsz == 0 &&
+            (ejq->orqlist == NULL || TCLISTNUM(ejq->orqlist) < 1) &&
+            (ejq->andqlist == NULL || TCLISTNUM(ejq->andqlist) < 1)) { //primitive count(*) query
         count = jcoll->tdb->hdb->rnum;
         if (log) {
             tcxstrprintf(log, "SIMPLE COUNT(*): %u\n", count);
@@ -2929,7 +3033,8 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
         tcxstrprintf(log, "MAIN IDX: '%s'\n", midx ? midx->name : "NONE");
         tcxstrprintf(log, "ORDER FIELDS: %d\n", ofsz);
         tcxstrprintf(log, "ACTIVE CONDITIONS: %d\n", anum);
-        tcxstrprintf(log, "$OR QUERIES: %d\n", ejq->orqobjsnum);
+        tcxstrprintf(log, "ROOT $OR QUERIES: %d\n", ((ejq->orqlist) ? TCLISTNUM(ejq->orqlist) : 0));
+        tcxstrprintf(log, "ROOT $AND QUERIES: %d\n", ((ejq->andqlist) ? TCLISTNUM(ejq->andqlist) : 0));
         tcxstrprintf(log, "FETCH ALL: %s\n", all ? "YES" : "NO");
     }
     if (max < UINT_MAX - skip) {
@@ -2990,7 +3095,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
                         break;
                     }
                 }
-                if (matched && (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, &oid, sizeof (oid)))) {
+                if (matched && _qry_$and_$or_match(jcoll, ejq, &oid, sizeof (oid))) {
                     JBQREGREC(&oid, sizeof (oid), TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
                 }
             } while (false);
@@ -3034,7 +3139,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
                         break;
                     }
                 }
-                if (matched && (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, &oid, sizeof (oid)))) {
+                if (matched && _qry_$and_$or_match(jcoll, ejq, &oid, sizeof (oid))) {
                     JBQREGREC(&oid, sizeof (oid), TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
                 }
             }
@@ -3051,8 +3156,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
         while ((all || count < max) && (kbuf = tcbdbcurkey3(cur, &kbufsz)) != NULL) {
             if (trim) kbufsz -= 3;
             vbuf = tcbdbcurval3(cur, &vbufsz);
-            if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) &&
-                    (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, vbuf, vbufsz))) {
+            if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) && _qry_$and_$or_match(jcoll, ejq, vbuf, vbufsz)) {
                 JBQREGREC(vbuf, vbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
             }
             if (mqf->order >= 0) {
@@ -3072,8 +3176,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
             if (trim) kbufsz -= 3;
             if (kbufsz == exprsz && !memcmp(kbuf, expr, exprsz)) {
                 vbuf = tcbdbcurval3(cur, &vbufsz);
-                if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) &&
-                        (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, vbuf, vbufsz))) {
+                if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) && _qry_$and_$or_match(jcoll, ejq, vbuf, vbufsz)) {
                     JBQREGREC(vbuf, vbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
                 }
             } else {
@@ -3092,8 +3195,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
             if (trim) kbufsz -= 3;
             if (kbufsz >= exprsz && !memcmp(kbuf, expr, exprsz)) {
                 vbuf = tcbdbcurval3(cur, &vbufsz);
-                if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) &&
-                        (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, vbuf, vbufsz))) {
+                if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) && _qry_$and_$or_match(jcoll, ejq, vbuf, vbufsz)) {
                     JBQREGREC(vbuf, vbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
                 }
             } else {
@@ -3129,8 +3231,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
                 if (trim) kbufsz -= 3;
                 if (kbufsz >= tsiz && !memcmp(kbuf, token, tsiz)) {
                     vbuf = tcbdbcurval3(cur, &vbufsz);
-                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) &&
-                            (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, vbuf, vbufsz))) {
+                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) && _qry_$and_$or_match(jcoll, ejq, vbuf, vbufsz)) {
                         JBQREGREC(vbuf, vbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
                     }
                 } else {
@@ -3167,8 +3268,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
                 if (trim) kbufsz -= 3;
                 if (kbufsz == tsiz && !memcmp(kbuf, token, tsiz)) {
                     vbuf = tcbdbcurval3(cur, &vbufsz);
-                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) &&
-                            (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, vbuf, vbufsz))) {
+                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) && _qry_$and_$or_match(jcoll, ejq, vbuf, vbufsz)) {
                         JBQREGREC(vbuf, vbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
                     }
                 } else {
@@ -3189,8 +3289,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
         while ((all || count < max) && (kbuf = tcbdbcurkey3(cur, &kbufsz)) != NULL) {
             if (_nucmp(&num, kbuf, mqf->ftype) == 0) {
                 vbuf = tcbdbcurval3(cur, &vbufsz);
-                if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) &&
-                        (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, vbuf, vbufsz))) {
+                if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) && _qry_$and_$or_match(jcoll, ejq, vbuf, vbufsz)) {
                     JBQREGREC(vbuf, vbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
                 }
             } else {
@@ -3216,8 +3315,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
                 if (cmp < 0) break;
                 if (cmp > 0 || (mqf->tcop == TDBQCNUMGE && cmp >= 0)) {
                     vbuf = tcbdbcurval3(cur, &vbufsz);
-                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) &&
-                            (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, vbuf, vbufsz))) {
+                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) && _qry_$and_$or_match(jcoll, ejq, vbuf, vbufsz)) {
                         JBQREGREC(vbuf, vbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
                     }
                 }
@@ -3231,8 +3329,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
                 int cmp = _nucmp2(&knum, &xnum, mqf->ftype);
                 if (cmp > 0 || (mqf->tcop == TDBQCNUMGE && cmp >= 0)) {
                     vbuf = tcbdbcurval3(cur, &vbufsz);
-                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) &&
-                            (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, vbuf, vbufsz))) {
+                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) && _qry_$and_$or_match(jcoll, ejq, vbuf, vbufsz)) {
                         JBQREGREC(vbuf, vbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
                     }
                 }
@@ -3257,8 +3354,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
                 if (cmp > 0) break;
                 if (cmp < 0 || (cmp <= 0 && mqf->tcop == TDBQCNUMLE)) {
                     vbuf = tcbdbcurval3(cur, &vbufsz);
-                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) &&
-                            (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, vbuf, vbufsz))) {
+                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) && _qry_$and_$or_match(jcoll, ejq, vbuf, vbufsz)) {
                         JBQREGREC(vbuf, vbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
                     }
                 }
@@ -3272,8 +3368,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
                 int cmp = _nucmp2(&knum, &xnum, mqf->ftype);
                 if (cmp < 0 || (cmp <= 0 && mqf->tcop == TDBQCNUMLE)) {
                     vbuf = tcbdbcurval3(cur, &vbufsz);
-                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) &&
-                            (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, vbuf, vbufsz))) {
+                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) && _qry_$and_$or_match(jcoll, ejq, vbuf, vbufsz)) {
                         JBQREGREC(vbuf, vbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
                     }
                 }
@@ -3303,8 +3398,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
         while ((all || count < max) && (kbuf = tcbdbcurkey3(cur, &kbufsz)) != NULL) {
             if (tcatof2(kbuf) > upper) break;
             vbuf = tcbdbcurval3(cur, &vbufsz);
-            if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) &&
-                    (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, vbuf, vbufsz))) {
+            if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) && _qry_$and_$or_match(jcoll, ejq, vbuf, vbufsz)) {
                 JBQREGREC(vbuf, vbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
             }
             tcbdbcurnext(cur);
@@ -3340,8 +3434,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
             while ((all || count < max) && (kbuf = tcbdbcurkey3(cur, &kbufsz)) != NULL) {
                 if (tcatof2(kbuf) == xnum) {
                     vbuf = tcbdbcurval3(cur, &vbufsz);
-                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) &&
-                            (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, vbuf, vbufsz))) {
+                    if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, vbuf, vbufsz) && _qry_$and_$or_match(jcoll, ejq, vbuf, vbufsz)) {
                         JBQREGREC(vbuf, vbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
                     }
                 } else {
@@ -3377,8 +3470,7 @@ static TCLIST* _qryexecute(EJCOLL *jcoll, const EJQ *q, uint32_t *outcount, int 
         TCMAP *tres = tctdbidxgetbytokens(jcoll->tdb, midx, tokens, mqf->tcop, log);
         tcmapiterinit(tres);
         while ((all || count < max) && (kbuf = tcmapiternext(tres, &kbufsz)) != NULL) {
-            if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, kbuf, kbufsz) &&
-                    (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, kbuf, kbufsz))) {
+            if (_qryallcondsmatch(ejq, anum, jcoll, qfs, qfsz, kbuf, kbufsz) && _qry_$and_$or_match(jcoll, ejq, kbuf, kbufsz)) {
                 JBQREGREC(kbuf, kbufsz, TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
             }
         }
@@ -3440,7 +3532,7 @@ fullscan: /* Full scan */
                 break;
             }
         }
-        if (matched && (ejq->orqobjsnum == 0 || _qryormatch(jcoll, ejq, TCXSTRPTR(skbuf), TCXSTRSIZE(skbuf)))) {
+        if (matched && _qry_$and_$or_match(jcoll, ejq, TCXSTRPTR(skbuf), TCXSTRSIZE(skbuf))) {
             if (updkeys) { //we are in updating mode
                 if (tcmapputkeep(updkeys, TCXSTRPTR(skbuf), TCXSTRSIZE(skbuf), &yes, sizeof (yes))) {
                     JBQREGREC(TCXSTRPTR(skbuf), TCXSTRSIZE(skbuf), TCXSTRPTR(ejq->bsbuf), TCXSTRSIZE(ejq->bsbuf));
@@ -4199,17 +4291,12 @@ static char* _fetch_bson_str_array2(EJDB *jb, bson_iterator *it, bson_type *type
     return tokens;
 }
 
-//typedef struct {
-//
-//} _PQOBJCTX ;
-
 static int _parse_qobj_impl(EJDB *jb, EJQ *q, bson_iterator *it, TCLIST *qlist, TCLIST *pathStack, EJQF *pqf, int elmatchgrp) {
     assert(it && qlist && pathStack);
     int ret = 0;
-    bson_type ftype;
+    bson_type ftype, bt;
 
     while ((ftype = bson_iterator_next(it)) != BSON_EOO) {
-
         const char *fkey = bson_iterator_key(it);
         bool isckey = (*fkey == '$'); //Key is a control key: $in, $nin, $not, $all, ...
         EJQF qf;
@@ -4226,7 +4313,10 @@ static int _parse_qobj_impl(EJDB *jb, EJQ *q, bson_iterator *it, TCLIST *qlist, 
             tclistpush2(pathStack, fkey);
             qf.ftype = ftype;
         } else {
-            if (!strcmp("$set", fkey) ||
+            if (!strcmp("$or", fkey) || //Both levels operators.
+                !strcmp("$and", fkey)) {
+                //nop
+            } else if (!strcmp("$set", fkey) ||
                     !strcmp("$inc", fkey) ||
                     !strcmp("$dropall", fkey) ||
                     !strcmp("$addToSet", fkey) ||
@@ -4270,62 +4360,88 @@ static int _parse_qobj_impl(EJDB *jb, EJQ *q, bson_iterator *it, TCLIST *qlist, 
             case BSON_ARRAY:
             {
                 if (isckey) {
-                    bson_iterator sit;
-                    bson_iterator_subiterator(it, &sit);
-                    bson_type atype = 0;
-                    TCLIST *tokens = _fetch_bson_str_array(jb, &sit, &atype, (qf.flags & EJCONDICASE) ? JBICASE : 0);
-                    if (atype == 0) {
-                        ret = JBEQINOPNOTARRAY;
-                        _ejdbsetecode(jb, ret, __FILE__, __LINE__, __func__);
-                        tclistdel(tokens);
-                        break;
-                    }
-                    assert(!qf.expr && !qf.fpath);
-                    qf.ftype = BSON_ARRAY;
-                    qf.expr = tclistdump(tokens, &qf.exprsz);
-                    qf.exprlist = tokens;
-                    if (!strcmp("$in", fkey) || !strcmp("$nin", fkey)) {
-                        if (!strcmp("$nin", fkey)) {
-                            qf.negate = true;
-                        }
-                        if (BSON_IS_NUM_TYPE(atype) || atype == BSON_BOOL || atype == BSON_DATE) {
-                            qf.tcop = TDBQCNUMOREQ;
-                        } else {
-                            qf.tcop = TDBQCSTROREQ;
-                            if (TCLISTNUM(tokens) >= JBINOPTMAPTHRESHOLD) {
-                                assert(!qf.exprmap);
-                                qf.exprmap = tcmapnew2(TCLISTNUM(tokens));
-                                for (int i = 0; i < TCLISTNUM(tokens); ++i) {
-                                    tcmapputkeep(qf.exprmap, TCLISTVALPTR(tokens, i), TCLISTVALSIZ(tokens, i), &yes, sizeof (yes));
-                                }
+                    if (!strcmp("$and", fkey)) {
+                        bson_iterator sit;
+                        bson_iterator_subiterator(it, &sit);
+                        while ((bt = bson_iterator_next(&sit)) != BSON_EOO) {
+                            if (bt != BSON_OBJECT) {
+                                continue;
+                            }
+                            if (_qryaddand(jb, q, bson_iterator_value(&sit)) == NULL) {
+                                break;
                             }
                         }
-                    } else if (!strcmp("$bt", fkey)) { //between
-                        qf.tcop = TDBQCNUMBT;
-                        if (TCLISTNUM(tokens) != 2) {
+                        break;
+                    } else if (!strcmp("$or", fkey)) {
+                        bson_iterator sit;
+                        bson_iterator_subiterator(it, &sit);
+                        while ((bt = bson_iterator_next(&sit)) != BSON_EOO) {
+                            if (bt != BSON_OBJECT) {
+                                continue;
+                            }
+                            if (ejdbqueryaddor(jb, q, bson_iterator_value(&sit)) == NULL) {
+                                break;
+                            }
+                        }
+                        break;
+                    } else {
+                        bson_iterator sit;
+                        bson_iterator_subiterator(it, &sit);
+                        bson_type atype = 0;
+                        TCLIST *tokens = _fetch_bson_str_array(jb, &sit, &atype, (qf.flags & EJCONDICASE) ? JBICASE : 0);
+                        if (atype == 0) {
                             ret = JBEQINOPNOTARRAY;
+                            _ejdbsetecode(jb, ret, __FILE__, __LINE__, __func__);
+                            tclistdel(tokens);
+                            break;
+                        }
+                        assert(!qf.expr && !qf.fpath);
+                        qf.ftype = BSON_ARRAY;
+                        qf.expr = tclistdump(tokens, &qf.exprsz);
+                        qf.exprlist = tokens;
+                        if (!strcmp("$in", fkey) || !strcmp("$nin", fkey)) {
+                            if (!strcmp("$nin", fkey)) {
+                                qf.negate = true;
+                            }
+                            if (BSON_IS_NUM_TYPE(atype) || atype == BSON_BOOL || atype == BSON_DATE) {
+                                qf.tcop = TDBQCNUMOREQ;
+                            } else {
+                                qf.tcop = TDBQCSTROREQ;
+                                if (TCLISTNUM(tokens) >= JBINOPTMAPTHRESHOLD) {
+                                    assert(!qf.exprmap);
+                                    qf.exprmap = tcmapnew2(TCLISTNUM(tokens));
+                                    for (int i = 0; i < TCLISTNUM(tokens); ++i) {
+                                        tcmapputkeep(qf.exprmap, TCLISTVALPTR(tokens, i), TCLISTVALSIZ(tokens, i), &yes, sizeof (yes));
+                                    }
+                                }
+                            }
+                        } else if (!strcmp("$bt", fkey)) { //between
+                            qf.tcop = TDBQCNUMBT;
+                            if (TCLISTNUM(tokens) != 2) {
+                                ret = JBEQINOPNOTARRAY;
+                                _ejdbsetecode(jb, ret, __FILE__, __LINE__, __func__);
+                                TCFREE(qf.expr);
+                                tclistdel(qf.exprlist);
+                                break;
+                            }
+                        } else if (!strcmp("$strand", fkey)) { //$strand
+                            qf.tcop = TDBQCSTRAND;
+                        } else if (!strcmp("$stror", fkey)) { //$stror
+                            qf.tcop = TDBQCSTROR;
+                        } else if (qf.flags & EJCONDSTARTWITH) { //$begin with some token
+                            qf.tcop = TDBQCSTRORBW;
+                        } else {
+                            ret = JBEQINVALIDQCONTROL;
                             _ejdbsetecode(jb, ret, __FILE__, __LINE__, __func__);
                             TCFREE(qf.expr);
                             tclistdel(qf.exprlist);
                             break;
                         }
-                    } else if (!strcmp("$strand", fkey)) { //$strand
-                        qf.tcop = TDBQCSTRAND;
-                    } else if (!strcmp("$stror", fkey)) { //$stror
-                        qf.tcop = TDBQCSTROR;
-                    } else if (qf.flags & EJCONDSTARTWITH) { //$begin with some token
-                        qf.tcop = TDBQCSTRORBW;
-                    } else {
-                        ret = JBEQINVALIDQCONTROL;
-                        _ejdbsetecode(jb, ret, __FILE__, __LINE__, __func__);
-                        TCFREE(qf.expr);
-                        tclistdel(qf.exprlist);
+                        qf.fpath = tcstrjoin(pathStack, '.');
+                        qf.fpathsz = strlen(qf.fpath);
+                        TCLISTPUSH(qlist, &qf, sizeof (qf));
                         break;
                     }
-                    qf.fpath = tcstrjoin(pathStack, '.');
-                    qf.fpathsz = strlen(qf.fpath);
-                    TCLISTPUSH(qlist, &qf, sizeof (qf));
-                    break;
                 } else {
                     bson_iterator sit;
                     bson_iterator_subiterator(it, &sit);

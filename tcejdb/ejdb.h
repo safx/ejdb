@@ -294,17 +294,21 @@ EJDB_EXPORT bson* ejdbloadbson(EJCOLL *coll, const bson_oid_t *oid);
  *      - $elemMatch The $elemMatch operator matches more than one component within an array element.
  *          -    { array: { $elemMatch: { value1 : 1, value2 : { $gt: 1 } } } }
  *          Restriction: only one $elemMatch allowed in context of one array field.
+ *      - $and, $or joining:
+ *          -   {..., $and : [subq1, subq2, ...] }
+ *          -   {..., $or  : [subq1, subq2, ...] }
+ *          Example: {z : 33, $and : [ {$or : [{a : 1}, {b : 2}]}, {$or : [{c : 5}, {d : 7}]} ] }
  *
  *  - Queries can be used to update records:
  *
  *      $set Field set operation.
- *          - {.., '$set' : {'field1' : val1, 'fieldN' : valN}}
+ *          - {.., '$set' : {'fpath1' : val1, 'fpathN' : valN}}
  *      $upsert Atomic upsert. If matching records are found it will be '$set' operation,
  *              otherwise new record will be inserted
  *              with fields specified by argment object.
- *          - {.., '$upsert' : {'field1' : val1, 'fieldN' : valN}}
+ *          - {.., '$upsert' : {'fpath1' : val1, 'fpathN' : valN}}
  *      $inc Increment operation. Only number types are supported.
- *          - {.., '$inc' : {'field1' : number, ...,  'field1' : number}
+ *          - {.., '$inc' : {'fpath1' : number, ...,  'fpath2' : number}
  *      $dropall In-place record removal operation.
  *          - {.., '$dropall' : true}
  *      $addToSet Atomically adds value to the array only if its not in the array already.
@@ -472,9 +476,9 @@ EJDB_EXPORT void ejdbqresultdispose(EJQRESULT qr);
  * `$set` and `$inc` operations are supported:
  *
  * `$set` Field set operation:
- *      - {some fields for selection, '$set' : {'field1' : {obj}, ...,  'field1' : {obj}}}
+ *      - {some fields for selection, '$set' : {'fpath1' : {obj}, ...,  'fpathN' : {obj}}}
  * `$inc` Increment operation. Only number types are supported.
- *      - {some fields for selection, '$inc' : {'field1' : number, ...,  'field1' : {number}}
+ *      - {some fields for selection, '$inc' : {'fpath1' : number, ...,  'fpathN' : {number}}
  *
  * @return Number of updated records
  */
