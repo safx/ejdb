@@ -41,6 +41,9 @@ JSON representation of queries and data implemented with API based on <a href="h
 
 <ul>
 <li>
+<code>2013-08-08</code> <strong><a href="https://github.com/Softmotions/ejdb/issues/81">Now supported $and &amp; $or mongodb operators</a></strong>
+</li>
+<li>
 <code>2013-07-15</code> <strong><a href="https://github.com/mkilling/goejdb">Google Go binding</a></strong>
 </li>
 <li>
@@ -592,6 +595,10 @@ gcc -o csnippet csnippet.o -ltcejdb
  *     - $elemMatch The $elemMatch operator matches more than one component within an array element.
  *          -  { array: { $elemMatch: { value1 : 1, value2 : { $gt: 1 } } } }
  *          Restriction: only one $elemMatch allowed in context of one array field.
+ *     - $and, $or joining:
+ *          -   {..., $and : [subq1, subq2, ...] }
+ *          -   {..., $or  : [subq1, subq2, ...] }
+ *          Example: {z : 33, $and : [ {$or : [{a : 1}, {b : 2}]}, {$or : [{c : 5}, {d : 7}]} ] }
  *
  *  - Queries can be used to update records:
  *       $set Field set operation.
