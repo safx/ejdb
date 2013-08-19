@@ -41,6 +41,9 @@ JSON representation of queries and data implemented with API based on <a href="h
 
 <ul>
 <li>
+<code>2013-08-19</code> <strong><a href="https://github.com/Softmotions/ejdb/wiki/V1.1.19">v1.1.19 Added support the long awaited mongodb update positional operator</a></strong>
+</li>
+<li>
 <code>2013-08-11</code> <strong><a href="https://github.com/Softmotions/ejdb/wiki/V1.1.18">v1.1.18 Added support for mongodb $ projection</a></strong>
 </li>
 <li>
@@ -602,6 +605,9 @@ gcc -o csnippet csnippet.o -ltcejdb
  *          -   {..., $and : [subq1, subq2, ...] }
  *          -   {..., $or  : [subq1, subq2, ...] }
  *          Example: {z : 33, $and : [ {$or : [{a : 1}, {b : 2}]}, {$or : [{c : 5}, {d : 7}]} ] }
+ *     - Mongodb $(projection) operator supported. (http://docs.mongodb.org/manual/reference/projection/positional/#proj._S_)
+ *     - Mongodb positional $ update operator supported (http://docs.mongodb.org/manual/reference/operator/positional/)
+ *
  *
  *  - Queries can be used to update records:
  *       $set Field set operation.
