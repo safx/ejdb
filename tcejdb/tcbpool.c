@@ -31,7 +31,7 @@
 #define BPDEFMAXSIZE   0x80000000       //Default extent max size 2147483648
 
 
-typedef struct { /** BP extent */
+typedef struct _BPEXT { /** BP extent */
     char *fpath; /**<Path to first BP extent */
     HANDLE fd; /**< Extent file handle */
     uint32_t hdrsiz; /**< Size of custom app header */
@@ -39,24 +39,31 @@ typedef struct { /** BP extent */
     uint64_t size; /*< Current size of extent */
     uint8_t ppow; /**< The power of buffer aligment */
     uint8_t nextext; /*< If set to 0x01 this extent continued by next extent */
-    struct BPEXT *next; /**< Next BP extent */
-    void *mmtx; /**< Global BP mutex */
+    struct _BPEXT *next; /**< Next BP extent */
 } BPEXT;
 
 struct BPOOL { /** BP itself */
     BPOPTS opts; /**< BP options */
     bpstate_t state; /**< BP state */
     BPEXT *ext; /**< First BP extent */
+    void *mmtx; /**< Global BP mutex */
 };
+
+#define BPLOCKMETHOD(TC_bp, TC_wr)                            \
+  ((TC_bp)->mmtx ? tcbplockmethod((TC_bp), (TC_wr)) : true)
+#define BPUNLOCKMETHOD(TC_bp)                         \
+  ((TC_bp)->mmtx ? tcbpunlockmethod(TC_bp) : true)
 
 /*************************************************************************************************
  *                           Static function prototypes
  *************************************************************************************************/
-
+ 
+EJDB_INLINE bool tcbplockmethod(BPOOL *bp, bool wr);
+EJDB_INLINE bool tcbpunlockmethod(BPOOL *bp);
 static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop);
 static int _closext(BPEXT *ext);
 static int _destroyext(BPEXT *ext);
-static int _creatext(BPEXT** ext);
+static int _creatext(BPOOL *bp, BPEXT** ext);
 static int _loadmeta(BPEXT *ext, const char *buf);
 static int _dumpmeta(BPEXT *ext, char *buf);
 
@@ -68,7 +75,7 @@ BPOOL* tcbpnew() {
 }
 
 bool tcbpisopen(BPOOL *bp) {
-    return (bp && bp->ext && !INVALIDHANDLE(bp->ext->fd));
+    return (bp && (bp->ext) && !INVALIDHANDLE(bp->ext->fd));
 }
 
 void tcbpdel(BPOOL *bp) {
@@ -86,7 +93,7 @@ int tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void 
         omode = TCOREADER | TCOWRITER | TCOCREAT;
     }
     //Initialize main extent
-    rv = _creatext(&(bp->ext));
+    rv = _creatext(bp, &(bp->ext));
     if (rv) {
         goto finish;
     }
@@ -101,7 +108,45 @@ finish:
 }
 
 int tcbpclose(BPOOL *bp) {
-    return TCESUCCESS;
+    assert(bp);
+    int rv = TCESUCCESS;
+    BPEXT *ext = bp->ext;
+    while (ext) {
+        int crv = _closext(ext);
+        if (crv) {
+            rv = crv;
+        }
+        ext = ext->next;
+    }
+    return rv;
+}
+
+
+/* Lock a method of the BP.
+   `bp' specifies the hash database object.
+   `wr' specifies whether the lock is writer or not.
+   If successful, the return value is true, else, it is false. */
+EJDB_INLINE bool tcbplockmethod(BPOOL *bp, bool wr) {
+    assert(bp);
+    if (wr ? pthread_rwlock_wrlock(bp->mmtx) != 0 : pthread_rwlock_rdlock(bp->mmtx) != 0) {
+        //tchdbsetecode(bp, TCETHREAD, __FILE__, __LINE__, __func__);
+        return false;
+    }
+    TCTESTYIELD();
+    return true;
+}
+
+/* Unlock a method of the BP.
+   `bp specifies the hash database object.
+   If successful, the return value is true, else, it is false. */
+EJDB_INLINE bool tcbpunlockmethod(BPOOL *bp) {
+    assert(bp);
+    if (pthread_rwlock_unlock(bp->mmtx) != 0) {
+        //tchdbsetecode(bp, TCETHREAD, __FILE__, __LINE__, __func__);
+        return false;
+    }
+    TCTESTYIELD();
+    return true;
 }
 
 /*************************************************************************************************
@@ -167,15 +212,17 @@ static int _dumpmeta(BPEXT *ext, char *buf) {
     return TCESUCCESS;
 }
 
-static int _creatext(BPEXT** ext) {
+static int _creatext(BPOOL *bp, BPEXT** ext) {
     int rv = TCESUCCESS;
     BPEXT *e;
     TCMALLOC(e, sizeof (*e));
     memset(e, 0, sizeof (*e));
-    TCMALLOC(e->mmtx, sizeof (pthread_rwlock_t));
-    if (pthread_rwlock_init(e->mmtx, NULL) != 0) {
-        rv = TCETHREAD;
-    }
+    
+    
+//   TCMALLOC(e->mmtx, sizeof (pthread_rwlock_t));
+//   if (pthread_rwlock_init(e->mmtx, NULL) != 0) {
+//      rv = TCETHREAD;
+//    }
     if (rv) {
         TCFREE(e);
         e = NULL;
@@ -194,10 +241,10 @@ static int _closext(BPEXT *ext) {
 
 static int _destroyext(BPEXT *ext) {
     assert(ext);
-    if (ext->mmtx) {
-        pthread_mutex_destroy(ext->mmtx);
-        TCFREE(ext->mmtx);
-    }
+//    if (ext->mmtx) {
+//        pthread_mutex_destroy(ext->mmtx);
+//        TCFREE(ext->mmtx);
+//    }
     TCFREE(ext);
     return TCESUCCESS;
 }
@@ -277,7 +324,7 @@ static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
             goto finish;
         }
     }
-
+    
 finish:
     if (rv) { //error code
         if (!INVALIDHANDLE(ext->fd)) {
