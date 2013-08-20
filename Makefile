@@ -10,6 +10,7 @@ clean:
 	- rm -f libtcejdb*.tar.gz libtcejdb*.deb libtcejdb*.changes libtcejdb*.build libtcejdb*.dsc
 	- rm -f python*.tar.gz python*.deb python*.changes python*.build python*.dsc
 	- rm -f lua*.tar.gz lua*.deb lua*.changes lua*.build lua*.dsc
+	- rm -f *.tgz
 
 deb-packages: deb-packages-tcejdb deb-packages-pyejdb deb-packages-luaejdb;
 
@@ -39,6 +40,5 @@ init:
 	$(MAKE) -C ./tcejdb version
 	- cp ./tcejdb/debian/changelog ./Changelog 
 	- cp ./tcejdb/debian/changelog ./tcejdb/Changelog
-
 
 .PHONY: all clean deb-packages deb-source-packages init initdeb

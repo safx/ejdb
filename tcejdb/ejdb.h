@@ -40,7 +40,7 @@ typedef struct { /**< EJDB collection tuning options. */
     bool large; /**< Large collection. It can be larger than 2GB. Default false */
     bool compressed; /**< Collection records will be compressed with DEFLATE compression. Default: false */
     int64_t records; /**< Expected records number in the collection. Default: 128K */
-    int cachedrecords; /**< Maximum number of cached records. Default: 0 */
+    int cachedrecords; /**< Maximum number of records cached in memory. Default: 0 */
 } EJCOLLOPTS;
 
 
@@ -298,6 +298,9 @@ EJDB_EXPORT bson* ejdbloadbson(EJCOLL *coll, const bson_oid_t *oid);
  *          -   {..., $and : [subq1, subq2, ...] }
  *          -   {..., $or  : [subq1, subq2, ...] }
  *          Example: {z : 33, $and : [ {$or : [{a : 1}, {b : 2}]}, {$or : [{c : 5}, {d : 7}]} ] }
+ *
+ *      - Mongodb $(projection) operator supported. (http://docs.mongodb.org/manual/reference/projection/positional/#proj._S_)
+ *      - Mongodb positional $ update operator supported. (http://docs.mongodb.org/manual/reference/operator/positional/)
  *
  *  - Queries can be used to update records:
  *

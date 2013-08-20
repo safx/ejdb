@@ -4,6 +4,7 @@
  */
 
 /*    Copyright 2009-2012 10gen Inc.
+ *    Copyright (C) 2012-2013 Softmotions Ltd <info@softmotions.com>
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,6 +29,7 @@
 #include <stdbool.h>
 #endif
 #include <time.h>
+#include "tcutil.h"
 
 #define BSON_IS_NUM_TYPE(atype) (atype == BSON_INT || atype == BSON_LONG || atype == BSON_DOUBLE)
 
@@ -125,6 +127,24 @@ typedef struct {
 
 EJDB_EXPORT const char* bson_first_errormsg(bson *bson);
 
+
+#define BSON_ITERATOR_FROM_BUFFER(_bs_I, _bs_B) \
+    (_bs_I)->cur = ((char*) (_bs_B)) + 4;       \
+    (_bs_I)->first = 1;
+
+#define BSON_ITERATOR_SUBITERATOR(_bs_I, _bs_S) \
+    BSON_ITERATOR_FROM_BUFFER((_bs_S), bson_iterator_value(_bs_I))
+
+#define BSON_ITERATOR_TYPE(_bs_I) \
+    ((bson_type) (_bs_I)->cur[0])
+
+#define BSON_ITERATOR_KEY(_bs_I) \
+    ((_bs_I)->cur + 1)
+
+#define BSON_ITERATOR_INIT(_bs_I, _bs) \
+    (_bs_I)->cur = (_bs)->data + 4; \
+    (_bs_I)->first = 1;
+
 /* ----------------------------
    READING
    ------------------------------ */
@@ -178,6 +198,8 @@ typedef struct { /**< Find field path context */
     bson_iterator *input;
     int stopos;
     bool stopnestedarr;
+    int mpos; /**< Array index of the first matched array field */
+    int dpos; /**< Position of `$` in array projection fieldpath. */
 } FFPCTX;
 
 
@@ -993,7 +1015,7 @@ extern void ( *bson_free_func)(void *);
 
 extern bson_printf_func bson_errprintf;
 
- void bson_free(void *ptr);
+void bson_free(void *ptr);
 
 /**
  * Allocates memory and checks return value, exiting fatally if malloc() fails.
@@ -1114,6 +1136,27 @@ EJDB_EXPORT int bson_merge3(const void *bsdata1, const void *bsdata2, bson *out)
 EJDB_EXPORT int bson_inplace_set_bool(bson_iterator *pos, bson_bool_t val);
 EJDB_EXPORT int bson_inplace_set_long(bson_iterator *pos, int64_t val);
 EJDB_EXPORT int bson_inplace_set_double(bson_iterator *pos, double val);
+
+typedef struct {
+    TCMAP *ifields; //Required Map of fieldpaths. Map values are a simple boolean bufs.
+    bool imode; //Required If true fpaths will be included. Otherwise fpaths will be excluded from bson.
+    const void *bsbuf; //Required BSON buffer to process.
+    bson *bsout; //Required Allocated output not finished bson* object.
+    TCMAP *fkfields; //Optional: Map (fpath => bson key) used to force specific bson keys for selected fpaths.
+} BSONSTRIPCTX;
+
+/**
+ * Include or exclude fpaths in the specified BSON and put resulting data into `bsout`.
+ * On completion it finishes `bsout` object.
+ *
+ * @param ifields Map of fieldpaths. Map values are a simple boolean bufs.
+ * @param imode If true fpaths will be included. Otherwise fpaths will be excluded from bson.
+ * @param bsbuf BSON buffer to process.
+ * @param bsout Allocated output not finished bson* object
+ * @return BSON error code
+ */
+EJDB_EXPORT int bson_strip(TCMAP *ifields, bool imode, const void *bsbuf, bson *bsout);
+EJDB_EXPORT int bson_strip2(BSONSTRIPCTX *sctx);
 
 
 /**
