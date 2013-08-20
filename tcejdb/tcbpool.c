@@ -40,6 +40,7 @@ typedef struct { /** BP extent */
     uint8_t ppow; /**< The power of buffer aligment */
     uint8_t nextext; /*< If set to 0x01 this extent continued by next extent */
     struct BPEXT *next; /**< Next BP extent */
+    void *mmtx; /**< Global BP mutex */
 } BPEXT;
 
 struct BPOOL { /** BP itself */
@@ -48,10 +49,16 @@ struct BPOOL { /** BP itself */
     BPEXT *ext; /**< First BP extent */
 };
 
+/*************************************************************************************************
+ *                           Static function prototypes
+ *************************************************************************************************/
 
-static int openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop);
-static int closext(BPEXT *ext);
-static BPEXT* creatext();
+static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop);
+static int _closext(BPEXT *ext);
+static int _destroyext(BPEXT *ext);
+static int _creatext(BPEXT** ext);
+static int _loadmeta(BPEXT *ext, const char *buf);
+static int _dumpmeta(BPEXT *ext, char *buf);
 
 BPOOL* tcbpnew() {
     BPOOL *ret;
@@ -61,7 +68,7 @@ BPOOL* tcbpnew() {
 }
 
 bool tcbpisopen(BPOOL *bp) {
-    return false;
+    return (bp && bp->ext && !INVALIDHANDLE(bp->ext->fd));
 }
 
 void tcbpdel(BPOOL *bp) {
@@ -79,9 +86,13 @@ int tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void 
         omode = TCOREADER | TCOWRITER | TCOCREAT;
     }
     //Initialize main extent
-    bp->ext = creatext();
-    rv = openext(bp->ext, fpath, omode, init, initop);
+    rv = _creatext(&(bp->ext));
     if (rv) {
+        goto finish;
+    }
+    rv = _openext(bp->ext, fpath, omode, init, initop);
+    if (rv) {
+        _destroyext(bp->ext);
         goto finish;
     }
 
@@ -93,11 +104,11 @@ int tcbpclose(BPOOL *bp) {
     return TCESUCCESS;
 }
 
-///////////////////////////////////////////////////////////////////////////
-//                          Private staff
-///////////////////////////////////////////////////////////////////////////
+/*************************************************************************************************
+ *                                Private staff
+ *************************************************************************************************/
 
-static int loadmeta(BPEXT *ext, const char *buf) {
+static int _loadmeta(BPEXT *ext, const char *buf) {
     //BPEXT: magic(3) + maxsize(64) + size(64) + nextext(1) + extra(124)
     int rp = 0;
     uint16_t magic = 0;
@@ -129,7 +140,7 @@ static int loadmeta(BPEXT *ext, const char *buf) {
     return TCESUCCESS;
 }
 
-static int dumpmeta(BPEXT *ext, char *buf) {
+static int _dumpmeta(BPEXT *ext, char *buf) {
     memset(buf, 0, BPHDRSIZ - BPHDREXTRAOFF);
     int wp = 0;
     uint16_t snum;
@@ -156,20 +167,42 @@ static int dumpmeta(BPEXT *ext, char *buf) {
     return TCESUCCESS;
 }
 
-static BPEXT* creatext() {
-    BPEXT *ext;
-    TCMALLOC(ext, sizeof (*ext));
-    memset(ext, 0, sizeof (*ext));
-    return ext;
+static int _creatext(BPEXT** ext) {
+    int rv = TCESUCCESS;
+    BPEXT *e;
+    TCMALLOC(e, sizeof (*e));
+    memset(e, 0, sizeof (*e));
+    TCMALLOC(e->mmtx, sizeof (pthread_rwlock_t));
+    if (pthread_rwlock_init(e->mmtx, NULL) != 0) {
+        rv = TCETHREAD;
+    }
+    if (rv) {
+        TCFREE(e);
+        e = NULL;
+    }
+    *ext = e;
+    return rv;
 }
 
-static int closext(BPEXT *ext) {
+static int _closext(BPEXT *ext) {
     assert(ext);
-    //todo
+    if (!INVALIDHANDLE(ext->fd)) {
+        CLOSEFH(ext->fd);
+    }
     return TCESUCCESS;
 }
 
-static int openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop) {
+static int _destroyext(BPEXT *ext) {
+    assert(ext);
+    if (ext->mmtx) {
+        pthread_mutex_destroy(ext->mmtx);
+        TCFREE(ext->mmtx);
+    }
+    TCFREE(ext);
+    return TCESUCCESS;
+}
+
+static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop) {
     int rv = TCESUCCESS;
     char hbuf[BPHDRSIZ]; //BPE header buffer
     BPOPTS opts = {0};
@@ -225,17 +258,17 @@ static int openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init
             rv = TCEREAD;
             goto finish;
         }
-        rv = loadmeta(ext, hbuf);
+        rv = _loadmeta(ext, hbuf);
         if (rv) {
             goto finish;
         }
 
     } else { //init new meta
         ext->maxsize = opts.maxsize > 0 ? opts.maxsize : BPDEFMAXSIZE;
-        ext->ppow = opts.bpow > 0 && opts.bpow <= BPBPOWMAX ? opts.bpow : BPBPOWDEF;
+        ext->ppow = (opts.bpow > 0 && opts.bpow <= BPBPOWMAX) ? opts.bpow : BPBPOWDEF;
         assert(!ext->size);
         assert(!ext->nextext);
-        rv = dumpmeta(ext, hbuf);
+        rv = _dumpmeta(ext, hbuf);
         if (rv) {
             goto finish;
         }

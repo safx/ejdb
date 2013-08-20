@@ -84,6 +84,8 @@
     <File Name="COPYING"/>
     <File Name="tcatest"/>
     <File Name="tctmttest"/>
+    <File Name="tcbpool.h"/>
+    <File Name="tcbpool.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="nix">
     <File Name="nix/platform.h"/>
