@@ -3746,7 +3746,7 @@ typedef unsigned char TCBITMAP; /* type of a bit map object */
 #define _TC_LIBVER     912
 #define _TC_FORMATVER  "1.1"
 
-enum { /* enumeration for error codes */
+enum { /* enumeration for error codes */    
     TCESUCCESS, /* success */
     TCETHREAD, /* threading error */
     TCEINVALID, /* invalid operation */

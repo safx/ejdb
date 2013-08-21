@@ -23,7 +23,9 @@ EJDB_EXTERN_C_START
 
 typedef enum { /** error codes */
     TCBPERONLY = 8001, /**< BP in readonly mode */
-    TCBPEXTINIT = 8002 /**< BP extent initalization failed */
+    TCBPEXTINIT = 8002, /**< BP extent initalization failed */
+    TCBPECLOSED = 8003, /**< BP is closed already */  
+    TCBPEOPENED = 8004  /**< BP is opened already */  
 } bpret_t;
 
 typedef enum {
@@ -38,6 +40,9 @@ typedef struct { /** BP options */
 
 struct BPOOL; /**< BPOOL object. */
 typedef struct BPOOL BPOOL;
+
+struct BPEXT; /**< BPEXT object. */
+typedef struct BPEXT BPEXT;
 
 typedef bool (*TCBPINIT) (HANDLE fd, tcomode_t omode, uint32_t *hdrsiz, BPOPTS *opts, void *opaque);
 
@@ -62,6 +67,13 @@ int tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void 
  * @return
  */
 int tcbpclose(BPOOL *bp);
+
+/**
+ * Sync buffer pool with disk
+ * @param bp
+ * @return
+ */
+int tcbpsync(BPOOL *bp);
 
 /**
  * Returns true if passed BP in open state.

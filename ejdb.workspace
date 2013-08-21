@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Workspace Name="ejdb" Database="./ejdb.tags">
+  <Project Name="tcejdb" Path="tcejdb/tcejdb.project" Active="Yes"/>
   <Environment>
     <![CDATA[]]>
   </Environment>
-  <Project Name="tcejdb" Path="tcejdb/tcejdb.project" Active="Yes"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Project Name="tcejdb" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
+    <WorkspaceConfiguration Name="Release" Selected="no">
       <Project Name="tcejdb" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
