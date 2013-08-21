@@ -13,7 +13,6 @@ bool bpinit(HANDLE fd, tcomode_t omode, uint32_t *hdrsiz, BPOPTS *opts, void *op
     int64_t h = 0xfffa11fffcfd8ff1LL; 
     rv = tcwrite(fd, &h, sizeof(h));
     *hdrsiz = sizeof(h);
-    
     //printf("\n\n%lu", sizeof(buf));
     return rv;
 }

@@ -34,14 +34,16 @@
 struct BPEXT { /** BP extent */
     char *fpath; /**<Path to first BP extent */
     HANDLE fd; /**< Extent file handle */
-    uint32_t hdrsiz; /**< Size of custom app header */
     uint64_t maxsize; /*< Max size of extent */
     uint64_t size; /*< Current size of extent */
     uint8_t ppow; /**< The power of buffer aligment */
     uint8_t nextext; /*< If set to 0x01 this extent continued by next extent */
     BPEXT *next; /**< Next BP extent */
+    BPOOL *bp; /**< BP ref */
     void *mmtx; /**<  Extent mutex */
     volatile int fatalcode; /**< Last happen fatal ERROR code */
+    uint32_t apphdrsz; /**< Size of custom app header */
+    char *apphdrdata; /**< Custom app header data */
 };
 
 struct BPOOL { /** BP itself */
@@ -69,7 +71,7 @@ static int _creatext(BPOOL *bp, BPEXT** ext);
 static int _loadmeta(BPEXT *ext, const char *buf);
 static int _dumpmeta(BPEXT *ext, char *buf);
 
-BPOOL* tcbpnew() {    
+BPOOL* tcbpnew() {
     BPOOL *bp;
     TCMALLOC(bp, sizeof (*bp));
     memset(bp, 0, sizeof (*bp));
@@ -93,8 +95,48 @@ void tcbpdel(BPOOL *bp) {
     TCFREE(bp);
 }
 
+int tcbpapphdrsiz(BPOOL *bp) {
+    if (!tcbpisopen(bp)) {
+        return 0;
+    }
+    if (bp->ext) {
+        return bp->ext->apphdrsz;
+    }
+    return 0;
+}
+
+int tcbpreadcutomhdrdata(BPOOL *bp, char *buf, int off, int len) {
+    if (!tcbpisopen(bp)) {
+        return 0;
+    }
+    BPEXT *ext = bp->ext;
+    if (ext && ext->apphdrsz > 0) {
+        int sz = MIN(ext->apphdrsz - off, len);
+        if (sz > 0) {
+            memcpy(buf, ext->apphdrdata + off, sz);
+            return sz;
+        }
+    }
+    return 0;
+}
+
+int tcbpwritecustomhdrdata(BPOOL *bp, int hoff, char *buf, int boff, int len) {
+    if (!tcbpisopen(bp)) {
+        return 0;
+    }
+    BPEXT *ext = bp->ext;
+    if (ext && ext->apphdrsz > 0) {
+        int sz = MIN(ext->apphdrsz - hoff, len);
+        if (sz > 0) {
+            memcpy(ext->apphdrdata + hoff, buf + boff, len);
+            return sz;
+        }
+    }
+    return 0;
+}
+
 int tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop) {
-    //todo lock?    
+    //todo lock?
     assert(bp && init);
     if (tcbpisopen(bp)) {
         return TCBPEOPENED;
@@ -107,33 +149,33 @@ int tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void 
     rv = _creatext(bp, &(bp->ext));
     if (rv) {
         goto finish;
-    }    
+    }
     rv = _openext(bp->ext, fpath, omode, init, initop);
     if (rv) {
         _destroyext(bp->ext);
         bp->ext = NULL;
         goto finish;
-    }        
+    }
     BPEXT *ext = bp->ext;
     int c = 1;
-    while (!rv && ext->nextext) {        
+    while (!rv && ext->nextext) {
         BPEXT *next;
-        rv = _creatext(bp, &next);        
+        rv = _creatext(bp, &next);
         if (rv) {
-            ext->fatalcode = rv;            
+            ext->fatalcode = rv;
             goto finish;
         }
-        char *efile = tcsprintf("%s.%d", ext->fpath, c);    
-        rv = _openext(next, efile, omode, NULL, NULL);    
-        TCFREE(efile);        
-        ext->next = next;  
+        char *efile = tcsprintf("%s.%d", ext->fpath, c);
+        rv = _openext(next, efile, omode, NULL, NULL);
+        TCFREE(efile);
+        ext->next = next;
         ext = next;
-        ++c;               
-    }    
-finish:   
+        ++c;
+    }
+finish:
     if (rv) { //opened with errors and should be closed
         tcbpclose(bp);
-    }     
+    }
     return rv;
 }
 
@@ -145,7 +187,7 @@ int tcbpsync(BPOOL *bp) {
     return rv;
 }
 
-int tcbpclose(BPOOL *bp) {    
+int tcbpclose(BPOOL *bp) {
     assert(bp);
     if (!tcbpisopen(bp)) {
         return TCBPECLOSED;
@@ -175,8 +217,8 @@ EJDB_INLINE int _lockbp(BPOOL *bp) {
 }
 
 EJDB_INLINE int _unlockbp(BPOOL *bp) {
-    assert(bp && bp->mmtx);   
-    return pthread_mutex_unlock(bp->mmtx); 
+    assert(bp && bp->mmtx);
+    return pthread_mutex_unlock(bp->mmtx);
 }
 
 EJDB_INLINE int _lockextent(BPEXT *ext, bool wr) {
@@ -296,11 +338,12 @@ static int _creatext(BPOOL *bp, BPEXT** ext) {
     TCMALLOC(e, sizeof (*e));
     memset(e, 0, sizeof (*e));
     TCMALLOC(e->mmtx, sizeof (pthread_rwlock_t));
-    rv = pthread_rwlock_init(e->mmtx, NULL);     
+    rv = pthread_rwlock_init(e->mmtx, NULL);
     if (rv) {
         TCFREE(e);
         e = NULL;
     }
+    e->bp = bp;
     *ext = e;
     return rv;
 }
@@ -315,6 +358,9 @@ static int _closext(BPEXT *ext) {
 
 static int _destroyext(BPEXT *ext) {
     assert(ext);
+    if (ext->apphdrdata) {
+        TCFREE(ext->apphdrdata);
+    }
     if (ext->mmtx) {
         pthread_mutex_destroy(ext->mmtx);
         TCFREE(ext->mmtx);
@@ -328,7 +374,7 @@ static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
     int rv = _lockextent(ext, true);
     if (rv) {
         return rv;
-    }    
+    }
     char hbuf[BPHDRSIZ]; //BPE header buffer
     BPOPTS opts = {0};
     struct stat sbuf; //BPE file stat buff
@@ -357,20 +403,32 @@ static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
                     FILE_SHARE_READ | FILE_SHARE_WRITE,
                     NULL, cmode, FILE_ATTRIBUTE_NORMAL, NULL);
 #endif
-    if (INVALIDHANDLE(ext->fd)) {        
+    if (INVALIDHANDLE(ext->fd)) {
         rv = TCEOPEN;
         goto finish;
     }
     if (init) {
-        //typedef bool (*TCBPINIT) (HANDLE fd, tcomode_t omode, uint32_t *hdrsiz, BPOPTS *opts, void *opaque);
-        if (!init(ext->fd, omode, &(ext->hdrsiz), &opts, initop)) {
+        //typedef bool (*TCBPINIT) (HANDLE fd, tcomode_t omode, uint32_t *apphdrsz, BPOPTS *opts, void *opaque);
+        if (!init(ext->fd, omode, &(ext->apphdrsz), &opts, initop)) {
             rv = TCBPEXTINIT;
             goto finish;
         }
+        if (ext->apphdrsz > 0) {
+            if (!tcfseek(ext->fd, ext->apphdrsz, TCFSTART)) {
+                rv = TCESEEK;
+                goto finish;
+            }
+
+        }
     }
-    if (ext->hdrsiz > 0) {
-        if (!tcfseek(ext->fd, ext->hdrsiz, TCFSTART)) {
+    if (ext->apphdrsz > 0) {
+        if (!tcfseek(ext->fd, 0, TCFSTART)) {
             rv = TCESEEK;
+            goto finish;
+        }
+        TCCALLOC(ext->apphdrdata, ext->apphdrsz, 1);
+        if (!tcread(ext->fd, ext->apphdrdata, ext->apphdrsz)) {
+            rv = TCEREAD;
             goto finish;
         }
     }
@@ -378,7 +436,7 @@ static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
         rv = TCESTAT;
         goto finish;
     }
-    if (sbuf.st_size > ext->hdrsiz) { //trying to read the existing header
+    if (sbuf.st_size > ext->apphdrsz) { //trying to read the existing header
         if (!tcread(ext->fd, hbuf, BPHDRSIZ)) {
             rv = TCEREAD;
             goto finish;
@@ -403,7 +461,7 @@ static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
         }
     }
 
-finish:    
+finish:
     if (rv) { //error code
         if (!INVALIDHANDLE(ext->fd)) {
             CLOSEFH(ext->fd);
