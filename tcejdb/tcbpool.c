@@ -111,6 +111,7 @@ int tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void 
     rv = _openext(bp->ext, fpath, omode, init, initop);
     if (rv) {
         _destroyext(bp->ext);
+        bp->ext = NULL;
         goto finish;
     }        
     BPEXT *ext = bp->ext;
@@ -253,7 +254,7 @@ static int _loadmeta(BPEXT *ext, const char *buf) {
         return TCEMETA;
     }
 
-    memcpy(&(ext->nextext), buf, sizeof(ext->nextext));
+    memcpy(&(ext->nextext), buf + rp, sizeof(ext->nextext));
     rp += sizeof(ext->nextext);
     if (ext->nextext & ~0x01) {
         ext->fatalcode = TCEMETA;

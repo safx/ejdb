@@ -6,17 +6,33 @@
 #include "tcbpool.h"
 #include <locale.h>
 
-int init_suite(void) {   
+//typedef bool (*TCBPINIT) (HANDLE fd, tcomode_t omode, uint32_t *hdrsiz, BPOPTS *opts, void *opaque);
+
+bool bpinit(HANDLE fd, tcomode_t omode, uint32_t *hdrsiz, BPOPTS *opts, void *opaque) {
+    int rv = true;
+    int64_t h = 0xfffa11fffcfd8ff1LL; 
+    rv = tcwrite(fd, &h, sizeof(h));
+    *hdrsiz = sizeof(h);
+    
+    //printf("\n\n%lu", sizeof(buf));
+    return rv;
+}
+
+int init_suite(void) {
     return 0;
 }
 
-int clean_suite(void) {    
+int clean_suite(void) {
     return 0;
 }
 
 void testOpenClose() {
     BPOOL *bp = tcbpnew();
     CU_ASSERT_PTR_NOT_NULL_FATAL(bp);
+    int rv = tcbpopen(bp, "bp1", 0, bpinit, NULL);
+    CU_ASSERT_EQUAL(rv, 0);
+    rv = tcbpclose(bp);
+    CU_ASSERT_EQUAL(rv, 0);
     tcbpdel(bp);
 }
 
@@ -36,12 +52,12 @@ int main() {
     }
 
     /* Add the tests to the suite */
-    if ((NULL == CU_add_test(pSuite, "testOpenCloseBP", testOpenClose))            
-            ) {
+    if ((NULL == CU_add_test(pSuite, "testOpenCloseBP", testOpenClose))
+       ) {
         CU_cleanup_registry();
         return CU_get_error();
     }
-    
+
     /* Run all tests using the CUnit Basic interface */
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
