@@ -30,6 +30,13 @@
 #define BPBPOWMAX 14                    //Maximum of BP buffer aligment power 16K
 #define BPDEFMAXSIZE   0x80000000       //Default extent max size 2147483648
 
+struct CPAGE { /** Cached page */
+    volatile int rrefs; /**< read page refs */
+    volatile int wrefs; /**< write page refs */
+    bool pinned; /**< If page is pinned */
+    off_t pageoff; /**< Page off in number of pages */
+    char *data; /**< Pointer to page data */    
+};
 
 struct BPEXT { /** BP extent */
     char *fpath; /**<Path to first BP extent */
@@ -40,7 +47,6 @@ struct BPEXT { /** BP extent */
     uint8_t nextext; /*< If set to 0x01 this extent continued by next extent */
     BPEXT *next; /**< Next BP extent */
     BPOOL *bp; /**< BP ref */
-    void *mmtx; /**<  Extent mutex */
     volatile int fatalcode; /**< Last happen fatal ERROR code */
     uint32_t apphdrsz; /**< Size of custom app header */
     char *apphdrdata; /**< Custom app header data */
@@ -50,19 +56,16 @@ struct BPOOL { /** BP itself */
     BPOPTS opts; /**< BP options */
     bpstate_t state; /**< BP state */
     BPEXT *ext; /**< First BP extent */
-    void *mmtx; /**< BP mutext */
+    
+    pthread_rwlock_t *mlock;  //Method RW-lock 
+    pthread_mutex_t *plockmtx; //Page-lock mutex
+    pthread_mutex_t *pcachemtx; //Page-cache mutex
+    pthread_mutex_t *freeblocksmtx; //Free-space mutex                            
 };
 
 /*************************************************************************************************
  *                           Static function prototypes
  *************************************************************************************************/
-
-EJDB_INLINE int _lockbp(BPOOL *bp);
-EJDB_INLINE int _unlockbp(BPOOL *bp);
-EJDB_INLINE int _lockextent(BPEXT *ext, bool wr);
-EJDB_INLINE int _unlockextent(BPEXT *ext);
-static int _lockallextents(BPOOL *bp, bool wr);
-static int _unlockallextents(BPOOL *bp);
 
 static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop);
 static int _closext(BPEXT *ext);
@@ -71,13 +74,36 @@ static int _creatext(BPOOL *bp, BPEXT** ext);
 static int _loadmeta(BPEXT *ext, const char *buf);
 static int _dumpmeta(BPEXT *ext, char *buf);
 
-BPOOL* tcbpnew() {
+int tcbpnew(BPOOL** _bp) {
+    int rv = TCESUCCESS;
     BPOOL *bp;
     TCMALLOC(bp, sizeof (*bp));
     memset(bp, 0, sizeof (*bp));
-    TCMALLOC(bp->mmtx, sizeof(pthread_mutex_t));
-    pthread_mutex_init(bp->mmtx, NULL);
-    return bp;
+
+    TCMALLOC(bp->mlock, sizeof(pthread_rwlock_t));        
+    rv = pthread_rwlock_init(bp->mlock, NULL);
+    if (rv) {
+        goto finish;
+    }
+    
+    TCMALLOC(bp->plockmtx, sizeof(pthread_mutex_t));
+    rv = pthread_mutex_init(bp->plockmtx, NULL);
+    if (rv) {
+        goto finish;
+    }
+    TCMALLOC(bp->pcachemtx, sizeof(pthread_mutex_t));
+    rv = pthread_mutex_init(bp->pcachemtx, NULL);
+    if (rv) {
+        goto finish;
+    }
+    TCMALLOC(bp->freeblocksmtx, sizeof(pthread_mutex_t));
+    rv = pthread_mutex_init(bp->freeblocksmtx, NULL);
+finish:
+    *_bp = rv ? NULL : bp;
+    if (rv && bp) {
+        tcbpdel(bp);
+    }
+    return rv;
 }
 
 bool tcbpisopen(BPOOL *bp) {
@@ -89,9 +115,18 @@ void tcbpdel(BPOOL *bp) {
     if (tcbpisopen(bp)) {
         tcbpclose(bp);
     }
-    if (bp->mmtx) {
-        TCFREE(bp->mmtx);
+    if (bp->pcachemtx) {
+        pthread_mutex_destroy(bp->pcachemtx);
+        TCFREE(bp->pcachemtx);
     }
+    if (bp->plockmtx) {
+        pthread_mutex_destroy(bp->plockmtx);
+        TCFREE(bp->plockmtx);
+    }
+    if (bp->freeblocksmtx) {
+        pthread_mutex_destroy(bp->freeblocksmtx);
+        TCFREE(bp->freeblocksmtx);
+    }    
     TCFREE(bp);
 }
 
@@ -181,9 +216,7 @@ finish:
 
 int tcbpsync(BPOOL *bp) {
     int rv = TCESUCCESS;
-    _lockallextents(bp, true);
     //todo
-    _unlockallextents(bp);
     return rv;
 }
 
@@ -193,7 +226,7 @@ int tcbpclose(BPOOL *bp) {
         return TCBPECLOSED;
     }
     tcbpsync(bp);
-    _lockallextents(bp, true);
+    //_lockallextents(bp, true);
     int rv = TCESUCCESS;
     BPEXT *ext = bp->ext;
     while (ext) {
@@ -203,7 +236,7 @@ int tcbpclose(BPOOL *bp) {
         }
         ext = ext->next;
     }
-    _unlockallextents(bp);
+    //_unlockallextents(bp);
     return rv;
 }
 
@@ -211,64 +244,6 @@ int tcbpclose(BPOOL *bp) {
  *                                Private staff
  *************************************************************************************************/
 
-EJDB_INLINE int _lockbp(BPOOL *bp) {
-    assert(bp && bp->mmtx);
-    return pthread_mutex_lock(bp->mmtx);
-}
-
-EJDB_INLINE int _unlockbp(BPOOL *bp) {
-    assert(bp && bp->mmtx);
-    return pthread_mutex_unlock(bp->mmtx);
-}
-
-EJDB_INLINE int _lockextent(BPEXT *ext, bool wr) {
-    assert(ext && ext->mmtx);
-    if (wr) {
-        return pthread_rwlock_wrlock(ext->mmtx);
-    } else {
-        return pthread_rwlock_rdlock(ext->mmtx);
-    }
-}
-
-EJDB_INLINE int _unlockextent(BPEXT *ext) {
-    assert(ext && ext->mmtx);
-    return pthread_rwlock_unlock(ext->mmtx);
-}
-
-/* Lock a method of the BP.
-   `bp' specifies the hash database object.
-   `wr' specifies whether the lock is writer or not.
-   If successful, the return value is true, else, it is false. */
-static int _lockallextents(BPOOL *bp, bool wr) {
-    assert(bp);
-    BPEXT *ext = bp->ext;
-    int rc = 0;
-    while (ext) {
-        if (wr) {
-            rc |= pthread_rwlock_wrlock(ext->mmtx);
-        } else {
-            rc |= pthread_rwlock_rdlock(ext->mmtx);
-        }
-        ext = ext->next;
-    }
-    TCTESTYIELD();
-    return rc ? TCETHREAD : 0;
-}
-
-/* Unlock a method of the BP.
-   `bp specifies the hash database object.
-   If successful, the return value is true, else, it is false. */
-static  int _unlockallextents(BPOOL *bp) {
-    assert(bp);
-    BPEXT *ext = bp->ext;
-    int rc = 0;
-    while (ext) {
-        rc |= pthread_rwlock_unlock(ext->mmtx);
-        ext = ext->next;
-    }
-    TCTESTYIELD();
-    return rc ? TCETHREAD : 0;
-}
 
 static int _loadmeta(BPEXT *ext, const char *buf) {
     //BPEXT: magic(3) + maxsize(64) + size(64) + nextext(1) + extra(124)
@@ -337,8 +312,8 @@ static int _creatext(BPOOL *bp, BPEXT** ext) {
     BPEXT *e;
     TCMALLOC(e, sizeof (*e));
     memset(e, 0, sizeof (*e));
-    TCMALLOC(e->mmtx, sizeof (pthread_rwlock_t));
-    rv = pthread_rwlock_init(e->mmtx, NULL);
+    //TCMALLOC(e->mmtx, sizeof (pthread_rwlock_t));
+    //rv = pthread_rwlock_init(e->mmtx, NULL);
     if (rv) {
         TCFREE(e);
         e = NULL;
@@ -361,20 +336,17 @@ static int _destroyext(BPEXT *ext) {
     if (ext->apphdrdata) {
         TCFREE(ext->apphdrdata);
     }
-    if (ext->mmtx) {
-        pthread_mutex_destroy(ext->mmtx);
-        TCFREE(ext->mmtx);
-    }
+    //if (ext->mmtx) {
+    //    pthread_mutex_destroy(ext->mmtx);
+    //    TCFREE(ext->mmtx);
+    //}
     TCFREE(ext);
     return TCESUCCESS;
 }
 
 //EXTENT W-LOCK
 static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop) {
-    int rv = _lockextent(ext, true);
-    if (rv) {
-        return rv;
-    }
+    int rv = TCESUCCESS;
     char hbuf[BPHDRSIZ]; //BPE header buffer
     BPOPTS opts = {0};
     struct stat sbuf; //BPE file stat buff
@@ -468,6 +440,5 @@ finish:
         }
         ext->fatalcode = rv;
     }
-    _unlockextent(ext);
     return rv;
 }

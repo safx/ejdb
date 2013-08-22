@@ -38,6 +38,9 @@ typedef struct { /** BP options */
     uint64_t maxsize; /**< The maximum size of BP extent */
 } BPOPTS;
 
+struct PAGE;
+typedef struct PAGE PAGE; /**< Page handle */
+
 struct BPOOL; /**< BPOOL object. */
 typedef struct BPOOL BPOOL;
 
@@ -49,7 +52,7 @@ typedef bool (*TCBPINIT) (HANDLE fd, tcomode_t omode, uint32_t *hdrsiz, BPOPTS *
 /**
  * Creates new zero initalized `TCBPOOL` structure instance.
  */
-BPOOL* tcbpnew();
+int tcbpnew(BPOOL** bp);
 
 /**
  * Return size of custom app header size in the first extent.

@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Project Name="tcejdb" InternalType="">
+  <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00010001N0005Debug000000000000]]>
+    </Plugin>
+  </Plugins>
   <Reconciliation>
     <Regexes/>
     <Excludepaths/>
@@ -9,11 +14,6 @@
     </Extensions>
     <Topleveldir>../tcejdb</Topleveldir>
   </Reconciliation>
-  <Plugins>
-    <Plugin Name="qmake">
-      <![CDATA[00010001N0005Debug000000000000]]>
-    </Plugin>
-  </Plugins>
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="tcejdb">
@@ -95,6 +95,8 @@
     <File Name="tctmttest"/>
     <File Name="tcbpool.h"/>
     <File Name="tcbpool.c"/>
+    <File Name="tcmtxpool.h"/>
+    <File Name="tcmtxpool.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="nix">
     <File Name="nix/platform.h"/>
