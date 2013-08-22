@@ -25,7 +25,9 @@ typedef enum { /** error codes */
     TCBPERONLY = 8001, /**< BP in readonly mode */
     TCBPEXTINIT = 8002, /**< BP extent initalization failed */
     TCBPECLOSED = 8003, /**< BP is closed already */
-    TCBPEOPENED = 8004  /**< BP is opened already */
+    TCBPEOPENED = 8004,  /**< BP is opened already */
+    TCBPEADDRALIGN = 8005, /**< Unaligned BP address */
+    TCBPEBLKOVERFLOW = 8006 /**< Requested block is greater than extent size */
 } bpret_t;
 
 typedef enum {
@@ -34,6 +36,7 @@ typedef enum {
 } bpstate_t;
 
 typedef struct { /** BP options */
+    uint8_t ppow; /**< The power of page size */
     uint8_t bpow; /**< The power of buffer aligment */
     uint64_t maxsize; /**< The maximum size of BP extent */
 } BPOPTS;
@@ -106,6 +109,28 @@ bool tcbpisopen(BPOOL *bp);
  * @param bp
  */
 void tcbpdel(BPOOL *bp);
+
+
+/**
+ * Lock pages in BP
+ * @param bp Buffer pool.
+ * @param addr First block address.
+ * @param len Number of bytes to lock.
+ */
+int tcbplock(BPOOL *bp, BPEXT **ext, uint64_t off, size_t len, bool wr);
+
+
+/**
+ * Unlock page in BP
+ */
+int tcbpunlock(BPEXT *ext, uint64_t addr, size_t len);
+
+
+/**
+ * Read data from BP.
+ */
+int tcbpread(BPOOL *bp, uint64_t addr, size_t len, char *out);
+
 
 
 EJDB_EXTERN_C_END

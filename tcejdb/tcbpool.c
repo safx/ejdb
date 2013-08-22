@@ -23,44 +23,55 @@
 #define BPFILEMODE    00644             // permission of created files
 
 #define BPHDRMAGIC 0xdc2a               //BP extent magic data
-#define BPHDRSIZ  256                   //BPEXT: magic(2) + maxsize(64) + size(64) + ppow(1) + nextext(1) + extra(124)
+#define BPHDRSIZ  256                   //BPEXT: magic(2) + maxsize(64) + size(64) + bpow(1) + nextext(1) + extra(124)
 #define BPHDREXTRAOFF 132               //Offset of extra extent header data
 
+#define BPPPOWMAX 16                    //Maximum BP page size power 64K
+#define BPPPOWDEF 12                    //Default BP page size power 4K
+#define BPPPOWMIN 10                    //Minimum BP page size power 1K
 #define BPBPOWDEF 6                     //Default BP buffer aligment power 64B
 #define BPBPOWMAX 14                    //Maximum of BP buffer aligment power 16K
-#define BPDEFMAXSIZE   0x80000000       //Default extent max size 2147483648
+#define BPDEFMAXSIZE   0x80000000       //Default extent max size 2G
+#define BPEXTMINSIZE   0x4000000        //Default extent min size 64M 
 
 struct CPAGE { /** Cached page */
-    volatile int rrefs; /**< read page refs */
-    volatile int wrefs; /**< write page refs */
+    off_t id; /**< Page off in number of pages */
     bool pinned; /**< If page is pinned */
-    off_t pageoff; /**< Page off in number of pages */
-    char *data; /**< Pointer to page data */    
+    char *data; /**< Pointer to page data */
 };
+
+struct UPAGE { /** Page in Use */
+    off_t id; /**< Page ID */
+    int refs; /**< Page refs count */
+    pthread_cond_t cv; /**< Condition var for thread sync */
+};
+typedef struct UPAGE UPAGE;
 
 struct BPEXT { /** BP extent */
     char *fpath; /**<Path to first BP extent */
     HANDLE fd; /**< Extent file handle */
+    uint64_t goff; /**< Global extent offset */
     uint64_t maxsize; /*< Max size of extent */
     uint64_t size; /*< Current size of extent */
-    uint8_t ppow; /**< The power of buffer aligment */
+    uint8_t bpow; /**< The power of buffer aligment */
+    uint8_t ppow; /**< Page size pow */
     uint8_t nextext; /*< If set to 0x01 this extent continued by next extent */
     BPEXT *next; /**< Next BP extent */
     BPOOL *bp; /**< BP ref */
     volatile int fatalcode; /**< Last happen fatal ERROR code */
     uint32_t apphdrsz; /**< Size of custom app header */
     char *apphdrdata; /**< Custom app header data */
+
+    pthread_mutex_t *upagesmtx; /**< Page-lock mutex */
+    pthread_mutex_t *freeblocksmtx; /**< Free-space mutex */
+
+    TCTREE *upages; /**< Pages in use */
 };
 
 struct BPOOL { /** BP itself */
-    BPOPTS opts; /**< BP options */
     bpstate_t state; /**< BP state */
     BPEXT *ext; /**< First BP extent */
-    
-    pthread_rwlock_t *mlock;  //Method RW-lock 
-    pthread_mutex_t *plockmtx; //Page-lock mutex
-    pthread_mutex_t *pcachemtx; //Page-cache mutex
-    pthread_mutex_t *freeblocksmtx; //Free-space mutex                            
+    pthread_rwlock_t *mlock;  /**< Method RW-lock */
 };
 
 /*************************************************************************************************
@@ -73,6 +84,8 @@ static int _destroyext(BPEXT *ext);
 static int _creatext(BPOOL *bp, BPEXT** ext);
 static int _loadmeta(BPEXT *ext, const char *buf);
 static int _dumpmeta(BPEXT *ext, char *buf);
+//Select extent for write|read operation
+static int _selectextent(BPOOL *bp, BPEXT **ext, uint64_t off, size_t len);
 
 int tcbpnew(BPOOL** _bp) {
     int rv = TCESUCCESS;
@@ -80,24 +93,12 @@ int tcbpnew(BPOOL** _bp) {
     TCMALLOC(bp, sizeof (*bp));
     memset(bp, 0, sizeof (*bp));
 
-    TCMALLOC(bp->mlock, sizeof(pthread_rwlock_t));        
+    TCMALLOC(bp->mlock, sizeof(pthread_rwlock_t));
     rv = pthread_rwlock_init(bp->mlock, NULL);
     if (rv) {
         goto finish;
     }
-    
-    TCMALLOC(bp->plockmtx, sizeof(pthread_mutex_t));
-    rv = pthread_mutex_init(bp->plockmtx, NULL);
-    if (rv) {
-        goto finish;
-    }
-    TCMALLOC(bp->pcachemtx, sizeof(pthread_mutex_t));
-    rv = pthread_mutex_init(bp->pcachemtx, NULL);
-    if (rv) {
-        goto finish;
-    }
-    TCMALLOC(bp->freeblocksmtx, sizeof(pthread_mutex_t));
-    rv = pthread_mutex_init(bp->freeblocksmtx, NULL);
+
 finish:
     *_bp = rv ? NULL : bp;
     if (rv && bp) {
@@ -115,18 +116,6 @@ void tcbpdel(BPOOL *bp) {
     if (tcbpisopen(bp)) {
         tcbpclose(bp);
     }
-    if (bp->pcachemtx) {
-        pthread_mutex_destroy(bp->pcachemtx);
-        TCFREE(bp->pcachemtx);
-    }
-    if (bp->plockmtx) {
-        pthread_mutex_destroy(bp->plockmtx);
-        TCFREE(bp->plockmtx);
-    }
-    if (bp->freeblocksmtx) {
-        pthread_mutex_destroy(bp->freeblocksmtx);
-        TCFREE(bp->freeblocksmtx);
-    }    
     TCFREE(bp);
 }
 
@@ -244,7 +233,6 @@ int tcbpclose(BPOOL *bp) {
  *                                Private staff
  *************************************************************************************************/
 
-
 static int _loadmeta(BPEXT *ext, const char *buf) {
     //BPEXT: magic(3) + maxsize(64) + size(64) + nextext(1) + extra(124)
     int rp = 0;
@@ -264,9 +252,9 @@ static int _loadmeta(BPEXT *ext, const char *buf) {
     ext->size = TCITOHLL(ext->size);
     rp += sizeof(ext->size);
 
-    memcpy(&(ext->ppow), buf + rp, sizeof(ext->ppow));
-    rp += sizeof(ext->ppow);
-    if (ext->ppow == 0 || ext->ppow > BPBPOWMAX) {
+    memcpy(&(ext->bpow), buf + rp, sizeof(ext->bpow));
+    rp += sizeof(ext->bpow);
+    if (ext->bpow == 0 || ext->bpow > BPBPOWMAX) {
         ext->fatalcode = TCEMETA;
         return TCEMETA;
     }
@@ -300,8 +288,8 @@ static int _dumpmeta(BPEXT *ext, char *buf) {
     memcpy(buf + wp, &llnum, sizeof(llnum));
     wp += sizeof(llnum);
 
-    memcpy(buf + wp, &(ext->ppow), sizeof(ext->ppow));
-    wp += sizeof(ext->ppow);
+    memcpy(buf + wp, &(ext->bpow), sizeof(ext->bpow));
+    wp += sizeof(ext->bpow);
 
     memcpy(buf + wp, &(ext->nextext), sizeof(ext->nextext));
     return TCESUCCESS;
@@ -312,10 +300,18 @@ static int _creatext(BPOOL *bp, BPEXT** ext) {
     BPEXT *e;
     TCMALLOC(e, sizeof (*e));
     memset(e, 0, sizeof (*e));
-    //TCMALLOC(e->mmtx, sizeof (pthread_rwlock_t));
-    //rv = pthread_rwlock_init(e->mmtx, NULL);
+
+    TCMALLOC(e->upagesmtx, sizeof(pthread_mutex_t));
+    rv = pthread_mutex_init(e->upagesmtx, NULL);
     if (rv) {
-        TCFREE(e);
+        goto finish;
+    }
+    TCMALLOC(e->freeblocksmtx, sizeof(pthread_mutex_t));
+    rv = pthread_mutex_init(e->freeblocksmtx, NULL);
+
+finish:
+    if (rv) {
+        _destroyext(e);
         e = NULL;
     }
     e->bp = bp;
@@ -336,16 +332,20 @@ static int _destroyext(BPEXT *ext) {
     if (ext->apphdrdata) {
         TCFREE(ext->apphdrdata);
     }
-    //if (ext->mmtx) {
-    //    pthread_mutex_destroy(ext->mmtx);
-    //    TCFREE(ext->mmtx);
-    //}
+    if (ext->upagesmtx) {
+        pthread_mutex_destroy(ext->upagesmtx);
+        TCFREE(ext->upagesmtx);
+    }
+    if (ext->freeblocksmtx) {
+        pthread_mutex_destroy(ext->freeblocksmtx);
+        TCFREE(ext->freeblocksmtx);
+    }
     TCFREE(ext);
     return TCESUCCESS;
 }
 
-//EXTENT W-LOCK
 static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop) {
+    assert(ext && ext->bp);
     int rv = TCESUCCESS;
     char hbuf[BPHDRSIZ]; //BPE header buffer
     BPOPTS opts = {0};
@@ -379,18 +379,18 @@ static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
         rv = TCEOPEN;
         goto finish;
     }
-    if (init) {
+    if (init) { //It is first extent
         //typedef bool (*TCBPINIT) (HANDLE fd, tcomode_t omode, uint32_t *apphdrsz, BPOPTS *opts, void *opaque);
         if (!init(ext->fd, omode, &(ext->apphdrsz), &opts, initop)) {
             rv = TCBPEXTINIT;
             goto finish;
         }
+        ext->ppow = (opts.ppow >= BPPPOWMIN && opts.ppow <= BPPPOWMAX) ? opts.ppow : BPPPOWDEF;
         if (ext->apphdrsz > 0) {
             if (!tcfseek(ext->fd, ext->apphdrsz, TCFSTART)) {
                 rv = TCESEEK;
                 goto finish;
             }
-
         }
     }
     if (ext->apphdrsz > 0) {
@@ -419,8 +419,8 @@ static int _openext(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
         }
 
     } else { //init new meta
-        ext->maxsize = opts.maxsize > 0 ? opts.maxsize : BPDEFMAXSIZE;
-        ext->ppow = (opts.bpow > 0 && opts.bpow <= BPBPOWMAX) ? opts.bpow : BPBPOWDEF;
+        ext->maxsize = (opts.maxsize > 0 ? (opts.maxsize < BPEXTMINSIZE ? BPEXTMINSIZE : opts.maxsize) : BPDEFMAXSIZE);
+        ext->bpow = (opts.bpow > 0 && opts.bpow <= BPBPOWMAX) ? opts.bpow : BPBPOWDEF;
         assert(!ext->size);
         assert(!ext->nextext);
         rv = _dumpmeta(ext, hbuf);
@@ -440,5 +440,55 @@ finish:
         }
         ext->fatalcode = rv;
     }
+    return rv;
+}
+
+
+static int _selectextent(BPOOL *bp, BPEXT **ext, uint64_t off, size_t len) {
+    assert(bp && ext && bp->ext);
+    int rv = TCESUCCESS;
+    BPEXT *e = bp->ext;
+    uint64_t eoff = 0;
+    while(e) {
+        if (len >= e->maxsize) {
+            return TCBPEBLKOVERFLOW;
+        }
+        if (off >= eoff && off + len <= eoff + e->maxsize) {
+            break;
+        }
+        eoff += e->maxsize;
+        e = e->next;
+    }
+    *ext = e;
+    return rv;
+}
+
+int tcbplock(BPOOL *bp, BPEXT **ext, uint64_t off, size_t len, bool wr) {
+    int rv = _selectextent(bp, ext, off, len);
+    if (rv) {
+        goto finish;
+    }
+    BPEXT *e = *ext;
+    if (e == NULL) {
+        
+    }
+    
+finish:
+    return rv;
+}
+
+int tcbpunlock(BPEXT *ext, uint64_t addr, size_t len) {
+    int rv = TCESUCCESS;
+
+    return rv;
+}
+
+int tcbpread(BPOOL *bp, uint64_t off, size_t len, char *out) {
+    assert(bp && bp->ext);
+    //if (((int) off & ((1 << bp->ext->bpow) - 1)) == 0) {
+    //    return TCBPEADDRALIGN;
+    //}
+    int rv = TCESUCCESS;
+
     return rv;
 }
