@@ -324,7 +324,7 @@ start:
         tctreeput(ext->lpages, &pnum, sizeof(pnum), &lps, sizeof(lps));
         lp = &lps;
     }
-    if (lp->refs == -1 /*someone writing*/ ||  (lp->refs > 0 && wr) /*we want to write but have a reades*/) { 
+    if (lp->refs == INT32_MAX /*someone writing*/ ||  (lp->refs > 0 && wr) /*we want to write but have a reades*/) { 
         //wait on condvar
         ++ lp->wrefs; 
         rv = pthread_cond_wait(&(lp->cv), ext->lpagesmtx);
