@@ -337,7 +337,7 @@ start:
     }
     if (wr) {
         assert(lp->refs == 0);
-        lp->refs = -1;
+        lp->refs = INT32_MAX;
     } else {
         ++ lp->refs;
     }
@@ -360,13 +360,18 @@ static int _extpnumunlock(BPEXT *ext, int pnum) {
     if (lp == NULL) {
         return TCBPEUNBALANCEDPL;
     }
-    if (lp->refs > 0) {
+    bool wr = (lp->refs == INT32_MAX);
+    if (wr) {
+       lp->refs = 0; 
+    } else if (lp->refs > 0) {
         -- lp->refs;
     } else {
-        lp->refs = 0;
+        rv = TCBPEUNBALANCEDPL;
     }
-    if (lp->wrefs > 0) {
-        rv = pthread_cond_signal(&(lp->cv));
+    if (rv) {
+        tctreeout(ext->lpages, &pnum, sizeof(pnum)); //recovering & cleanup
+    } else if (lp->wrefs > 0) {
+        rv = wr ? thread_cond_broadcast(&(lp->cv)) : pthread_cond_signal(&(lp->cv));
     } else if (lp->refs < 1) {
         tctreeout(ext->lpages, &pnum, sizeof(pnum));
     }
