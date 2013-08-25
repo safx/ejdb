@@ -27,7 +27,9 @@ typedef enum { /** error codes */
     TCBPECLOSED = 8003, /**< BP is closed already */
     TCBPEOPENED = 8004,  /**< BP is opened already */
     TCBPEADDRALIGN = 8005, /**< Unaligned BP address */
-    TCBPEBLKOVERFLOW = 8006 /**< Requested block is greater than extent size */
+    TCBPEBLKOVERFLOW = 8006, /**< Requested block is greater than extent size */
+    TCBPEXTNOTFOUND = 8007, /**< BP extent not found */
+    TCBPEUNBALANCEDPL = 8008 /**< Unbalanced page locks */
 } bpret_t;
 
 typedef enum {
@@ -38,7 +40,7 @@ typedef enum {
 typedef struct { /** BP options */
     uint8_t ppow; /**< The power of page size */
     uint8_t bpow; /**< The power of buffer aligment */
-    uint64_t maxsize; /**< The maximum size of BP extent */
+    int64_t maxsize; /**< The maximum size of BP extent */
 } BPOPTS;
 
 struct PAGE;
@@ -49,6 +51,9 @@ typedef struct BPOOL BPOOL;
 
 struct BPEXT; /**< BPEXT object. */
 typedef struct BPEXT BPEXT;
+
+struct LPAGE;
+typedef struct LPAGE LPAGE;
 
 typedef bool (*TCBPINIT) (HANDLE fd, tcomode_t omode, uint32_t *hdrsiz, BPOPTS *opts, void *opaque);
 
@@ -70,7 +75,7 @@ int tcbpapphdrsiz(BPOOL *bp);
  * @param len Number of bytes to write.
  * @return Size actually writen.
  */
-int tcbpreadcutomhdrdata(BPOOL *bp, char *buf, int off, int len);
+int tcbpreadcustomhdrdata(BPOOL *bp, char *buf, int off, int len);
 
 int tcbpwritecustomhdrdata(BPOOL *bp, int hoff, char *buf, int boff, int len);
 
@@ -117,19 +122,19 @@ void tcbpdel(BPOOL *bp);
  * @param addr First block address.
  * @param len Number of bytes to lock.
  */
-int tcbplock(BPOOL *bp, BPEXT **ext, uint64_t off, size_t len, bool wr);
+int tcbplock(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr);
 
 
 /**
  * Unlock page in BP
  */
-int tcbpunlock(BPEXT *ext, uint64_t addr, size_t len);
+int tcbpunlock(BPEXT *ext, int64_t addr, size_t len);
 
 
 /**
  * Read data from BP.
  */
-int tcbpread(BPOOL *bp, uint64_t addr, size_t len, char *out);
+int tcbpread(BPOOL *bp, int64_t addr, size_t len, char *out);
 
 
 
