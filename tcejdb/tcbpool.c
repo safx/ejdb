@@ -34,9 +34,14 @@
 #define BPDEFMAXSIZE   0x80000000       //Default extent max size 2G
 #define BPEXTMINSIZE   0x4000000        //Default extent min size 64M 
 
-#define ROUNDUP(_x, _v) ((((~(_x)) + 1) & ((_v)-1)) + (_x))
-#define PSIZE(_ext) (1 << _ext->ppow)
-#define BSIZE(_ext) (1 << _ext->bpow)
+#define ROUNDUP(BP_x, BP_v) ((((~(BP_x)) + 1) & ((BP_v)-1)) + (BP_x))
+#define PSIZE(BP_ext) (1 << BP_ext->ppow)
+#define BSIZE(BP_ext) (1 << BP_ext->bpow)
+
+
+#define BPLOCKMETHOD(BP_bp, BP_wr) (BP_bp->mmtx ? _bplockmeth(BP_bp, BP_wr) : 0)
+#define BPUNLOCKMETHOD(BP_bp) (BP_bp->mmtx ? _bpunlockmeth(BP_bp) : 0)
+
 
 struct LPAGE { /** Page in Use */
     off_t id; /**< Page ID */
@@ -69,7 +74,7 @@ struct BPEXT { /** BP extent */
 struct BPOOL { /** BP itself */
     bpstate_t state; /**< BP state */
     BPEXT *ext; /**< First BP extent */
-    pthread_rwlock_t *mlock;  /**< Method RW-lock */
+    pthread_rwlock_t *mmtx;  /**< Method RW-lock */
 };
 
 
@@ -82,31 +87,32 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
 static int _extclose(BPEXT *ext);
 static int _extdel(BPEXT *ext);
 static int _extnew(BPOOL *bp, BPEXT** ext);
+static int _extsetmtx(BPEXT *ext);
 static int _loadmeta(BPEXT *ext, const char *buf);
 static int _dumpmeta(BPEXT *ext, char *buf);
 static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len);
 static int _bpsync(BPOOL *bp);
 static int _extplock(BPEXT *ext, int64_t off, size_t len, bool wr);
-static int _extpagescmp(const char *aptr, int asiz, const char *bptr, int bsiz, void *op);
+static int _extpunlock(BPEXT *ext, int64_t off, size_t len);
 static int _extpnumlock(BPEXT *ext, int pnum, bool wr);
 static int _extpnumunlock(BPEXT *ext, int pnum);
+static int _extpagescmp(const char *aptr, int asiz, const char *bptr, int bsiz, void *op);
 
 int tcbpnew(BPOOL** _bp) {
     int rv = TCESUCCESS;
     BPOOL *bp;
     TCMALLOC(bp, sizeof (*bp));
     memset(bp, 0, sizeof (*bp));
-    TCMALLOC(bp->mlock, sizeof(pthread_rwlock_t));
-    rv = pthread_rwlock_init(bp->mlock, NULL);
-    if (rv) {
-        goto finish;
-    }
-
-finish:
     *_bp = rv ? NULL : bp;
     if (rv && bp) {
         tcbpdel(bp);
     }
+    return rv;
+}
+
+int tcbpsetmtx(BPOOL *bp) {
+    TCMALLOC(bp->mmtx, sizeof(pthread_rwlock_t));
+    int rv = pthread_rwlock_init(bp->mmtx, NULL);
     return rv;
 }
 
@@ -119,9 +125,9 @@ void tcbpdel(BPOOL *bp) {
     if (tcbpisopen(bp)) {
         tcbpclose(bp);
     }
-    if (bp->mlock) {
-        pthread_rwlock_destroy(bp->mlock);
-        TCFREE(bp->mlock);
+    if (bp->mmtx) {
+        pthread_rwlock_destroy(bp->mmtx);
+        TCFREE(bp->mmtx);
     }
     TCFREE(bp);
 }
@@ -137,7 +143,7 @@ int tcbpapphdrsiz(BPOOL *bp) {
 }
 
 int tcbpreadcustomhdrdata(BPOOL *bp, char *buf, int off, int len) {
-    if (_bplockmeth(bp, false)) {
+    if (BPLOCKMETHOD(bp, false)) {
         return 0;
     }
     if (!tcbpisopen(bp)) {
@@ -149,20 +155,20 @@ int tcbpreadcustomhdrdata(BPOOL *bp, char *buf, int off, int len) {
         int sz = MIN(ext->apphdrsz - off, len);
         if (sz > 0) {
             memcpy(buf, ext->apphdrdata + off, sz);
-            _bpunlockmeth(bp);
+            BPUNLOCKMETHOD(bp);
             return sz;
         }
     }
-    _bpunlockmeth(bp);
+    BPUNLOCKMETHOD(bp);
     return 0;
 }
 
 int tcbpwritecustomhdrdata(BPOOL *bp, int hoff, char *buf, int boff, int len) {
-    if (_bplockmeth(bp, false)) {
+    if (BPLOCKMETHOD(bp, false)) {
         return 0;
     }
     if (!tcbpisopen(bp)) {
-        _bpunlockmeth(bp);
+        BPUNLOCKMETHOD(bp);
         return 0;
     }
     BPEXT *ext = bp->ext;
@@ -170,11 +176,11 @@ int tcbpwritecustomhdrdata(BPOOL *bp, int hoff, char *buf, int boff, int len) {
         int sz = MIN(ext->apphdrsz - hoff, len);
         if (sz > 0) {
             memcpy(ext->apphdrdata + hoff, buf + boff, len);
-            _bpunlockmeth(bp);
+            BPUNLOCKMETHOD(bp);
             return sz;
         }
     }
-    _bpunlockmeth(bp);
+    BPUNLOCKMETHOD(bp);
     return 0;
 }
 
@@ -187,7 +193,7 @@ int tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void 
     if (omode == 0) {
         omode = TCOREADER | TCOWRITER | TCOCREAT;
     }
-    rv = _bplockmeth(bp, true);
+    rv = BPLOCKMETHOD(bp, true);
     if (rv) return rv;
     //Initialize main extent
     rv = _extnew(bp, &(bp->ext));
@@ -217,7 +223,7 @@ int tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void 
         ++c;
     }
 finish:
-    _bpunlockmeth(bp);
+    BPUNLOCKMETHOD(bp);
     if (rv) { //opened with errors and should be closed
         tcbpclose(bp);
     }
@@ -226,18 +232,18 @@ finish:
 
 int tcbpsync(BPOOL *bp) {
     int rv = TCESUCCESS;
-    rv = _bplockmeth(bp, true);
+    rv = BPLOCKMETHOD(bp, true);
     if (rv) return rv;
     rv = _bpsync(bp);
-    _bpunlockmeth(bp);
+    BPUNLOCKMETHOD(bp);
     return rv;
 }
 
 int tcbpclose(BPOOL *bp) {
     assert(bp);
-    _bplockmeth(bp, true);
+    BPLOCKMETHOD(bp, true);
     if (!tcbpisopen(bp)) {
-        _bpunlockmeth(bp);
+        BPUNLOCKMETHOD(bp);
         return TCBPECLOSED;
     }
     tcbpsync(bp);
@@ -250,39 +256,67 @@ int tcbpclose(BPOOL *bp) {
         }
         ext = ext->next;
     }
-    _bpunlockmeth(bp);
+    BPUNLOCKMETHOD(bp);
     return rv;
 }
 
 int tcbplock(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr) {
-    int rv = _bplockmeth(bp, false);
+    if (((int) off & (BSIZE(bp->ext) - 1)) == 0) {
+        return TCBPEADDRALIGN;
+    }
+    int rv = BPLOCKMETHOD(bp, false);
     if (rv) return rv;
     rv = _extselect(bp, ext, off, len);
     if (rv) goto finish;
     BPEXT *e = *ext;
     assert(e);
-    rv = _extplock(e, off, len, wr);
-
-    //TODO fix case if off + len span more than one extent
-
-    if (rv) goto finish;
-
+    while (e) {
+        int64_t extmaxlen = (e->maxsize + e->goff - off);
+        int64_t locklen = MIN(extmaxlen, len);
+        rv = _extplock(e, off, locklen, wr);
+        if (rv) break;
+        off += locklen;
+        len -= locklen;
+        e =  (len > 0) ? e->next : NULL;
+    }
+    if (len > 0) {
+        rv = TCBPEXTNOTFOUND;
+    }
 finish:
-    _bpunlockmeth(bp);
+    BPUNLOCKMETHOD(bp);
     return rv;
 }
 
-int tcbpunlock(BPEXT *ext, int64_t addr, size_t len) {
-    int rv = TCESUCCESS;
-
+int tcbpunlock(BPOOL *bp, int64_t off, size_t len) {
+    if (((int) off & (BSIZE(bp->ext) - 1)) != 0) {
+        return TCBPEADDRALIGN;
+    }
+    int rv = BPLOCKMETHOD(bp, false);
+    if (rv) return rv;
+    BPEXT *ext;
+    rv = _extselect(bp, &ext, off, len);
+    if (rv) goto finish;
+    BPEXT *e = ext;
+    assert(e);
+    while (e) {
+        int64_t extmaxlen = (e->maxsize + e->goff - off);
+        int64_t locklen = MIN(extmaxlen, len);
+        rv = _extpunlock(e, off, locklen);
+        if (rv) break;
+        off += locklen;
+        len -= locklen;
+        e =  (len > 0) ? e->next : NULL;
+    }
+finish:
+    BPUNLOCKMETHOD(bp);
     return rv;
 }
 
 int tcbpread(BPOOL *bp, int64_t off, size_t len, char *out) {
     assert(bp && bp->ext);
-    //if (((int) off & ((1 << bp->ext->bpow) - 1)) == 0) {
-    //    return TCBPEADDRALIGN;
-    //}
+    if (((int) off & (BSIZE(bp->ext) - 1)) != 0) {
+        return TCBPEADDRALIGN;
+    }
     int rv = TCESUCCESS;
 
     return rv;
@@ -304,16 +338,19 @@ static int _extpagescmp(const char *aptr, int asiz, const char *bptr, int bsiz, 
 
 /**
  * Lock specific page within extent.
- * @param ext Extent. 
+ * @param ext Extent.
  * @param pnum Page ID.
- * @param wf If true the page will be exclusively locked for writing. 
+ * @param wf If true the page will be exclusively locked for writing.
  */
 static int _extpnumlock(BPEXT *ext, int pnum, bool wr) {
+    if (!ext->lpagesmtx) {
+        return TCESUCCESS;
+    }
     int rv = pthread_mutex_lock(ext->lpagesmtx);
     if (rv) return rv;
     int sp;
     LPAGE *lp;
-start:   
+start:
     lp = (LPAGE*) tctreeget(ext->lpages, &pnum, sizeof(pnum), &sp);
     if (lp == NULL) {
         LPAGE lps = {
@@ -324,9 +361,9 @@ start:
         tctreeput(ext->lpages, &pnum, sizeof(pnum), &lps, sizeof(lps));
         lp = &lps;
     }
-    if (lp->refs == INT32_MAX /*someone writing*/ ||  (lp->refs > 0 && wr) /*we want to write but have a reades*/) { 
+    if (lp->refs == INT32_MAX /*someone writing*/ ||  (lp->refs > 0 && wr) /*we want to write but have a reades*/) {
         //wait on condvar
-        ++ lp->wrefs; 
+        ++ lp->wrefs;
         rv = pthread_cond_wait(&(lp->cv), ext->lpagesmtx);
         -- lp->wrefs;
         if (rv) {
@@ -341,7 +378,7 @@ start:
     } else {
         ++ lp->refs;
     }
-    
+
 finish:
     pthread_mutex_unlock(ext->lpagesmtx);
     return rv;
@@ -353,6 +390,9 @@ finish:
  * @param plum Page ID.
  */
 static int _extpnumunlock(BPEXT *ext, int pnum) {
+    if (!ext->lpagesmtx) {
+        return TCESUCCESS;
+    }
     int rv = pthread_mutex_lock(ext->lpagesmtx);
     if (rv) return rv;
     int sp;
@@ -362,7 +402,7 @@ static int _extpnumunlock(BPEXT *ext, int pnum) {
     }
     bool wr = (lp->refs == INT32_MAX);
     if (wr) {
-       lp->refs = 0; 
+        lp->refs = 0;
     } else if (lp->refs > 0) {
         -- lp->refs;
     } else {
@@ -371,7 +411,7 @@ static int _extpnumunlock(BPEXT *ext, int pnum) {
     if (rv) {
         tctreeout(ext->lpages, &pnum, sizeof(pnum)); //recovering & cleanup
     } else if (lp->wrefs > 0) {
-        rv = wr ? thread_cond_broadcast(&(lp->cv)) : pthread_cond_signal(&(lp->cv));
+        rv = wr ? pthread_cond_broadcast(&(lp->cv)) : pthread_cond_signal(&(lp->cv));
     } else if (lp->refs < 1) {
         tctreeout(ext->lpages, &pnum, sizeof(pnum));
     }
@@ -387,23 +427,45 @@ static int _extpnumunlock(BPEXT *ext, int pnum) {
  * @param wr If true area will be exclusively locked for writing
  */
 static int _extplock(BPEXT *ext, int64_t off, size_t len, bool wr) {
+    if (!ext->lpagesmtx) {
+        return TCESUCCESS;
+    }
     int rv = TCESUCCESS;
     int64_t eoff = off - ext->goff;
     assert(eoff >= 0);
     off_t spn = (int64_t) ROUNDUP(eoff, PSIZE(ext)) / PSIZE(ext);
     off_t epn = (int64_t) ROUNDUP(eoff + len, PSIZE(ext)) / PSIZE(ext);
     for (off_t i = spn; i <= epn; ++i) {
-        rv = _extpnumlock(ext, i, wr);
-        if (rv) break;
+        int frv = _extpnumlock(ext, i, wr);
+        if (frv) {
+            rv = frv;
+        }
     }
     return rv;
+}
+
+static int _extpunlock(BPEXT *ext, int64_t off, size_t len) {
+    if (!ext->lpagesmtx) {
+        return TCESUCCESS;
+    }
+    int rv = TCESUCCESS;
+    int64_t eoff = off - ext->goff;
+    assert(eoff >= 0);
+    off_t spn = (int64_t) ROUNDUP(eoff, PSIZE(ext)) / PSIZE(ext);
+    off_t epn = (int64_t) ROUNDUP(eoff + len, PSIZE(ext)) / PSIZE(ext);
+    for (off_t i = spn; i <= epn; ++i) {
+        int frv = _extpnumunlock(ext, i);
+        if (frv) {
+            rv = frv;
+        }
+    }
+    return rv;    
 }
 
 static int _bpsync(BPOOL *bp) {
     int rv = TCESUCCESS;
     return rv;
 }
-
 
 static int _loadmeta(BPEXT *ext, const char *buf) {
     //BPEXT: magic(3) + maxsize(64) + size(64) + nextext(1) + extra(124)
@@ -467,21 +529,28 @@ static int _dumpmeta(BPEXT *ext, char *buf) {
     return TCESUCCESS;
 }
 
+static int _extsetmtx(BPEXT *ext) {
+    int rv = TCESUCCESS;
+    TCMALLOC(ext->lpagesmtx, sizeof(pthread_mutex_t));
+    rv = pthread_mutex_init(ext->lpagesmtx, NULL);
+    if (rv) {
+        goto finish;
+    }
+    TCMALLOC(ext->fblocksmtx, sizeof(pthread_mutex_t));
+    rv = pthread_mutex_init(ext->fblocksmtx, NULL);
+    ext->lpages = tctreenew2(_extpagescmp, ext);
+finish:
+    return rv;
+}
+
 static int _extnew(BPOOL *bp, BPEXT** ext) {
     int rv = TCESUCCESS;
     BPEXT *e;
     TCMALLOC(e, sizeof (*e));
     memset(e, 0, sizeof (*e));
-
-    TCMALLOC(e->lpagesmtx, sizeof(pthread_mutex_t));
-    rv = pthread_mutex_init(e->lpagesmtx, NULL);
-    if (rv) {
-        goto finish;
+    if (bp->mmtx) {
+        _extsetmtx(e);
     }
-    TCMALLOC(e->fblocksmtx, sizeof(pthread_mutex_t));
-    rv = pthread_mutex_init(e->fblocksmtx, NULL);
-    e->lpages = tctreenew2(_extpagescmp, e);
-finish:
     if (rv) {
         _extdel(e);
         e = NULL;
@@ -607,7 +676,6 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
             goto finish;
         }
     }
-
 finish:
     if (rv) { //error code
         if (!INVALIDHANDLE(ext->fd)) {
@@ -618,33 +686,29 @@ finish:
     return rv;
 }
 
-
 static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len) {
     assert(bp && ext && bp->ext);
     int rv = TCESUCCESS;
     BPEXT *e = bp->ext;
     int64_t eoff = 0;
     while(e) {
-        if (len >= e->maxsize) {
-            return TCBPEBLKOVERFLOW;
-        }
-        if (off < eoff + e->maxsize) {
+        if (off >= e->goff && off < eoff + e->maxsize) {
             break;
         }
         eoff += e->maxsize;
         e = e->next;
     }
+    *ext = e;
     if (e == NULL) {
         return TCBPEXTNOTFOUND;
     }
-    *ext = e;
     return rv;
 }
 
 static int _bplockmeth(BPOOL *bp, bool wr) {
-    return (wr ? pthread_rwlock_wrlock(bp->mlock) :  pthread_rwlock_rdlock(bp->mlock));
+    return (wr ? pthread_rwlock_wrlock(bp->mmtx) :  pthread_rwlock_rdlock(bp->mmtx));
 }
 
 static int _bpunlockmeth(BPOOL *bp) {
-    return pthread_rwlock_unlock(bp->mlock);
+    return pthread_rwlock_unlock(bp->mmtx);
 }

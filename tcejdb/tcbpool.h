@@ -63,6 +63,11 @@ typedef bool (*TCBPINIT) (HANDLE fd, tcomode_t omode, uint32_t *hdrsiz, BPOPTS *
 int tcbpnew(BPOOL** bp);
 
 /**
+ * Set BP mutexes in the case of concurrent access.
+ */
+int tcbpsetmtx(BPOOL *bp);
+
+/**
  * Return size of custom app header size in the first extent.
  */
 int tcbpapphdrsiz(BPOOL *bp);
@@ -128,7 +133,7 @@ int tcbplock(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr);
 /**
  * Unlock page in BP
  */
-int tcbpunlock(BPEXT *ext, int64_t addr, size_t len);
+int tcbpunlock(BPOOL *bp, int64_t off, size_t len);
 
 
 /**

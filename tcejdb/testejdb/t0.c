@@ -30,6 +30,8 @@ void testOpenClose() {
     int rv = tcbpnew(&bp);
     CU_ASSERT_EQUAL(rv, 0);
     CU_ASSERT_PTR_NOT_NULL_FATAL(bp);
+    rv = tcbpsetmtx(bp);
+    CU_ASSERT_EQUAL(rv, 0);
     rv = tcbpopen(bp, "bp1", 0, bpinit, NULL);
     CU_ASSERT_EQUAL(rv, 0);
     rv = tcbpclose(bp);
