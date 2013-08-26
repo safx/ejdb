@@ -120,27 +120,64 @@ bool tcbpisopen(BPOOL *bp);
  */
 void tcbpdel(BPOOL *bp);
 
-
 /**
- * Lock pages in BP
+ * Lock pages in BP.
  * @param bp Buffer pool.
- * @param addr First block address.
+ * @param ext Optional output pointer into which first offset matching extent will be saved.
+ * @param off First block address.
  * @param len Number of bytes to lock.
+ * @param wr If true an exclusive write lock will be acquired on pages.
  */
 int tcbplock(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr);
 
-
 /**
- * Unlock page in BP
+ * Unlock page in BP.
  */
 int tcbpunlock(BPOOL *bp, int64_t off, size_t len);
 
+/**
+ * Read BP data.
+ * In multithreaded environment every call of `tcbpread` must be guarded by overlapping `tcbplock`.
+ * @param bp Buffer pool.
+ * @param off Read address offset.
+ * @param len Number of bytes to read.
+ * @param out Buffer to write data.
+ * @param sp Output pointer into which number of bytes actually read will be saved.
+ */
+int tcbpread(BPOOL *bp, int64_t off, size_t len, char *out, size_t *sp);
 
 /**
- * Read data from BP.
+ * Read BP data.
+ * This call is protected by matching `tcbplock`.
+ * @param bp Buffer pool.
+ * @param off Read address offset.
+ * @param len Number of bytes to read.
+ * @param out Buffer to write data.
+ * @param sp Output pointer into which number of bytes actually read will be saved.
  */
-int tcbpread(BPOOL *bp, int64_t addr, size_t len, char *out);
+int tcbplockread(BPOOL *bp, int64_t off, size_t len, char *out, size_t *sp);
 
+/**
+ * Write BP data.
+ * In multithreaded environment every call of `tcbpwrite` must be guarded by overlapping `tcbplock`.
+ * @param bp Buffer pool.
+ * @param off Write address offset.
+ * @param buf Input buffer to write.
+ * @param len Number of bytes to write.
+ * @param sp Output pointer into which number of bytes actually written will be saved.
+ */
+int tcbpwrite(BPOOL *bp, int64_t off, const void *buf, size_t len, size_t *sp);
+
+/**
+ * Write BP data.
+ * This call is protected by matching `tcbplock`.
+ * @param bp Buffer pool.
+ * @param off Write address offset.
+ * @param buf Input buffer to write.
+ * @param len Number of bytes to write.
+ * @param sp Output pointer into which number of bytes actually written will be saved.
+ */
+int tcbplockwrite(BPOOL *bp, int64_t off, const void *buf, size_t len, size_t *sp);
 
 
 EJDB_EXTERN_C_END
