@@ -27,6 +27,8 @@
 *.pyc
 *.tags
 .dep.inc
+cscope.out
+cscope_file.list
 */nbproject/private/*
 /ejdbdll
 /node_modules

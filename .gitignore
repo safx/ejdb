@@ -22,6 +22,9 @@
 *.pyc
 *.tags
 .dep.inc
+cscope.out
+cscope_file.list
+
 /ejdbdll
 /node_modules
 /configure.gypi
