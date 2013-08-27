@@ -27,8 +27,6 @@
 *.pyc
 *.tags
 .dep.inc
-cscope.out
-cscope_file.list
 */nbproject/private/*
 /ejdbdll
 /node_modules
@@ -103,6 +101,8 @@ addressbook*
 nbproject
 .idea
 
+cscope.out
+cscope_file.list
 compilation.db
 .clang/
 ejdb.workspace.session

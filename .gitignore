@@ -22,8 +22,6 @@
 *.pyc
 *.tags
 .dep.inc
-cscope.out
-cscope_file.list
 
 /ejdbdll
 /node_modules
@@ -155,6 +153,8 @@ __pycache__
 /nejdb/sample/bin/
 /nejdb/test-results/
 
+cscope.out
+cscope_file.list
 compilation.db
 .clang/
 ejdb.workspace.session
