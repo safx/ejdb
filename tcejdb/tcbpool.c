@@ -26,13 +26,14 @@
 #define BPHDRSIZ  256                   //BPEXT: magic(2) + maxsize(64) + size(64) + bpow(1) + nextext(1) + extra(124)
 #define BPHDREXTRAOFF 132               //Offset of extra extent header data
 
-#define BPPPOWMAX 16                    //Maximum BP page size power 64K
+#define BPPPOWMAX 17                    //Maximum BP page size power 128K
 #define BPPPOWDEF 12                    //Default BP page size power 4K
 #define BPPPOWMIN 10                    //Minimum BP page size power 1K
-#define BPBPOWDEF 6                     //Default BP buffer aligment power 64B
+#define BPBPOWDEF 7                     //Default BP buffer aligment power 128B
 #define BPBPOWMAX 14                    //Maximum of BP buffer aligment power 16K
 #define BPDEFMAXSIZE   0x80000000       //Default extent max size 2G
 #define BPEXTMINSIZE   0x4000000        //Default extent min size 64M 
+#define BPIOBUFSIZ     16384
 
 #define ROUNDUP(BP_x, BP_v) ((((~(BP_x)) + 1) & ((BP_v)-1)) + (BP_x))
 #define PSIZE(BP_ext) (1 << BP_ext->ppow)
@@ -98,6 +99,7 @@ static int _extpunlock(BPEXT *ext, int64_t off, size_t len);
 static int _extpnumlock(BPEXT *ext, int pnum, bool wr);
 static int _extpnumunlock(BPEXT *ext, int pnum);
 static int _extpagescmp(const char *aptr, int asiz, const char *bptr, int bsiz, void *op);
+EJDB_INLINE size_t _extdataoff(BPEXT *ext);
 
 int tcbpnew(BPOOL** _bp) {
     int rv = TCESUCCESS;
@@ -342,13 +344,32 @@ int tcbpread(BPOOL *bp, int64_t off, size_t len, char *out, size_t *sp) {
     while (e) {
         int64_t extmaxlen = (e->maxsize + e->goff - off);
         int64_t locklen = MIN(extmaxlen, len);
-        if (!tcread(e->fd, out, locklen)) {
-            rv = TCEREAD;
+        int rlen = locklen;
+        int roff = (off - e->goff);
+        while (true) {
+            int rb = pread(e->fd, out, rlen, roff);
+            if (rb >= rlen) {
+                out += rlen;
+                break;
+            } else if (rb > 0) {
+                out += rb;
+                rlen -= rb;
+                roff += rb;
+            } else if (rb == -1) {
+                if (errno != EINTR) {
+                    rv = TCEREAD;
+                    break;
+                }
+            } else {
+                if (rlen > 0) {
+                    rv = TCEREAD;
+                    break;
+                }
+            }
         }
         if (rv) break;
         off += locklen;
         len -= locklen;
-        out += locklen;
         e =  (len > 0) ? e->next : NULL;
     }
     *sp = (out - sout);
@@ -385,8 +406,28 @@ int tcbpwrite(BPOOL *bp, int64_t off, const void *buf, size_t len, size_t *sp) {
     while (e) {
         int64_t extmaxlen = (e->maxsize + e->goff - off);
         int64_t locklen = MIN(extmaxlen, len);
-        if (!tcwrite(e->fd, buf, locklen)) {
-            rv = TCEWRITE;
+        int wlen = locklen;
+        int woff = (off - e->goff);
+        while (true) {
+            int wb = pwrite(e->fd, buf, wlen, woff);
+            if (wb >= wlen) {
+                buf = (char *) buf + wlen;
+                break;
+            } else if (wb > 0) {
+                buf = (char *) buf + wb;
+                wlen -= wb;
+                woff += wb;
+            } else if (wb == -1) {
+                if (errno != EINTR) {
+                    rv = TCEWRITE;
+                    break;
+                }
+            } else {
+                if (wlen > 0) {
+                    rv = TCEWRITE;
+                    break;
+                }
+            }
         }
         if (rv) break;
         off += locklen;
@@ -403,6 +444,10 @@ finish:
 /*************************************************************************************************
  *                                Private staff
  *************************************************************************************************/
+
+EJDB_INLINE size_t _extdataoff(BPEXT *ext) {
+    return ext->apphdrsz + BPHDRSIZ + /* header */ + ((ext->maxsize / BSIZE(ext)) / 8) /*blocks bitmap */ + 1 /* term NULL */;
+}
 
 //compare function for BPEXT->lpages tre
 static int _extpagescmp(const char *aptr, int asiz, const char *bptr, int bsiz, void *op) {
@@ -743,6 +788,7 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
     } else { //init new meta
         ext->maxsize = (opts.maxsize > 0 ? (opts.maxsize < BPEXTMINSIZE ? BPEXTMINSIZE : opts.maxsize) : BPDEFMAXSIZE);
         ext->bpow = (opts.bpow > 0 && opts.bpow <= BPBPOWMAX) ? opts.bpow : BPBPOWDEF;
+        ext->maxsize = ROUNDUP(ext->maxsize, PSIZE(ext));
         assert(!ext->size);
         assert(!ext->nextext);
         rv = _dumpmeta(ext, hbuf);
@@ -752,6 +798,18 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
         if (!tcwrite(ext->fd, hbuf, BPHDRSIZ)) {
             rv = TCEWRITE;
             goto finish;
+        }
+        //fill free-block bitmap by zeros
+        int bb = ((ext->maxsize / BSIZE(ext)) / 8) + 1 /*NULL*/;
+        char zb[BPIOBUFSIZ];
+        memset(zb, 0, BPIOBUFSIZ);
+        while (bb >= 0) {
+            int w = MIN(bb, BPIOBUFSIZ);
+            if (!tcwrite(ext->fd, zb, w)) {
+                rv = TCEWRITE;
+                break;
+            }
+            bb -= w;
         }
     }
 finish:
