@@ -22,6 +22,7 @@
 EJDB_EXTERN_C_START
 
 #define BPDEFOMODE (TCOREADER | TCOWRITER | TCOCREAT)
+#define BPODEBUG (1 << 30)
 
 typedef enum { /** error codes */
     TCBPERONLY = 8001, /**< BP in readonly mode */
@@ -31,7 +32,8 @@ typedef enum { /** error codes */
     TCBPEADDRALIGN = 8005, /**< Unaligned BP address */
     TCBPEBLKOVERFLOW = 8006, /**< Requested block is greater than extent size */
     TCBPEXTNOTFOUND = 8007, /**< BP extent not found */
-    TCBPEUNBALANCEDPL = 8008 /**< Unbalanced page locks */
+    TCBPEUNBALANCEDPL = 8008, /**< Unbalanced page locks */
+    TCBPEOPTS = 8009 /**< invalid BP options. */
 } bpret_t;
 
 typedef enum {
@@ -107,14 +109,14 @@ int tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void 
 /**
  * Closes buffer pool.
  * @param bp
- * @return
+ * @return Error code.
  */
 int tcbpclose(BPOOL *bp);
 
 /**
  * Sync buffer pool with disk
  * @param bp
- * @return
+ * @return Error code.
  */
 int tcbpsync(BPOOL *bp);
 
@@ -137,11 +139,13 @@ void tcbpdel(BPOOL *bp);
  * @param off First block address.
  * @param len Number of bytes to lock.
  * @param wr If true an exclusive write lock will be acquired on pages.
+ * @return Error code.
  */
 int tcbplock(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr);
 
 /**
  * Unlock page in BP.
+ * @return Error code.
  */
 int tcbpunlock(BPOOL *bp, int64_t off, size_t len);
 
@@ -153,6 +157,7 @@ int tcbpunlock(BPOOL *bp, int64_t off, size_t len);
  * @param len Number of bytes to read.
  * @param out Buffer to write data.
  * @param sp Output pointer into which number of bytes actually read will be saved.
+ * @return Error code.
  */
 int tcbpread(BPOOL *bp, int64_t off, size_t len, char *out, size_t *sp);
 
@@ -164,6 +169,7 @@ int tcbpread(BPOOL *bp, int64_t off, size_t len, char *out, size_t *sp);
  * @param len Number of bytes to read.
  * @param out Buffer to write data.
  * @param sp Output pointer into which number of bytes actually read will be saved.
+ * @return Error code.
  */
 int tcbplockread(BPOOL *bp, int64_t off, size_t len, char *out, size_t *sp);
 
@@ -175,6 +181,7 @@ int tcbplockread(BPOOL *bp, int64_t off, size_t len, char *out, size_t *sp);
  * @param buf Input buffer to write.
  * @param len Number of bytes to write.
  * @param sp Output pointer into which number of bytes actually written will be saved.
+ * @return Error code.
  */
 int tcbpwrite(BPOOL *bp, int64_t off, const void *buf, size_t len, size_t *sp);
 
@@ -186,8 +193,18 @@ int tcbpwrite(BPOOL *bp, int64_t off, const void *buf, size_t len, size_t *sp);
  * @param buf Input buffer to write.
  * @param len Number of bytes to write.
  * @param sp Output pointer into which number of bytes actually written will be saved.
+ * @return Error code.
  */
 int tcbplockwrite(BPOOL *bp, int64_t off, const void *buf, size_t len, size_t *sp);
+
+
+/**
+ * Fetch BP meta-info.
+ * @param bp Buffer pool.
+ * @param bpi Buffer pool info placeholder.
+ * @return Error code.
+ */
+int tcbpinfo(BPOOL *bp, BPINFO *bpi);
 
 
 EJDB_EXTERN_C_END

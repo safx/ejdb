@@ -753,7 +753,6 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
             rv = TCBPEXTINIT;
             goto finish;
         }
-        ext->ppow = (opts.ppow >= BPPPOWMIN && opts.ppow <= BPPPOWMAX) ? opts.ppow : BPPPOWDEF;        
     }
     if (ext->apphdrsz > 0) {
         if (!tcfseek(ext->fd, 0, TCFSTART)) {
@@ -781,11 +780,23 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
         }
 
     } else { //init new meta
-        ext->maxsize = (opts.maxsize > 0 ? (opts.maxsize < BPEXTMINSIZE ? BPEXTMINSIZE : opts.maxsize) : BPDEFMAXSIZE);
-        ext->bpow = (opts.bpow > 0 && opts.bpow <= BPBPOWMAX) ? opts.bpow : BPBPOWDEF;
+        if (omode & BPODEBUG) {
+            ext->ppow = (opts.ppow > 0) ? opts.ppow : BPPPOWDEF;
+            ext->bpow = (opts.bpow > 0) ? opts.bpow : BPBPOWDEF;
+            ext->maxsize = (opts.maxsize > 0 ? opts.maxsize : BPDEFMAXSIZE);
+        } else {
+            ext->ppow = (opts.ppow >= BPPPOWMIN && opts.ppow <= BPPPOWMAX) ? opts.ppow : BPPPOWDEF;
+            ext->bpow = (opts.bpow > 0 && opts.bpow <= BPBPOWMAX) ? opts.bpow : BPBPOWDEF;
+            ext->maxsize = (opts.maxsize > 0 ? (opts.maxsize < BPEXTMINSIZE ? BPEXTMINSIZE : opts.maxsize) : BPDEFMAXSIZE);
+        }
         ext->maxsize = ROUNDUP(ext->maxsize, PSIZE(ext));
         assert(!ext->size);
         assert(!ext->nextext);
+
+        if (ext->ppow <= ext->bpow || (ext->maxsize <= (1 << ext->ppow))) {
+            rv = TCBPEOPTS;
+            goto finish;
+        }
         rv = _dumpmeta(ext, hbuf);
         if (rv) {
             goto finish;
