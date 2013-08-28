@@ -145,7 +145,7 @@ int tcbpapphdrsiz(BPOOL *bp) {
     return 0;
 }
 
-int tcbpreadcustomhdrdata(BPOOL *bp, char *buf, int off, int len) {
+int tcbpapphdread(BPOOL *bp, void *buf, int off, int len) {
     if (BPLOCKMETHOD(bp, false)) {
         return 0;
     }
@@ -166,7 +166,7 @@ int tcbpreadcustomhdrdata(BPOOL *bp, char *buf, int off, int len) {
     return 0;
 }
 
-int tcbpwritecustomhdrdata(BPOOL *bp, int hoff, char *buf, int boff, int len) {
+int tcbpapphdwrite(BPOOL *bp, int hoff, char *buf, int boff, int len) {
     if (BPLOCKMETHOD(bp, false)) {
         return 0;
     }
@@ -188,13 +188,13 @@ int tcbpwritecustomhdrdata(BPOOL *bp, int hoff, char *buf, int boff, int len) {
 }
 
 int tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop) {
-    assert(bp && init);
+    assert(bp);
     if (tcbpisopen(bp)) {
         return TCBPEOPENED;
     }
     int rv = TCESUCCESS;
     if (omode == 0) {
-        omode = TCOREADER | TCOWRITER | TCOCREAT;
+        omode = BPDEFOMODE;
     }
     rv = BPLOCKMETHOD(bp, true);
     if (rv) return rv;
@@ -723,6 +723,7 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
     if (omode & TCOWRITER) {
         mode = O_RDWR;
         if (omode & TCOCREAT) mode |= O_CREAT;
+        if (omode & O_TRUNC) mode |= O_TRUNC;
     }
     assert(!ext->fd);
     ext->fd = open(fpath, mode, BPFILEMODE);
@@ -752,13 +753,7 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
             rv = TCBPEXTINIT;
             goto finish;
         }
-        ext->ppow = (opts.ppow >= BPPPOWMIN && opts.ppow <= BPPPOWMAX) ? opts.ppow : BPPPOWDEF;
-        if (ext->apphdrsz > 0) {
-            if (!tcfseek(ext->fd, ext->apphdrsz, TCFSTART)) {
-                rv = TCESEEK;
-                goto finish;
-            }
-        }
+        ext->ppow = (opts.ppow >= BPPPOWMIN && opts.ppow <= BPPPOWMAX) ? opts.ppow : BPPPOWDEF;        
     }
     if (ext->apphdrsz > 0) {
         if (!tcfseek(ext->fd, 0, TCFSTART)) {
@@ -775,7 +770,7 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
         rv = TCESTAT;
         goto finish;
     }
-    if (sbuf.st_size > ext->apphdrsz) { //trying to read the existing header
+    if (sbuf.st_size > ext->apphdrsz && !(omode & TCOTRUNC)) { //trying to read the existing header
         if (!tcread(ext->fd, hbuf, BPHDRSIZ)) {
             rv = TCEREAD;
             goto finish;
@@ -803,7 +798,7 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
         int bb = ((ext->maxsize / BSIZE(ext)) / 8) + 1 /*NULL*/;
         char zb[BPIOBUFSIZ];
         memset(zb, 0, BPIOBUFSIZ);
-        while (bb >= 0) {
+        while (bb > 0) {
             int w = MIN(bb, BPIOBUFSIZ);
             if (!tcwrite(ext->fd, zb, w)) {
                 rv = TCEWRITE;

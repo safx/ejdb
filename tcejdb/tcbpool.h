@@ -21,6 +21,8 @@
 
 EJDB_EXTERN_C_START
 
+#define BPDEFOMODE (TCOREADER | TCOWRITER | TCOCREAT)
+
 typedef enum { /** error codes */
     TCBPERONLY = 8001, /**< BP in readonly mode */
     TCBPEXTINIT = 8002, /**< BP extent initalization failed */
@@ -37,11 +39,19 @@ typedef enum {
     TCBPOPEN = 1 /**< BP in open state */
 } bpstate_t;
 
-typedef struct { /** BP options */
-    uint8_t ppow; /**< The power of page size */
-    uint8_t bpow; /**< The power of buffer aligment */
+typedef struct { /**< BP options */
+    uint8_t ppow; /**< Power of page size */
+    uint8_t bpow; /**< Power of buffer aligment */
     int64_t maxsize; /**< The maximum size of BP extent */
 } BPOPTS;
+
+typedef struct { /**< BP info */
+   uint32_t apphdrsz; /**< Size of custom application header in the first extent */
+   uint8_t ppow; /**< Power of page size */
+   uint8_t bpow;  /**< Power of buffer aligment */
+   int64_t maxsize; /**< Maximum size of whole buffer pool */
+   int maxcachepages; /**< Maximum number of cached pages */
+} BPINFO;
 
 struct PAGE;
 typedef struct PAGE PAGE; /**< Page handle */
@@ -57,7 +67,7 @@ typedef struct LPAGE LPAGE;
 
 typedef bool (*TCBPINIT) (HANDLE fd, tcomode_t omode, uint32_t *hdrsiz, BPOPTS *opts, void *opaque);
 
-/**
+/** 
  * Creates new zero initalized `TCBPOOL` structure instance.
  */
 int tcbpnew(BPOOL** bp);
@@ -78,11 +88,11 @@ int tcbpapphdrsiz(BPOOL *bp);
  * @param buf Target buffer.
  * @param off Offset in the header data.
  * @param len Number of bytes to write.
- * @return Size actually writen.
+ * @return Size actually read.
  */
-int tcbpreadcustomhdrdata(BPOOL *bp, char *buf, int off, int len);
+int tcbpapphdread(BPOOL *bp, void *buf, int off, int len);
 
-int tcbpwritecustomhdrdata(BPOOL *bp, int hoff, char *buf, int boff, int len);
+int tcbpapphdwrite(BPOOL *bp, int hoff, char *buf, int boff, int len);
 
 /**
  * Opens buffer pool.
