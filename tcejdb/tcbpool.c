@@ -33,16 +33,16 @@
 #define BPBPOWMAX 14                    //Maximum of BP buffer aligment power 16K
 #define BPDEFMAXSIZE   0x80000000       //Default extent max size 2G
 #define BPEXTMINSIZE   0x4000000        //Default extent min size 64M 
-#define BPIOBUFSIZ     16384
+#define BPIOBUFSIZ     16384            //IO buffer size
 
 #define ROUNDUP(BP_x, BP_v) ((((~(BP_x)) + 1) & ((BP_v)-1)) + (BP_x))
 #define PSIZE(BP_ext) (1 << BP_ext->ppow)
 #define BSIZE(BP_ext) (1 << BP_ext->bpow)
 
-
 #define BPLOCKMETHOD(BP_bp, BP_wr) (BP_bp->mmtx ? _bplockmeth(BP_bp, BP_wr) : 0)
 #define BPUNLOCKMETHOD(BP_bp) (BP_bp->mmtx ? _bpunlockmeth(BP_bp) : 0)
-
+#define BPLOCKEXT(BP_bp) (BP_bp->extmtx ? _bplockext(BP_bp) : 0)
+#define BPUNLOCKEXT(BP_bp) (BP_bp->extmtx ? _bpunlockext(BP_bp) : 0)
 
 struct LPAGE { /** Page in Use */
     off_t id; /**< Page ID */
@@ -67,7 +67,6 @@ struct BPEXT { /** BP extent */
     char *apphdrdata; /**< Custom app header data */
 
     pthread_mutex_t *fblocksmtx; /**< Free-space mutex */
-
     pthread_mutex_t *lpagesmtx; /**< Page-lock mutex */
     TCTREE *lpages; /**< Pages currently locked by threads */
 };
@@ -76,6 +75,7 @@ struct BPOOL { /** BP itself */
     bpstate_t state; /**< BP state */
     BPEXT *ext; /**< First BP extent */
     pthread_rwlock_t *mmtx;  /**< Method RW-lock */
+    pthread_mutex_t *extmtx; /**< Extents mutex */
     tcomode_t omode; /**< BP open mode */
 };
 
@@ -83,8 +83,11 @@ struct BPOOL { /** BP itself */
 /*************************************************************************************************
  *                           Static function prototypes
  *************************************************************************************************/
-static int _bplockmeth(BPOOL *bp, bool wr);
-static int _bpunlockmeth(BPOOL *bp);
+EJDB_INLINE int _bplockmeth(BPOOL *bp, bool wr);
+EJDB_INLINE int _bpunlockmeth(BPOOL *bp);
+EJDB_INLINE int _bplockext(BPOOL *bp);
+EJDB_INLINE int _bpunlockext(BPOOL *bp);
+
 static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop);
 static int _extclose(BPEXT *ext);
 static int _extdel(BPEXT *ext);
@@ -92,7 +95,9 @@ static int _extnew(BPOOL *bp, BPEXT** ext);
 static int _extsetmtx(BPEXT *ext);
 static int _loadmeta(BPEXT *ext, const char *buf);
 static int _dumpmeta(BPEXT *ext, char *buf);
-static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len);
+static int _extcreate(BPEXT *prev, BPEXT *next, int64_t end);
+static int _extensurend(BPEXT *ext, int64_t end);
+static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr);
 static int _bpsync(BPOOL *bp);
 static int _extplock(BPEXT *ext, int64_t off, size_t len, bool wr);
 static int _extpunlock(BPEXT *ext, int64_t off, size_t len);
@@ -116,6 +121,10 @@ int tcbpnew(BPOOL** _bp) {
 int tcbpsetmtx(BPOOL *bp) {
     TCMALLOC(bp->mmtx, sizeof(pthread_rwlock_t));
     int rv = pthread_rwlock_init(bp->mmtx, NULL);
+    if (!rv) {
+        TCMALLOC(bp->extmtx, sizeof(pthread_mutex_t));
+        pthread_mutex_init(bp->extmtx, NULL);
+    }
     return rv;
 }
 
@@ -274,7 +283,7 @@ int tcbplock(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr) {
     if (!ext) {
         ext = &e;
     }
-    rv = _extselect(bp, ext, off, len);
+    rv = _extselect(bp, ext, off, len, wr);
     if (rv) goto finish;
     e = *ext;
     assert(e);
@@ -302,7 +311,7 @@ int tcbpunlock(BPOOL *bp, int64_t off, size_t len) {
     int rv = BPLOCKMETHOD(bp, false);
     if (rv) return rv;
     BPEXT *ext;
-    rv = _extselect(bp, &ext, off, len);
+    rv = _extselect(bp, &ext, off, len, false);
     if (rv) goto finish;
     BPEXT *e = ext;
     assert(e);
@@ -336,7 +345,7 @@ int tcbpread(BPOOL *bp, int64_t off, size_t len, char *out, size_t *sp) {
 
     char *sout = out; //save original len
     BPEXT *ext;
-    rv = _extselect(bp, &ext, off, len);
+    rv = _extselect(bp, &ext, off, len, false);
     if (rv) goto finish;
     BPEXT *e = ext;
     assert(e);
@@ -398,7 +407,7 @@ int tcbpwrite(BPOOL *bp, int64_t off, const void *buf, size_t len, size_t *sp) {
 
     size_t slen = len; //save original len
     BPEXT *ext;
-    rv = _extselect(bp, &ext, off, len);
+    rv = _extselect(bp, &ext, off, len, true);
     if (rv) goto finish;
     BPEXT *e = ext;
     assert(e);
@@ -828,29 +837,81 @@ finish:
     return rv;
 }
 
-static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len) {
-    assert(bp && ext && bp->ext);
+static int _extensurend(BPEXT *ext, int64_t end) {
     int rv = TCESUCCESS;
-    BPEXT *e = bp->ext;
-    int64_t eoff = 0;
-    while(e) {
-        if (off >= e->goff && off < eoff + e->maxsize) {
-            break;
-        }
-        eoff += e->maxsize;
-        e = e->next;
-    }
-    *ext = e;
-    if (e == NULL) {
-        return TCBPEXTNOTFOUND;
-    }
     return rv;
 }
 
-static int _bplockmeth(BPOOL *bp, bool wr) {
+static int _extcreate(BPEXT *prev, BPEXT *next, int64_t end) {
+    int rv = TCESUCCESS;
+    return rv;
+}
+
+static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr) {
+    assert(bp && ext && bp->ext);
+    int rv = BPLOCKEXT(bp);
+    if (rv) return rv;
+    BPEXT *e = bp->ext;
+    if (!e) {
+        return TCBPEXTNOTFOUND;
+    }
+    if (!wr) { //readonly
+        while(e) {
+            if (off >= e->goff && off < e->goff + e->maxsize) break;
+            e = e->next;
+        }
+        *ext = e;
+        if (e == NULL) {
+            BPUNLOCKEXT(bp);
+            return TCBPEXTNOTFOUND;
+        }
+        BPUNLOCKEXT(bp);
+        return rv;
+    } else {
+        int64_t end = off + len;
+        int en = (end / (e->maxsize + 1)) + 1;
+        BPEXT *laste = e;
+        while (e && --en > 0) {
+            laste = e;
+            e = e->next;
+        }
+        for (int i = 1; i <= en; ++i) {
+            BPEXT *next;
+            rv = _extnew(bp, &next);
+            if (rv) break;
+            if (bp->mmtx) {
+                rv = _extsetmtx(next);
+                if (rv) break;
+            }
+            
+            //extopen
+            
+            if (i < en) { //full extent allocation
+                ;
+            } else { //partial extent allocation
+                ;
+            }
+            laste->nextext = true;
+            laste->next = next;
+            laste = next;
+        }
+    }
+    BPUNLOCKEXT(bp);
+    return rv;
+}
+
+EJDB_INLINE int _bplockmeth(BPOOL *bp, bool wr) {
     return (wr ? pthread_rwlock_wrlock(bp->mmtx) :  pthread_rwlock_rdlock(bp->mmtx));
 }
 
-static int _bpunlockmeth(BPOOL *bp) {
+EJDB_INLINE int _bpunlockmeth(BPOOL *bp) {
     return pthread_rwlock_unlock(bp->mmtx);
+}
+
+EJDB_INLINE int _bplockext(BPOOL *bp) {
+   return pthread_mutex_lock(bp->extmtx);
+}
+
+EJDB_INLINE int _bpunlockext(BPOOL *bp) {
+   return pthread_mutex_unlock(bp->extmtx); 
 }

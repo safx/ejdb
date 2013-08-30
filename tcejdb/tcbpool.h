@@ -33,7 +33,7 @@ typedef enum { /** error codes */
     TCBPEBLKOVERFLOW = 8006, /**< Requested block is greater than extent size */
     TCBPEXTNOTFOUND = 8007, /**< BP extent not found */
     TCBPEUNBALANCEDPL = 8008, /**< Unbalanced page locks */
-    TCBPEOPTS = 8009 /**< invalid BP options. */
+    TCBPEOPTS = 8009 /**< Invalid BP options. */
 } bpret_t;
 
 typedef enum {
@@ -45,6 +45,7 @@ typedef struct { /**< BP options */
     uint8_t ppow; /**< Power of page size */
     uint8_t bpow; /**< Power of buffer aligment */
     int64_t maxsize; /**< The maximum size of BP extent */
+    uint8_t incpow; /**< Extent increment delta pow */ 
 } BPOPTS;
 
 typedef struct { /**< BP info */
