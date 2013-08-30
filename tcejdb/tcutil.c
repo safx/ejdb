@@ -7350,6 +7350,13 @@ bool tcwrite(HANDLE fd, const void *buf, size_t size) {
     return true;
 }
 
+/* Write data into file at specified offset */
+bool tcpwrite(HANDLE fd, const void *buf, size_t count, off_t offset) {
+    assert(!INVALIDHANDLE(fd) && buf);
+    //TODO    
+    return true;
+}
+
 /* Read data from a file. */
 bool tcread(HANDLE fd, void *buf, size_t size) {
     assert(!INVALIDHANDLE(fd) && buf && size >= 0);

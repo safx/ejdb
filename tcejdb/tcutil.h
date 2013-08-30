@@ -2967,13 +2967,21 @@ EJDB_EXPORT bool tcftruncate(HANDLE fd, off_t length);
 EJDB_EXPORT bool tcwrite(HANDLE fd, const void *buf, size_t size);
 
 
+/* Write data into file at the specified offset. 
+ * `fd' specifies the file descriptor.
+ * `buf' specifies the buffer to be written.
+ * `count` specifies the number if bytes to write.
+ * `offset' specifies file offset.
+ */
+EJDB_EXPORT bool tcpwrite(HANDLE fd, const void *buf, size_t count, off_t offset);
+
+
 /* Read data from a file.
    `fd' specifies the file descriptor.
    `buf' specifies the buffer to store into.
    `size' specifies the size of the buffer.
    The return value is true if successful, else, it is false. */
 EJDB_EXPORT bool tcread(HANDLE fd, void *buf, size_t size);
-
 
 /* Lock a file.
    `fd' specifies the file descriptor.

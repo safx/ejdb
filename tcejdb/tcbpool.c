@@ -95,6 +95,7 @@ static int _extnew(BPOOL *bp, BPEXT** ext);
 static int _extsetmtx(BPEXT *ext);
 static int _loadmeta(BPEXT *ext, const char *buf);
 static int _dumpmeta(BPEXT *ext, char *buf);
+static int _dumpmeta2(BPEXT *ext);
 static int _extcreate(BPEXT *prev, BPEXT *next, int64_t end);
 static int _extensurend(BPEXT *ext, int64_t end);
 static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr);
@@ -105,6 +106,7 @@ static int _extpnumlock(BPEXT *ext, int pnum, bool wr);
 static int _extpnumunlock(BPEXT *ext, int pnum);
 static int _extpagescmp(const char *aptr, int asiz, const char *bptr, int bsiz, void *op);
 EJDB_INLINE size_t _extdataoff(BPEXT *ext);
+static bool _initintext(HANDLE fd, tcomode_t omode, uint32_t *apphdrsz, BPOPTS *opts, void *opaque);
 
 int tcbpnew(BPOOL** _bp) {
     int rv = TCESUCCESS;
@@ -454,6 +456,22 @@ finish:
  *                                Private staff
  *************************************************************************************************/
 
+
+/**
+ * Init internal extension
+ */
+static bool _initintext(HANDLE fd, tcomode_t omode, uint32_t *apphdrsz, BPOPTS *opts, void *opaque) {
+    assert(opaque);
+    BPOOL *bp = opaque;
+    BPEXT *e = bp->ext; //Master extension
+    assert(e);
+    opts->bpow = e->bpow;
+    opts->ppow = e->ppow;
+    opts->maxsize = e->maxsize;
+    *apphdrsz = 0;
+    return true;
+}
+
 EJDB_INLINE size_t _extdataoff(BPEXT *ext) {
     return ext->apphdrsz + BPHDRSIZ + /* header */ + ((ext->maxsize / BSIZE(ext)) / 8) /*blocks bitmap */ + 1 /* term NULL */;
 }
@@ -634,6 +652,22 @@ static int _loadmeta(BPEXT *ext, const char *buf) {
     return TCESUCCESS;
 }
 
+/**
+ * Dump extent meta directly into extent header.
+ */
+static int _dumpmeta2(BPEXT *ext) {
+    char h[BPHDRSIZ - BPHDREXTRAOFF];
+    int rv = _dumpmeta(ext, h);
+    if (rv) return rv;
+    
+    //TODO write
+    return rv;
+}
+
+/**
+ * Dump extent meta into the specified buffer.
+ * Buffer size must be >=  (BPHDRSIZ - BPHDREXTRAOFF)
+ */
 static int _dumpmeta(BPEXT *ext, char *buf) {
     memset(buf, 0, BPHDRSIZ - BPHDREXTRAOFF);
     int wp = 0;
@@ -716,6 +750,10 @@ static int _extdel(BPEXT *ext) {
         pthread_mutex_destroy(ext->fblocksmtx);
         TCFREE(ext->fblocksmtx);
     }
+    if (ext->fpath) {
+        TCFREE(ext->fpath);
+    }
+
     TCFREE(ext);
     return TCESUCCESS;
 }
@@ -727,6 +765,7 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
     BPOPTS opts = {0};
     struct stat sbuf; //BPE file stat buff
 
+    ext->fpath = strdup(fpath);
 #ifndef _WIN32
     int mode = O_RDONLY;
     if (omode & TCOWRITER) {
@@ -756,7 +795,7 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
         rv = TCEOPEN;
         goto finish;
     }
-    if (init) { //It is first extent
+    if (init) {
         //typedef bool (*TCBPINIT) (HANDLE fd, tcomode_t omode, uint32_t *apphdrsz, BPOPTS *opts, void *opaque);
         if (!init(ext->fd, omode, &(ext->apphdrsz), &opts, initop)) {
             rv = TCBPEXTINIT;
@@ -834,6 +873,7 @@ finish:
         }
         ext->fatalcode = rv;
     }
+
     return rv;
 }
 
@@ -851,15 +891,14 @@ static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr) 
     assert(bp && ext && bp->ext);
     int rv = BPLOCKEXT(bp);
     if (rv) return rv;
+    int64_t end = off + len;
     BPEXT *e = bp->ext;
     if (!e) {
         return TCBPEXTNOTFOUND;
     }
     if (!wr) { //readonly
-        while(e) {
-            if (off >= e->goff && off < e->goff + e->maxsize) break;
-            e = e->next;
-        }
+        int en = (end / (e->maxsize + 1)) + 1;
+        while (e && --en > 0) e = e->next;
         *ext = e;
         if (e == NULL) {
             BPUNLOCKEXT(bp);
@@ -868,14 +907,15 @@ static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr) 
         BPUNLOCKEXT(bp);
         return rv;
     } else {
-        int64_t end = off + len;
         int en = (end / (e->maxsize + 1)) + 1;
         BPEXT *laste = e;
+        int ec = 0; // ext counter
         while (e && --en > 0) {
             laste = e;
             e = e->next;
+            ++ec;
         }
-        for (int i = 1; i <= en; ++i) {
+        for (int i = 1; i <= en; ++i, ++ec) {
             BPEXT *next;
             rv = _extnew(bp, &next);
             if (rv) break;
@@ -883,17 +923,21 @@ static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr) 
                 rv = _extsetmtx(next);
                 if (rv) break;
             }
-            
-            //extopen
-            
+            char *epath = tcsprintf("%s.%d", e->fpath, en);
+            rv = _extopen(next, epath, (bp->omode | TCOTRUNC), _initintext, bp);
+            TCFREE(epath);
+            if (rv) break;
+
             if (i < en) { //full extent allocation
                 ;
             } else { //partial extent allocation
                 ;
             }
+
             laste->nextext = true;
             laste->next = next;
             laste = next;
+            //todo save meta
         }
     }
     BPUNLOCKEXT(bp);
@@ -909,9 +953,9 @@ EJDB_INLINE int _bpunlockmeth(BPOOL *bp) {
 }
 
 EJDB_INLINE int _bplockext(BPOOL *bp) {
-   return pthread_mutex_lock(bp->extmtx);
+    return pthread_mutex_lock(bp->extmtx);
 }
 
 EJDB_INLINE int _bpunlockext(BPOOL *bp) {
-   return pthread_mutex_unlock(bp->extmtx); 
+    return pthread_mutex_unlock(bp->extmtx);
 }
