@@ -7307,16 +7307,32 @@ bool tcfseek(HANDLE fd, off_t off, int whence) {
 #endif
 }
 
+bool tcfensurespace(HANDLE fd, off_t len, off_t inc, off_t maxlen, off_t *newsz) {
+    bool rv = TCESUCCESS;
+#ifndef _WIN32
+    struct stat sbuf;
+    if (fstat(fd, &sbuf)) {
+        return false;
+    }
+    off_t ssz = sbuf.st_size;
+    if (len < ssz) {
+        *newsz = ssz;
+        return true;
+    }
+    rv = tcftruncate(fd, MIN(len + inc, maxlen));
+#else 
+    //TODO WIN implementation
+#endif
+    return rv;
+}
+
 bool tcftruncate(HANDLE fd, off_t length) {
 #ifdef _WIN32
     LARGE_INTEGER size;
     size.QuadPart = length;
-    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     bool err = false;
-    pthread_mutex_lock(&mutex);
     if (!SetFilePointerEx(fd, size, NULL, FILE_BEGIN)) err = true;
     if (err == false && !SetEndOfFile(fd)) err = true;
-    pthread_mutex_unlock(&mutex);
     return !err;
 #else
     return (ftruncate(fd, length) != -1);
@@ -7351,10 +7367,48 @@ bool tcwrite(HANDLE fd, const void *buf, size_t size) {
 }
 
 /* Write data into file at specified offset */
-bool tcpwrite(HANDLE fd, const void *buf, size_t count, off_t offset) {
-    assert(!INVALIDHANDLE(fd) && buf);
-    //TODO    
+bool tcpwrite(HANDLE fd, const void *buf, size_t size, off_t off) {
+    assert(buf);
+    while (true) {
+        int wb = pwrite(fd, buf, size, off);
+        if (wb >= size) {
+            return true;
+        } else if (wb > 0) {
+            buf = (char *) buf + wb;
+            size -= wb;
+            off += wb;
+        } else if (wb == -1) {
+            if (errno != EINTR) {
+                return false;
+            }
+        } else {
+            if (size > 0) {
+                return false;
+            }
+        }
+    }    
     return true;
+}
+
+bool tcpread(HANDLE fd, void *buf, size_t size, off_t off) {
+    assert(buf);
+    while (true) {
+        int rb = pread(fd, buf, size, off);
+        if (rb >= size) {
+            return true;
+        } else if (rb > 0) {
+            size -= rb;
+            off += rb;
+        } else if (rb == -1) {
+            if (errno != EINTR) {
+                return false;
+            }
+        } else {
+            if (size > 0) {
+                return false;
+            }
+        }
+    }
 }
 
 /* Read data from a file. */
@@ -7473,6 +7527,68 @@ int tcsystem(const char **args, int anum) {
         rv = INT_MAX;
     }
     tcxstrdel(phrase);
+    return rv;
+}
+
+int tcmmap(TCMMAP *mm) {
+    int rv = TCESUCCESS;
+    off_t psz =  tcpagsize();
+    if ((mm->off & (psz - 1)) != 0 || (mm->len & (psz - 1)) != 0) {
+        errno = EINVAL;
+        return EINVAL;
+    }
+#ifndef _WIN32
+    int flags = 0;
+    flags |= (mm->mode & TCMMAPSHARED) ? MAP_SHARED : 0;
+    flags |= (mm->mode & TCMMAPPRIVATE) ? MAP_PRIVATE : 0;
+    int prot = PROT_READ;
+    if (mm->omode & TCOWRITER) {
+        prot |= PROT_WRITE;
+    }
+    void *map = mmap(0, mm->len, prot, flags, mm->fd, mm->off); 
+    if (map == MAP_FAILED) {
+        rv = errno;
+        goto finish;
+    }
+    mm->data = map;
+#else 
+    //TODO WIN32 PORT!!!
+#endif
+
+finish:
+    return rv;
+}
+
+int tcunmap(TCMMAP *mm) {
+    int rv = TCESUCCESS;
+    if (mm->data == NULL) {
+        return rv;
+    }
+    off_t psz =  tcpagsize();
+    if ((mm->off & (psz - 1)) != 0 || (mm->len & (psz - 1)) != 0) {
+        errno = EINVAL;
+        return EINVAL;
+    }
+#ifndef _WIN32 
+    if (munmap(mm->data, mm->len)) {
+        rv = errno;
+    }
+#else 
+    //TODO WIN32 PORT!!!
+#endif    
+    return rv;
+ }
+ 
+int tcmsync(void *addr, size_t len, bool async) {
+#ifndef _WIN32 
+    int rv = TCESUCCESS;
+    rv = msync(addr, len, ((async ? MS_ASYNC : MS_SYNC) | MS_INVALIDATE));
+    if (rv) {
+        rv = errno;
+    }
+#else 
+    //TODO WIN32 PORT!!!
+#endif
     return rv;
 }
 

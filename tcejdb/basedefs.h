@@ -26,6 +26,8 @@
 
 EJDB_EXTERN_C_START
 
+#define EJDB_STATIC
+
 #ifdef __GNUC__
 #define EJDB_INLINE static inline
 #else
@@ -35,7 +37,7 @@ EJDB_EXTERN_C_START
 #ifdef _WIN32
 #ifdef EJDB_DLL
 #define EJDB_EXPORT __declspec(dllexport)
-#elif !defined(EJDB_STATIC)
+#elif !defined(EJDB_LIBSTATIC)
 #define EJDB_EXPORT __declspec(dllimport)
 #else
 #define EJDB_EXPORT

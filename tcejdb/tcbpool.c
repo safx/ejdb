@@ -23,21 +23,29 @@
 #define BPFILEMODE    00644             // permission of created files
 
 #define BPHDRMAGIC 0xdc2a               //BP extent magic data
-#define BPHDRSIZ  256                   //BPEXT: magic(2) + maxsize(64) + size(64) + bpow(1) + nextext(1) + extra(124)
-#define BPHDREXTRAOFF 132               //Offset of extra extent header data
+#define BPHDRSIZ  256                   //BPEXT: magic(2) + maxsize(64) + size(64) + 
+                                        //       bpow(1) + ppow(1) + incpow(1) + nextext(1) + extra(122)
+#define BPHDREXTRAOFF 134               //Offset of extra extent header data
 
 #define BPPPOWMAX 17                    //Maximum BP page size power 128K
 #define BPPPOWDEF 12                    //Default BP page size power 4K
 #define BPPPOWMIN 10                    //Minimum BP page size power 1K
 #define BPBPOWDEF 7                     //Default BP buffer aligment power 128B
 #define BPBPOWMAX 14                    //Maximum of BP buffer aligment power 16K
+#define BPPOWINCDEF 19                  //Default file size increment pow 512K
+#define BPPOWINCMAX 27                  //Max file size increment 128M
+#define BPPOWINCMIN 1                   //Min file size increment 2B
+
 #define BPDEFMAXSIZE   0x80000000       //Default extent max size 2G
 #define BPEXTMINSIZE   0x4000000        //Default extent min size 64M 
 #define BPIOBUFSIZ     16384            //IO buffer size
 
-#define ROUNDUP(BP_x, BP_v) ((((~(BP_x)) + 1) & ((BP_v)-1)) + (BP_x))
-#define PSIZE(BP_ext) (1 << BP_ext->ppow)
-#define BSIZE(BP_ext) (1 << BP_ext->bpow)
+#define ROUNDUP(BP_x, BP_v) ((((~(BP_x)) + 1) & ((BP_v) - 1)) + (BP_x))
+#define PSIZE(BP_ext) (1 << (BP_ext)->ppow)
+#define BSIZE(BP_ext) (1 << (BP_ext)->bpow)
+#define INCSIZE(BP_ext) (1 << (BP_ext)->incpow)
+#define FBSIZE(BP_ext) (((BP_ext)->maxsize / BSIZE(BP_ext)) / 8)
+
 
 #define BPLOCKMETHOD(BP_bp, BP_wr) (BP_bp->mmtx ? _bplockmeth(BP_bp, BP_wr) : 0)
 #define BPUNLOCKMETHOD(BP_bp) (BP_bp->mmtx ? _bpunlockmeth(BP_bp) : 0)
@@ -60,11 +68,14 @@ struct BPEXT { /** BP extent */
     uint8_t bpow; /**< The power of buffer aligment */
     uint8_t ppow; /**< Page size pow */
     uint8_t nextext; /*< If set to 0x01 this extent continued by next extent */
+    uint8_t incpow; /*< File size increment pow */
     BPEXT *next; /**< Next BP extent */
     BPOOL *bp; /**< BP ref */
     volatile int fatalcode; /**< Last happen fatal ERROR code */
+
     uint32_t apphdrsz; /**< Size of custom app header */
-    char *apphdrdata; /**< Custom app header data */
+    TCMMAP hdrmmap;    /**< MMAP for ext header data */
+    //char *apphdrdata; /**< Custom app header data */
 
     pthread_mutex_t *fblocksmtx; /**< Free-space mutex */
     pthread_mutex_t *lpagesmtx; /**< Page-lock mutex */
@@ -88,25 +99,26 @@ EJDB_INLINE int _bpunlockmeth(BPOOL *bp);
 EJDB_INLINE int _bplockext(BPOOL *bp);
 EJDB_INLINE int _bpunlockext(BPOOL *bp);
 
-static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop);
-static int _extclose(BPEXT *ext);
-static int _extdel(BPEXT *ext);
-static int _extnew(BPOOL *bp, BPEXT** ext);
-static int _extsetmtx(BPEXT *ext);
-static int _loadmeta(BPEXT *ext, const char *buf);
-static int _dumpmeta(BPEXT *ext, char *buf);
-static int _dumpmeta2(BPEXT *ext);
-static int _extcreate(BPEXT *prev, BPEXT *next, int64_t end);
-static int _extensurend(BPEXT *ext, int64_t end);
-static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr);
-static int _bpsync(BPOOL *bp);
-static int _extplock(BPEXT *ext, int64_t off, size_t len, bool wr);
-static int _extpunlock(BPEXT *ext, int64_t off, size_t len);
-static int _extpnumlock(BPEXT *ext, int pnum, bool wr);
-static int _extpnumunlock(BPEXT *ext, int pnum);
-static int _extpagescmp(const char *aptr, int asiz, const char *bptr, int bsiz, void *op);
+EJDB_STATIC int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop);
+EJDB_STATIC int _extclose(BPEXT *ext);
+EJDB_STATIC int _extdel(BPEXT *ext);
+EJDB_STATIC int _extnew(BPOOL *bp, BPEXT** ext);
+EJDB_STATIC int _extsetmtx(BPEXT *ext);
+EJDB_STATIC int _loadmeta(BPEXT *ext, const char *buf);
+EJDB_INLINE int _extsyncmeta(BPEXT *ext);
+EJDB_STATIC int _extdumpmeta(BPEXT *ext, char *buf);
+EJDB_STATIC int _extdumpmeta2(BPEXT *ext);
+EJDB_STATIC int _extcreate(BPEXT *prev, BPEXT *next, int64_t end);
+EJDB_STATIC int _extensurend(BPEXT *ext, int64_t end);
+EJDB_STATIC int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr);
+EJDB_STATIC int _bpsync(BPOOL *bp);
+EJDB_STATIC int _extplock(BPEXT *ext, int64_t off, size_t len, bool wr);
+EJDB_STATIC int _extpunlock(BPEXT *ext, int64_t off, size_t len);
+EJDB_STATIC int _extpnumlock(BPEXT *ext, int pnum, bool wr);
+EJDB_STATIC int _extpnumunlock(BPEXT *ext, int pnum);
+EJDB_STATIC int _extpagescmp(const char *aptr, int asiz, const char *bptr, int bsiz, void *op);
 EJDB_INLINE size_t _extdataoff(BPEXT *ext);
-static bool _initintext(HANDLE fd, tcomode_t omode, uint32_t *apphdrsz, BPOPTS *opts, void *opaque);
+EJDB_STATIC bool _initintext(HANDLE fd, tcomode_t omode, uint32_t *apphdrsz, BPOPTS *opts, void *opaque);
 
 int tcbpnew(BPOOL** _bp) {
     int rv = TCESUCCESS;
@@ -168,7 +180,7 @@ int tcbpapphdread(BPOOL *bp, void *buf, int off, int len) {
     if (ext && ext->apphdrsz > 0) {
         int sz = MIN(ext->apphdrsz - off, len);
         if (sz > 0) {
-            memcpy(buf, ext->apphdrdata + off, sz);
+            memcpy(buf, ext->hdrmmap.data + off, sz);
             BPUNLOCKMETHOD(bp);
             return sz;
         }
@@ -189,7 +201,7 @@ int tcbpapphdwrite(BPOOL *bp, int hoff, char *buf, int boff, int len) {
     if (ext && ext->apphdrsz > 0) {
         int sz = MIN(ext->apphdrsz - hoff, len);
         if (sz > 0) {
-            memcpy(ext->apphdrdata + hoff, buf + boff, len);
+            memcpy(ext->hdrmmap.data + hoff, buf + boff, len);
             BPUNLOCKMETHOD(bp);
             return sz;
         }
@@ -456,11 +468,10 @@ finish:
  *                                Private staff
  *************************************************************************************************/
 
-
 /**
  * Init internal extension
  */
-static bool _initintext(HANDLE fd, tcomode_t omode, uint32_t *apphdrsz, BPOPTS *opts, void *opaque) {
+EJDB_STATIC bool _initintext(HANDLE fd, tcomode_t omode, uint32_t *apphdrsz, BPOPTS *opts, void *opaque) {
     assert(opaque);
     BPOOL *bp = opaque;
     BPEXT *e = bp->ext; //Master extension
@@ -468,16 +479,17 @@ static bool _initintext(HANDLE fd, tcomode_t omode, uint32_t *apphdrsz, BPOPTS *
     opts->bpow = e->bpow;
     opts->ppow = e->ppow;
     opts->maxsize = e->maxsize;
+    opts->incpow = e->incpow;
     *apphdrsz = 0;
     return true;
 }
 
 EJDB_INLINE size_t _extdataoff(BPEXT *ext) {
-    return ext->apphdrsz + BPHDRSIZ + /* header */ + ((ext->maxsize / BSIZE(ext)) / 8) /*blocks bitmap */ + 1 /* term NULL */;
+    return ext->apphdrsz + BPHDRSIZ + /* header */ + FBSIZE(ext) /*blocks bitmap */ + 1 /* term NULL */;
 }
 
 //compare function for BPEXT->lpages tre
-static int _extpagescmp(const char *aptr, int asiz, const char *bptr, int bsiz, void *op) {
+EJDB_STATIC int _extpagescmp(const char *aptr, int asiz, const char *bptr, int bsiz, void *op) {
     BPEXT *ext = op;
     assert(ext);
     LPAGE *lp1 = (LPAGE*) aptr;
@@ -492,7 +504,7 @@ static int _extpagescmp(const char *aptr, int asiz, const char *bptr, int bsiz, 
  * @param pnum Page ID.
  * @param wf If true the page will be exclusively locked for writing.
  */
-static int _extpnumlock(BPEXT *ext, int pnum, bool wr) {
+EJDB_STATIC int _extpnumlock(BPEXT *ext, int pnum, bool wr) {
     if (!ext->lpagesmtx) {
         return TCESUCCESS;
     }
@@ -539,7 +551,7 @@ finish:
  * @param ext Extent.
  * @param plum Page ID.
  */
-static int _extpnumunlock(BPEXT *ext, int pnum) {
+EJDB_STATIC int _extpnumunlock(BPEXT *ext, int pnum) {
     if (!ext->lpagesmtx) {
         return TCESUCCESS;
     }
@@ -576,7 +588,7 @@ static int _extpnumunlock(BPEXT *ext, int pnum) {
  * @param len Locked area length
  * @param wr If true area will be exclusively locked for writing
  */
-static int _extplock(BPEXT *ext, int64_t off, size_t len, bool wr) {
+EJDB_STATIC int _extplock(BPEXT *ext, int64_t off, size_t len, bool wr) {
     if (!ext->lpagesmtx) {
         return TCESUCCESS;
     }
@@ -594,7 +606,7 @@ static int _extplock(BPEXT *ext, int64_t off, size_t len, bool wr) {
     return rv;
 }
 
-static int _extpunlock(BPEXT *ext, int64_t off, size_t len) {
+EJDB_STATIC int _extpunlock(BPEXT *ext, int64_t off, size_t len) {
     if (!ext->lpagesmtx) {
         return TCESUCCESS;
     }
@@ -612,12 +624,12 @@ static int _extpunlock(BPEXT *ext, int64_t off, size_t len) {
     return rv;
 }
 
-static int _bpsync(BPOOL *bp) {
+EJDB_STATIC int _bpsync(BPOOL *bp) {
     int rv = TCESUCCESS;
     return rv;
 }
 
-static int _loadmeta(BPEXT *ext, const char *buf) {
+EJDB_STATIC int _loadmeta(BPEXT *ext, const char *buf) {
     //BPEXT: magic(3) + maxsize(64) + size(64) + nextext(1) + extra(124)
     int rp = 0;
     uint16_t magic = 0;
@@ -643,6 +655,20 @@ static int _loadmeta(BPEXT *ext, const char *buf) {
         return TCEMETA;
     }
 
+    memcpy(&(ext->ppow), buf + rp, sizeof(ext->ppow));
+    rp += sizeof(ext->ppow);
+    if (ext->ppow == 0 || ext->ppow > BPPPOWMAX) {
+        ext->fatalcode = TCEMETA;
+        return TCEMETA;
+    }
+    
+    memcpy(&(ext->incpow), buf + rp, sizeof(ext->incpow));
+    rp += sizeof(ext->incpow);
+    if (ext->incpow > BPPOWINCMAX) {
+        ext->fatalcode = TCEMETA;
+        return TCEMETA;
+    }
+
     memcpy(&(ext->nextext), buf + rp, sizeof(ext->nextext));
     rp += sizeof(ext->nextext);
     if (ext->nextext & ~0x01) {
@@ -652,15 +678,21 @@ static int _loadmeta(BPEXT *ext, const char *buf) {
     return TCESUCCESS;
 }
 
+EJDB_INLINE int _extsyncmeta(BPEXT *ext) {
+    assert(ext && ext->hdrmmap.data);
+    int rv = _extdumpmeta2(ext);
+    return (rv == 0 ? tcmsync(0, BPHDRSIZ, true) : rv);
+}
+
 /**
  * Dump extent meta directly into extent header.
  */
-static int _dumpmeta2(BPEXT *ext) {
-    char h[BPHDRSIZ - BPHDREXTRAOFF];
-    int rv = _dumpmeta(ext, h);
+EJDB_STATIC int _extdumpmeta2(BPEXT *ext) {
+    assert(ext && ext->hdrmmap.data);
+    char h[BPHDRSIZ];
+    int rv = _extdumpmeta(ext, h);
     if (rv) return rv;
-    
-    //TODO write
+    memcpy(ext->hdrmmap.data + ext->apphdrsz, h, BPHDRSIZ);
     return rv;
 }
 
@@ -668,7 +700,7 @@ static int _dumpmeta2(BPEXT *ext) {
  * Dump extent meta into the specified buffer.
  * Buffer size must be >=  (BPHDRSIZ - BPHDREXTRAOFF)
  */
-static int _dumpmeta(BPEXT *ext, char *buf) {
+EJDB_STATIC int _extdumpmeta(BPEXT *ext, char *buf) {
     memset(buf, 0, BPHDRSIZ - BPHDREXTRAOFF);
     int wp = 0;
     uint16_t snum;
@@ -691,11 +723,18 @@ static int _dumpmeta(BPEXT *ext, char *buf) {
     memcpy(buf + wp, &(ext->bpow), sizeof(ext->bpow));
     wp += sizeof(ext->bpow);
 
+    memcpy(buf + wp, &(ext->ppow), sizeof(ext->ppow));
+    wp += sizeof(ext->ppow);
+
+    memcpy(buf + wp, &(ext->incpow), sizeof(ext->incpow));
+    wp += sizeof(ext->incpow);
+
+    ext->nextext = (ext->next != NULL) ? 0x01 : 0x00;
     memcpy(buf + wp, &(ext->nextext), sizeof(ext->nextext));
     return TCESUCCESS;
 }
 
-static int _extsetmtx(BPEXT *ext) {
+EJDB_STATIC int _extsetmtx(BPEXT *ext) {
     int rv = TCESUCCESS;
     TCMALLOC(ext->lpagesmtx, sizeof(pthread_mutex_t));
     rv = pthread_mutex_init(ext->lpagesmtx, NULL);
@@ -709,7 +748,7 @@ finish:
     return rv;
 }
 
-static int _extnew(BPOOL *bp, BPEXT** ext) {
+EJDB_STATIC int _extnew(BPOOL *bp, BPEXT** ext) {
     int rv = TCESUCCESS;
     BPEXT *e;
     TCMALLOC(e, sizeof (*e));
@@ -726,7 +765,7 @@ static int _extnew(BPOOL *bp, BPEXT** ext) {
     return rv;
 }
 
-static int _extclose(BPEXT *ext) {
+EJDB_STATIC int _extclose(BPEXT *ext) {
     assert(ext);
     if (!INVALIDHANDLE(ext->fd)) {
         CLOSEFH(ext->fd);
@@ -734,14 +773,12 @@ static int _extclose(BPEXT *ext) {
     return TCESUCCESS;
 }
 
-static int _extdel(BPEXT *ext) {
+EJDB_STATIC int _extdel(BPEXT *ext) {
     assert(ext);
     if (ext->lpages) {
         tctreedel(ext->lpages);
     }
-    if (ext->apphdrdata) {
-        TCFREE(ext->apphdrdata);
-    }
+    tcunmap(&(ext->hdrmmap));
     if (ext->lpagesmtx) {
         pthread_mutex_destroy(ext->lpagesmtx);
         TCFREE(ext->lpagesmtx);
@@ -758,7 +795,7 @@ static int _extdel(BPEXT *ext) {
     return TCESUCCESS;
 }
 
-static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop) {
+EJDB_STATIC int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop) {
     assert(ext && ext->bp);
     int rv = TCESUCCESS;
     char hbuf[BPHDRSIZ]; //BPE header buffer
@@ -802,16 +839,9 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
             goto finish;
         }
     }
-    if (ext->apphdrsz > 0) {
-        if (!tcfseek(ext->fd, 0, TCFSTART)) {
-            rv = TCESEEK;
-            goto finish;
-        }
-        TCCALLOC(ext->apphdrdata, ext->apphdrsz, 1);
-        if (!tcread(ext->fd, ext->apphdrdata, ext->apphdrsz)) {
-            rv = TCEREAD;
-            goto finish;
-        }
+    if (ext->apphdrsz > 0 && !tcfseek(ext->fd, ext->apphdrsz, TCFSTART)) {
+        rv = TCESEEK;
+        goto finish;
     }
     if (fstat(ext->fd, &sbuf)) {
         rv = TCESTAT;
@@ -826,16 +856,23 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
         if (rv) {
             goto finish;
         }
-
+        size_t ef = _extdataoff(ext);
+        if (sbuf.st_size < ef) {
+            rv = TCBPEINVFB;
+            goto finish;
+        }
     } else { //init new meta
         if (omode & BPODEBUG) {
             ext->ppow = (opts.ppow > 0) ? opts.ppow : BPPPOWDEF;
             ext->bpow = (opts.bpow > 0) ? opts.bpow : BPBPOWDEF;
             ext->maxsize = (opts.maxsize > 0 ? opts.maxsize : BPDEFMAXSIZE);
+            ext->incpow = (opts.incpow > 0 ? opts.incpow : BPPOWINCDEF); 
+            
         } else {
             ext->ppow = (opts.ppow >= BPPPOWMIN && opts.ppow <= BPPPOWMAX) ? opts.ppow : BPPPOWDEF;
             ext->bpow = (opts.bpow > 0 && opts.bpow <= BPBPOWMAX) ? opts.bpow : BPBPOWDEF;
             ext->maxsize = (opts.maxsize > 0 ? (opts.maxsize < BPEXTMINSIZE ? BPEXTMINSIZE : opts.maxsize) : BPDEFMAXSIZE);
+            ext->incpow = (opts.incpow > 0 ? (opts.incpow > BPPOWINCMAX ? BPPOWINCMAX : opts.incpow) : BPPOWINCDEF);
         }
         ext->maxsize = ROUNDUP(ext->maxsize, PSIZE(ext));
         assert(!ext->size);
@@ -845,7 +882,7 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
             rv = TCBPEOPTS;
             goto finish;
         }
-        rv = _dumpmeta(ext, hbuf);
+        rv = _extdumpmeta(ext, hbuf);
         if (rv) {
             goto finish;
         }
@@ -854,7 +891,7 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
             goto finish;
         }
         //fill free-block bitmap by zeros
-        int bb = ((ext->maxsize / BSIZE(ext)) / 8) + 1 /*NULL*/;
+        int bb = FBSIZE(ext) + 1 /*NULL*/;
         char zb[BPIOBUFSIZ];
         memset(zb, 0, BPIOBUFSIZ);
         while (bb > 0) {
@@ -866,6 +903,13 @@ static int _extopen(BPEXT *ext, const char *fpath, tcomode_t omode, TCBPINIT ini
             bb -= w;
         }
     }
+    TCMMAP *hmm = &(ext->hdrmmap);
+    memset(hmm, 0, sizeof(*hmm));
+    hmm->fd = ext->fd;
+    hmm->len = _extdataoff(ext);
+    hmm->off = 0;
+    rv = tcmmap(hmm); //mmap custom app headers and fb bitmap
+    
 finish:
     if (rv) { //error code
         if (!INVALIDHANDLE(ext->fd)) {
@@ -877,17 +921,17 @@ finish:
     return rv;
 }
 
-static int _extensurend(BPEXT *ext, int64_t end) {
+EJDB_STATIC int _extensurend(BPEXT *ext, int64_t end) {
     int rv = TCESUCCESS;
     return rv;
 }
 
-static int _extcreate(BPEXT *prev, BPEXT *next, int64_t end) {
+EJDB_STATIC int _extcreate(BPEXT *prev, BPEXT *next, int64_t end) {
     int rv = TCESUCCESS;
     return rv;
 }
 
-static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr) {
+EJDB_STATIC int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr) {
     assert(bp && ext && bp->ext);
     int rv = BPLOCKEXT(bp);
     if (rv) return rv;
@@ -909,7 +953,7 @@ static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr) 
     } else {
         int en = (end / (e->maxsize + 1)) + 1;
         BPEXT *laste = e;
-        int ec = 0; // ext counter
+        int ec = 1; // ext counter
         while (e && --en > 0) {
             laste = e;
             e = e->next;
@@ -918,28 +962,46 @@ static int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool wr) 
         for (int i = 1; i <= en; ++i, ++ec) {
             BPEXT *next;
             rv = _extnew(bp, &next);
-            if (rv) break;
+            if (rv) goto finish;
             if (bp->mmtx) {
                 rv = _extsetmtx(next);
-                if (rv) break;
+                if (rv) {
+                    goto finish;
+                }
             }
             char *epath = tcsprintf("%s.%d", e->fpath, en);
             rv = _extopen(next, epath, (bp->omode | TCOTRUNC), _initintext, bp);
             TCFREE(epath);
-            if (rv) break;
-
-            if (i < en) { //full extent allocation
-                ;
-            } else { //partial extent allocation
-                ;
+            if (rv) {
+                goto finish;
             }
-
-            laste->nextext = true;
+            if (i < en) { //full extent allocation
+                if (!tcfensurespace(next->fd, e->maxsize, 0, e->maxsize, &(next->size))) {
+                    rv = TCEWRITE;
+                    goto finish;
+                }
+            }
+            laste->nextext = 0x01;
             laste->next = next;
+            if (i < en) {
+                rv = _extsyncmeta(laste);
+                if (rv) {
+                    goto finish;
+                }
+            }
             laste = next;
-            //todo save meta
+        }
+        assert(laste);
+        assert(ec * e->maxsize >= end);
+        if (!tcfensurespace(laste->fd, (ec * e->maxsize - end), INCSIZE(laste), e->maxsize, &(laste->size))) {
+            rv = TCEWRITE;
+        } else {
+            laste->next = NULL;
+            laste->nextext = 0x00;
+            rv = _extsyncmeta(laste);
         }
     }
+finish:
     BPUNLOCKEXT(bp);
     return rv;
 }

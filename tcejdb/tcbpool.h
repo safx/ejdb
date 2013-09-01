@@ -33,7 +33,8 @@ typedef enum { /** error codes */
     TCBPEBLKOVERFLOW = 8006, /**< Requested block is greater than extent size */
     TCBPEXTNOTFOUND = 8007, /**< BP extent not found */
     TCBPEUNBALANCEDPL = 8008, /**< Unbalanced page locks */
-    TCBPEOPTS = 8009 /**< Invalid BP options. */
+    TCBPEOPTS = 8009, /**< Invalid BP options. */
+    TCBPEINVFB = 8010 /**< Invalid free-blocks bitmap. */
 } bpret_t;
 
 typedef enum {

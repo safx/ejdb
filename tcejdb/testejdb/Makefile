@@ -1,21 +1,18 @@
 
 CC=gcc
-CPPFLAGS = -I../ -I. -I$(INCLUDEDIR) -D_UNICODE -DNDEBUG -D_GNU_SOURCE=1 -D_REENTRANT -D__EXTENSIONS__ -D_DEBUG -UNDEBUG -DEJDB_STATIC
+CPPFLAGS = -I../ -I. -I$(INCLUDEDIR) -D_UNICODE -DNDEBUG -D_GNU_SOURCE=1 -D_REENTRANT -D__EXTENSIONS__ -D_DEBUG -UNDEBUG -DEJDB_LIBSTATIC
 CFLAGS = -std=gnu99 -Wall -pedantic -fsigned-char -ggdb -O0 -Wfatal-errors -fPIC
 LDFLAGS = -L../ -L. -L$(LIBDIR) -L/usr/lib
 CMDLDFLAGS =
 LIBS = -lcunit -ltcejdb -lpthread -lz -lrt -lm -lc 
 RUNENV = LD_LIBRARY_PATH=.:.. DYLD_LIBRARY_PATH=.:..
 
-TESTS = t0 t1 t2 t3 t4
+TESTS = t1 t2 t3 t4
 
-check : all check-t0 check-t1 check-t2 check-t3 check-t4;
+check : all check-t1 check-t2 check-t3 check-t4;
 
 check-valgrind :
 	make RUNCMD="valgrind --tool=memcheck --leak-check=full --error-exitcode=1" check
-
-check-valgrind-t0 :
-	make RUNCMD="valgrind --tool=memcheck --leak-check=full --error-exitcode=1" check-t0
 
 check-valgrind-t2 :
 	make RUNCMD="valgrind --tool=memcheck --leak-check=full --error-exitcode=1" check-t2
@@ -25,9 +22,6 @@ check-valgrind-t3 :
 
 check-valgrind-t4 :
 	make RUNCMD="valgrind --tool=memcheck --leak-check=full --error-exitcode=1" check-t4
-
-check-t0 :
-	$(RUNENV) $(RUNCMD) ./t0
 
 check-t1 :
 	$(RUNENV) $(RUNCMD) ./t1
@@ -47,9 +41,6 @@ all : $(TESTS)
 clean :
 	rm -rf *.o $(TESTS) db* *.vlog
 
-t0 : t0.o
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(CMDLDFLAGS) $(LIBS)
-
 t1 : t1.o
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(CMDLDFLAGS) $(LIBS)
 
@@ -63,5 +54,5 @@ t4 : t4.o
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(CMDLDFLAGS) $(LIBS)
 
 
-.PHONY : all clean check check-t0 check-t1 check-t2 check-t3 check-t4
+.PHONY : all clean check check-t1 check-t2 check-t3 check-t4
 

@@ -82,7 +82,7 @@ AC_ARG_ENABLE(debug,
 if test "$enable_debug" = "yes"
 then
   MYCFLAGS="-std=gnu99 -Wall -pedantic -fsigned-char -ggdb -O0 -Wfatal-errors"
-  MYCPPFLAGS="$MYCPPFLAGS -D_DEBUG -UNDEBUG -DEJDB_STATIC"
+  MYCPPFLAGS="$MYCPPFLAGS -D_DEBUG -UNDEBUG -DEJDB_LIBSTATIC"
   case $host_os in
     darwin*)
 

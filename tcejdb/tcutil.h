@@ -2957,7 +2957,14 @@ enum {
 EJDB_EXPORT bool tcfseek(HANDLE fd, off_t off, int whence);
 
 
+/* Truncate file to the specified `length'. 
+   The return value is true if successful, else, it is false. */
 EJDB_EXPORT bool tcftruncate(HANDLE fd, off_t length);
+
+/* Ensures that file (size >= len), if not it will be resized to: (len + inc).
+   Actual file size after operation will be stored in `newsz' 
+   The return value is true if successful, else, it is false. */ 
+EJDB_EXPORT bool tcfensurespace(HANDLE fd, off_t len, off_t inc, off_t maxlen, off_t *newsz);
 
 /* Write data into a file.
    `fd' specifies the file descriptor.
@@ -2970,10 +2977,9 @@ EJDB_EXPORT bool tcwrite(HANDLE fd, const void *buf, size_t size);
 /* Write data into file at the specified offset. 
  * `fd' specifies the file descriptor.
  * `buf' specifies the buffer to be written.
- * `count` specifies the number if bytes to write.
- * `offset' specifies file offset.
- */
-EJDB_EXPORT bool tcpwrite(HANDLE fd, const void *buf, size_t count, off_t offset);
+ * `size` specifies the number if bytes to write.
+ * `offset' specifies the file offset. */
+EJDB_EXPORT bool tcpwrite(HANDLE fd, const void *buf, size_t size, off_t offset);
 
 
 /* Read data from a file.
@@ -2982,6 +2988,15 @@ EJDB_EXPORT bool tcpwrite(HANDLE fd, const void *buf, size_t count, off_t offset
    `size' specifies the size of the buffer.
    The return value is true if successful, else, it is false. */
 EJDB_EXPORT bool tcread(HANDLE fd, void *buf, size_t size);
+
+
+/* Read data from a file at specified offset.
+ * `fd' specifies the file descriptor.
+ * `buf' specifies the buffer to store into.
+ * `offset' specifies the file offset.
+ */
+EJDB_EXPORT bool tcpread(HANDLE fd, void *buf, size_t size, off_t offset);
+
 
 /* Lock a file.
    `fd' specifies the file descriptor.
@@ -3005,6 +3020,36 @@ EJDB_EXPORT bool tcunlock(HANDLE fd);
 EJDB_EXPORT int tcsystem(const char **args, int anum);
 
 
+
+enum {
+    TCMMAPSHARED = 1, //Shared mmmap
+    TCMMAPPRIVATE = 1 << 1 //Private mmmap
+};
+
+typedef struct {
+    char *data; //Memory mapped data
+    int omode;  //Open mode: `TCOREADER' | `TCOWRITER' 
+    int mode;   //MMAP mode
+    HANDLE fd;  //Handle of mmapped file
+    off_t off;  //Page aligned file offset
+    size_t len; //Page aligned mapping length;
+#ifndef _WIN32 
+    HANDLE fmfd; //File mapping handle 
+#endif    
+} TCMMAP;
+
+
+/* MMAP. 
+ * Return value is the error code or zero.*/
+EJDB_EXPORT int tcmmap(TCMMAP *mm);
+
+/* MUNMAP 
+ * Return value is the error code or zero. */
+EJDB_EXPORT int tcunmap(TCMMAP *mm);
+
+/* Sync mmaped region 
+   `async' If true calling process will not wait for sync completion. */
+EJDB_EXPORT int tcmsync(void *addr, size_t length, bool async);
 
 /*************************************************************************************************
  * encoding utilities
