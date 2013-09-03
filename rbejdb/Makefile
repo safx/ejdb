@@ -2,7 +2,8 @@
 all: build doc
 
 build:
-	ruby extconf.rb
+	mkdir -p build
+	cd ./build; ruby ../ext/rbejdb/extconf.rb ../ext/rbejdb/src
 	make -C ./build
 
 install:
@@ -12,12 +13,16 @@ check:
 	make -C ./test
 
 doc:
-	rdoc src
+	rdoc ext/rbejdb/src
+
+build-gem:
+	gem build rbejdb.gemspec
 
 clean:
 	rm -rf build
 	rm -rf doc
 	rm -rf test/testdb
 	rm -f mkmf.log
+	rm -f rbejdb*.gem
 
-.PHONY: all build install check doc clean
+.PHONY: all build install check doc build-gem clean
