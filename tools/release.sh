@@ -36,12 +36,11 @@ function _dput() {
    rm -f *.upload
    rm -f libtcejdb*.tar.gz libtcejdb*.tgz libtcejdb*.deb libtcejdb*.changes libtcejdb*.build libtcejdb*.dsc
    make -C "${EJDB_HOME}" deb-source-packages-tcejdb
-   #dput "${VERSION}"
    echo "Uploading into RARING"
    dput -c tools/dput-raring.cf "${PPA}" "./libtcejdb_${1}_source.changes" || exit $?
    rm -f *.upload
-   echo "Uploading into QUANTAL"
-   dput -c tools/dput-quantal.cf "${PPA}" "./libtcejdb_${1}_source.changes" || exit $?
+#   echo "Uploading into QUANTAL"
+#   dput -c tools/dput-quantal.cf "${PPA}" "./libtcejdb_${1}_source.changes" || exit $?
    exit 0;
 }
 
