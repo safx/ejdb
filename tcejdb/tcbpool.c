@@ -64,7 +64,7 @@ struct BPEXT { /** BP extent */
     HANDLE fd; /**< Extent file handle */
     int64_t goff; /**< Global extent offset */
     int64_t maxsize; /*< Max size of extent */
-    int64_t size; /*< Current size of extent */
+    int64_t size; /*< Current logical size of extent */
     uint8_t bpow; /**< The power of buffer aligment */
     uint8_t ppow; /**< Page size pow */
     uint8_t nextext; /*< If set to 0x01 this extent continued by next extent */
@@ -992,7 +992,7 @@ EJDB_STATIC int _extselect(BPOOL *bp, BPEXT **ext, int64_t off, size_t len, bool
             laste = next;
         }
         assert(laste);
-        assert(ec * e->maxsize >= end);
+        assert(ec * e->maxsize >= end);        
         if (!tcfensurespace(laste->fd, (ec * e->maxsize - end), INCSIZE(laste), e->maxsize, &(laste->size))) {
             rv = TCEWRITE;
         } else {
