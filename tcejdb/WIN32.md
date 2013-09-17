@@ -1,8 +1,8 @@
 Precompiled windows binaries
 =========================================
 
-* [tcejdb-1.1.23-mingw32-i686](https://dl.dropboxusercontent.com/u/4709222/ejdb/tcejdb-1.1.23-mingw32-i686.zip)
-* [tcejdb-1.1.23-mingw32-x86_64](https://dl.dropboxusercontent.com/u/4709222/ejdb/tcejdb-1.1.23-mingw32-x86_64.zip)
+* [tcejdb-1.1.24-mingw32-i686](https://dl.dropboxusercontent.com/u/4709222/ejdb/tcejdb-1.1.24-mingw32-i686.zip)
+* [tcejdb-1.1.24-mingw32-x86_64](https://dl.dropboxusercontent.com/u/4709222/ejdb/tcejdb-1.1.24-mingw32-x86_64.zip)
 
 **[Installing EJDB NodeJS win32 module](#ejdb-nodejs-module-installation)**
 
@@ -73,7 +73,7 @@ Example: building win64 binaries:
     tcejdb/mxe/mxe-build.sh ${HOME}/mxe w64
 
 As result you will get zip archive in the folder `./tcejdb`:
-    `tcejdb-1.1.0-mingw32-i686.zip` or `tcejdb-1.1.0-mingw32-x86_64.zip`
+    `tcejdb-1.1.24-mingw32-i686.zip` or `tcejdb-1.1.24-mingw32-x86_64.zip`
 
 In those archives you will found:
 
@@ -100,20 +100,6 @@ it automatically downloaded by `mxe-build.sh` from my dropbox account. So do not
 * Database files size on windows 32-bit are limited to 2GB, because on win32 all data is memory mapped.
 
 * HDB `tchdbsetxmsiz()` takes no effect because all file data is memory mapped on windows platform.
-
-
-EJDB NodeJS module installation
-==================================
-
-To install nodejs ejdb binding you need:
-
- * MSVC 2010 express edition
- * Installed node v0.8.x or v0.10.x
- * Manually installed `npm install adm-zip` package  (because it needed during installation process)
-
- Then start MSVC cmd window and run:
-
-    npm install ejdb
 
 
 

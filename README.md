@@ -1,4 +1,4 @@
-[![EJDB](https://raw.github.com/Softmotions/ejdb/master/misc/ejdblogo3.png)](http://ejdb.org)
+[![EJDB](https://raw.github.com/Softmotions/ejdb-pub/master/misc/ejdblogo3.png)](http://ejdb.org)
 
 
 Embedded JSON Database engine
@@ -12,19 +12,20 @@ JSON representation of queries and data implemented with API based on [C BSON](h
 
 News
 ===============================
+* `2013-09-10` **[v1.1.24 Fixed incorrect $set behaviour] (https://github.com/Softmotions/ejdb/wiki/V1.1.24)**
 * `2013-08-19` **[v1.1.19 Added support the long awaited mongodb update positional operator] (https://github.com/Softmotions/ejdb/wiki/V1.1.19)**
 * `2013-08-11` **[v1.1.18 Added support for mongodb $ projection] (https://github.com/Softmotions/ejdb/wiki/V1.1.18)**
 * `2013-08-08` **[v1.1.17 Now supported $and & $or mongodb operators] (https://github.com/Softmotions/ejdb/issues/81)**
 * `2013-07-15` **[Google Go binding] (https://github.com/mkilling/goejdb)**
-* `2013-06-23` **[C# .Net binding] (https://github.com/Softmotions/ejdb/tree/master/nejdb)**
+* `2013-06-23` **[C# .Net binding] (https://github.com/Softmotions/ejdb-csharp)**
 * `2013-06-02` **[Adobe Air Native Extension (ANE) for EJDB (Thanks to @thejustinwalsh)] (https://github.com/thejustinwalsh/airejdb)**
-* `2013-05-29` **[EJDB Python 2.7.x binding available](https://github.com/Softmotions/ejdb/blob/master/pyejdb/)**
-* `2013-05-06` **[Ruby binding available](https://github.com/Softmotions/ejdb/blob/master/rbejdb/README.md)**
+* `2013-05-29` **[EJDB Python 2.7.x binding available](https://github.com/Softmotions/ejdb-python)**
+* `2013-05-06` **[Ruby binding available](https://github.com/Softmotions/ejdb-ruby)**
 * `2013-05-02` **[NodeJS win32 module available](https://github.com/Softmotions/ejdb/blob/master/tcejdb/WIN32.md#ejdb-nodejs-module-installation)**
 * `2013-04-25` **[EJDB and TokyoCabinet API ported to Windows](https://github.com/Softmotions/ejdb/blob/master/tcejdb/WIN32.md)**
-* `2013-04-03` **[Java API binding available](https://github.com/Softmotions/ejdb/blob/master/jejdb/)**
-* `2013-03-20` **[Lua binding available](https://github.com/Softmotions/ejdb/blob/master/luaejdb/)**
-* `2013-02-15` **[EJDB Python3 binding available](https://github.com/Softmotions/ejdb/blob/master/pyejdb/)**
+* `2013-04-03` **[Java API binding available](https://github.com/Softmotions/ejdb-java)**
+* `2013-03-20` **[Lua binding available](https://github.com/Softmotions/ejdb-lua/)**
+* `2013-02-15` **[EJDB Python3 binding available](https://github.com/Softmotions/ejdb-python)**
 * `2013-02-07` **[Debian packages provided](https://github.com/Softmotions/ejdb/wiki/Debian-Ubuntu-installation)**
 * `2013-01-22` **[Collection joins now supported](https://github.com/Softmotions/ejdb/wiki/Collection-joins)**
 
@@ -53,12 +54,12 @@ Documentation
 * **[Collection joins](https://github.com/Softmotions/ejdb/wiki/Collection-joins)**
 * **[Development FAQ](https://github.com/Softmotions/ejdb/wiki/Development-FAQ)**
 * **Bindings**
-    * **[C# .Net] (https://github.com/Softmotions/ejdb/tree/master/nejdb)**
-    * **[NodeJS] (https://github.com/Softmotions/ejdb/blob/master/node/)**
-    * **[Python 2.7/3.x](https://github.com/Softmotions/ejdb/blob/master/pyejdb/)**
-    * **[Lua](https://github.com/Softmotions/ejdb/blob/master/luaejdb/)**
-    * **[Java](https://github.com/Softmotions/ejdb/blob/master/jejdb/)**
-    * **[Ruby](https://github.com/Softmotions/ejdb/blob/master/rbejdb/)**
+    * **[C# .Net] (https://github.com/Softmotions/ejdb-csharp)**
+    * **[NodeJS] (https://github.com/Softmotions/ejdb-node)**
+    * **[Python 2.7/3.x](https://github.com/Softmotions/ejdb-python)**
+    * **[Lua](https://github.com/Softmotions/ejdb-lua/)**
+    * **[Java](https://github.com/Softmotions/ejdb-java)**
+    * **[Ruby](https://github.com/Softmotions/ejdb-ruby)**
     * **[Objective-C](https://github.com/johnnyd/EJDBKit)**
     * **[Go](https://github.com/mkilling/goejdb/)**
     * **[Pike language] (https://github.com/hww3/pike_modules-ejdb)**
@@ -126,7 +127,7 @@ jb.save("parrots", [parrot1, parrot2], function(err, oids) {
             });
 });
 ```
-**[EJDB NodeJS binding page](https://github.com/Softmotions/ejdb/blob/master/node)**
+**[EJDB NodeJS binding page](https://github.com/Softmotions/ejdb-node)**
 
 EJDB Python
 ==================================
@@ -169,7 +170,7 @@ with ejdb.find("parrots2", {"likes" : "toys"},
 
 ejdb.close()
 ```
-**[EJDB Python 2.7/3.x binding page](https://github.com/Softmotions/ejdb/blob/master/pyejdb)**
+**[EJDB Python 2.7/3.x binding page](https://github.com/Softmotions/ejdb-python)**
 
 EJDB Lua
 ==================================
@@ -238,7 +239,7 @@ end
 
 db:close()
 ```
-**[EJDB Lua binding page](https://github.com/Softmotions/ejdb/blob/master/luaejdb)**
+**[EJDB Lua binding page](https://github.com/Softmotions/ejdb-lua)**
 
 EJDB Go
 ==================================
@@ -337,7 +338,7 @@ results.close #It's not mandatory to close cursor explicitly
 jb.close #Close the database
 
 ```
-**[EJDB Ruby binding page](https://github.com/Softmotions/ejdb/blob/master/rbejdb/)**
+**[EJDB Ruby binding page](https://github.com/Softmotions/ejdb-ruby)**
 
 
 EJDB Adobe AIR
