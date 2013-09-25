@@ -3316,6 +3316,27 @@ EJDB_EXPORT char *tcxmlescape(const char *str);
    when it is no longer in use. */
 EJDB_EXPORT char *tcxmlunescape(const char *str);
 
+/*	Compress a serial object with LZ4 encoding.
+   `ptr' specifies the pointer to the region.
+   `size' specifies the size of the region.
+   `sp' specifies the pointer to the variable into which the size of the region of the return
+   value is assigned.
+   If successful, the return value is the pointer to the result object, else, it is `NULL'.
+   Because the region of the return value is allocated with the `malloc' call, it should be
+   released with the `free' call when it is no longer in use. */ 
+EJDB_EXPORT char *tclz4encode(const char *ptr, int size, int *sp);
+
+/* Decompress a serial object compressed with LZ4 encoding.
+   `ptr' specifies the pointer to the region.
+   `size' specifies the size of the region.
+   `sp' specifies the pointer to a variable into which the size of the region of the return
+   value is assigned.
+   If successful, the return value is the pointer to the result object, else, it is `NULL'.
+   Because an additional zero code is appended at the end of the region of the return value,
+   the return value can be treated as a character string.  Because the region of the return
+   value is allocated with the `malloc' call, it should be released with the `free' call when it
+   is no longer in use. */
+EJDB_EXPORT char *tclz4decode(const char *ptr, int size, int *sp);
 
 
 /*************************************************************************************************
