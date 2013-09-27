@@ -175,6 +175,12 @@
 #define TCUSEBZIP      0
 #endif
 
+#if defined(_MYLZ4)
+#define TCUSELZ4	   1
+#else
+#define TCUSELZ4	   0
+#endif
+
 #if defined(_MYEXLZMA)
 #define TCUSEEXLZMA    1
 #else

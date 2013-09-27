@@ -387,6 +387,40 @@ char *(*_tc_bzdecompress)(const char *, int, int *) = NULL;
 #endif
 
 
+/*************************************************************************************************
+ * for LZ4
+ *************************************************************************************************/
+ 
+ #if TCUSELZ4
+
+
+#include <lz4.h>
+
+#define LZ4BUFSIZ     8192
+
+static char *_tc_lzcompress_impl(const char *ptr, int size, int *sp);
+static char *_tc_lzdecompress_impl(const char *ptr, int size, int *sp);
+
+
+char *(*_tc_lzcompress)(const char *, int, int *) = _tc_lzcompress_impl;
+char *(*_tc_lzdecompress)(const char *, int, int *) = _tc_lzdecompress_impl;
+ 
+static char *_tc_lzcompress_impl(const char *ptr, int size, int *sp){
+		
+}
+
+static char *_tc_lzdecompress_impl(const char *ptr, int size, int *sp){
+
+} 
+ 
+#else
+
+
+char *(*_tc_lzcompress)(const char *, int, int *) = NULL;
+char *(*_tc_lzdecompress)(const char *, int, int *) = NULL;
+
+
+#endif
 
 /*************************************************************************************************
  * for test of custom codec functions

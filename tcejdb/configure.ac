@@ -181,6 +181,15 @@ then
   enables="$enables (bzip)"
 fi
 
+# Enable LZ4 compression
+AC_ARG_ENABLE(lz4,
+  AC_HELP_STRING([--enable-lz4], [build with lz4 compression]))
+if test "$enable_lz4" = "yes|
+then
+  MYCPPFLAGS="$MYCPPFLAGS -D_MYLZ4"
+  enables="$enables (lz4)"
+fi
+
 # Disable the unified buffer cache assumption
 AC_ARG_ENABLE(ubc,
   AC_HELP_STRING([--disable-ubc], [build without the unified buffer cache assumption]))
@@ -281,6 +290,10 @@ if test "$enable_bzip" = "yes"
 then
   AC_CHECK_LIB(bz2, main)
 fi
+if test "$enable_lz4" = "yes"
+then
+  AC_CHECK_LIB(lz4, main)
+fi
 if test "$enable_exlzma" = "yes"
 then
   AC_CHECK_LIB(lzma, main)
@@ -311,6 +324,10 @@ fi
 if test "$enable_bzip" = "yes"
 then
   AC_CHECK_HEADER(bzlib.h, true, AC_MSG_ERROR([bzlib.h is required]))
+fi
+if test "$enable_lz4" = "yes"
+then
+  AC_CHECK_HEADER(lz4.h, true, AC_MSG_ERROR([lz4.h is required]))
 fi
 if test "$enable_exlzma" = "yes"
 then
