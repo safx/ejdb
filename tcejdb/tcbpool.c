@@ -30,8 +30,8 @@
 #define BPPPOWMAX 17                    //Maximum BP page size power 128K
 #define BPPPOWDEF 12                    //Default BP page size power 4K
 #define BPPPOWMIN 10                    //Minimum BP page size power 1K
-#define BPBPOWDEF 7                     //Default BP buffer aligment power 128B
-#define BPBPOWMAX 14                    //Maximum of BP buffer aligment power 16K
+#define BPBPOWDEF 7                     //Default BP block aligment power 128B
+#define BPBPOWMAX 14                    //Maximum of BP block aligment power 16K
 #define BPPOWINCDEF 19                  //Default file size increment pow 512K
 #define BPPOWINCMAX 27                  //Max file size increment 128M
 #define BPPOWINCMIN 1                   //Min file size increment 2B
@@ -65,7 +65,7 @@ struct BPEXT { /** BP extent */
     int64_t goff; /**< Global extent offset */
     int64_t maxsize; /*< Max size of extent */
     int64_t size; /*< Current logical size of extent */
-    uint8_t bpow; /**< The power of buffer aligment */
+    uint8_t bpow; /**< The power of block aligment */
     uint8_t ppow; /**< Page size pow */
     uint8_t nextext; /*< If set to 0x01 this extent continued by next extent */
     uint8_t incpow; /*< File size increment pow */

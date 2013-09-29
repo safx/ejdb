@@ -27,8 +27,8 @@ EJDB_EXTERN_C_START
 typedef enum { /** error codes */
     TCBPERONLY = 8001, /**< BP in readonly mode */
     TCBPEXTINIT = 8002, /**< BP extent initalization failed */
-    TCBPECLOSED = 8003, /**< BP is closed already */
-    TCBPEOPENED = 8004,  /**< BP is opened already */
+    TCBPECLOSED = 8003, /**< BP is closed */
+    TCBPEOPENED = 8004,  /**< BP is opened */
     TCBPEADDRALIGN = 8005, /**< Unaligned BP address */
     TCBPEBLKOVERFLOW = 8006, /**< Requested block is greater than extent size */
     TCBPEXTNOTFOUND = 8007, /**< BP extent not found */
@@ -99,38 +99,39 @@ int tcbpapphdread(BPOOL *bp, void *buf, int off, int len);
 int tcbpapphdwrite(BPOOL *bp, int hoff, char *buf, int boff, int len);
 
 /**
- * Opens buffer pool.
- * @param bp
- * @param fname
- * @param omode
- * @param init
+ * Opens the specified buffer pool specified by `bp`.
+ * @param bp Buffer pool.
+ * @param fname Buffer pool first extend file path.
+ * @param omode Open mode.
+ * @param init Extent init method.
  * @return Error code.
  */
 int tcbpopen(BPOOL *bp, const char *fpath, tcomode_t omode, TCBPINIT init, void *initop);
 
 /**
  * Closes buffer pool.
- * @param bp
+ * @param bp Buffer pool.
  * @return Error code.
  */
 int tcbpclose(BPOOL *bp);
 
 /**
  * Sync buffer pool with disk
- * @param bp
+ * @param bp Buffer poll.
  * @return Error code.
  */
 int tcbpsync(BPOOL *bp);
 
 /**
  * Returns true if passed BP in open state.
+ * @param bp Buffer pool.
  */
 bool tcbpisopen(BPOOL *bp);
 
 /**
  * Deletes the `TCBPOOL` structure. If underlying buffer pool is open
  * it will be closed explicitly by `tcbclose`.
- * @param bp
+ * @param bp Buffer pool.
  */
 void tcbpdel(BPOOL *bp);
 
