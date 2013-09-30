@@ -391,7 +391,7 @@ char *(*_tc_bzdecompress)(const char *, int, int *) = NULL;
  * for LZ4
  *************************************************************************************************/
  
- #if TCUSELZ4
+#if TCUSELZ4
 
 
 #include <lz4.h>
@@ -406,11 +406,42 @@ char *(*_tc_lzcompress)(const char *, int, int *) = _tc_lzcompress_impl;
 char *(*_tc_lzdecompress)(const char *, int, int *) = _tc_lzdecompress_impl;
  
 static char *_tc_lzcompress_impl(const char *ptr, int size, int *sp){
-		
+	LZ4_Data stream = LZ4_create(ptr);
+	int maxCompressedSize = LZ4_compressBound(size);
+	char* tempBuf;
+	if(!(tempBuf = MYMALLOC(LZ4_compressBound(LZ4BUFSIZ)))){
+		LZ4_free(stream);
+		return NULL;
+	}
+	char* destBuf;
+	if(!(destBuf = MYMALLOC(maxCompressedSize))){		
+		LZ4_free(stream);
+		return NULL;
+	}
+	int bufferSize = 0;
+	while(true){
+		int res = LZ4_compress_continue(stream, ptr, tempBuf, LZ4BUFSIZ);
+		if(0 == res) {
+			break;
+		}
+		memcpy(destBuf + bufferSize, tempBuf, res);
+		bufferSize += res;
+	}
+	*sp = bufferSize;
+	LZ4_free(stream);
+	return destBuf;
 }
 
-static char *_tc_lzdecompress_impl(const char *ptr, int size, int *sp){
 
+static char *_tc_lzdecompress_impl(const char *ptr, int size, int *sp){
+	int magicNumber; //problem
+	char* destBuf;
+	if(!(destBuf = MYMALLOC(magicNumber))){				
+		return NULL;
+	}
+	int res = LZ4_decompress_safe(const char* ptr, char* destBuf, int size, int magicNumber);
+	*sp = res;
+	return destBuf;
 } 
  
 #else
