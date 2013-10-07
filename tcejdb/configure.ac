@@ -58,6 +58,9 @@ MYRUNPATH="\$(LIBDIR)"
 MYLDLIBPATHENV="LD_LIBRARY_PATH"
 MYPOSTCMD="true"
 
+MYCPPFLAGS="$MYCPPFLAGS -I./fastlzlib/fastlzlib.h"
+MYLDFLAGS="$MYLDFLAGS -L./fastlzlib"
+
 # Building paths
 PATH="$PATH:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
 PATH="$PATH:/opt/SUNWspro/bin:/usr/ccs/bin:/usr/xpg4/bin:/usr/xpg6/bin:/usr/ucb"
@@ -66,8 +69,7 @@ LIBRARY_PATH="$LIBRARY_PATH:/usr/local/lib"
 LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib"
 PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
 export PATH CPATH LIBRARY_PATH LD_LIBRARY_PATH PKG_CONFIG_PATH
-
-
+  
 #================================================================
 # Options
 #================================================================
@@ -366,7 +368,7 @@ then
     *)
         MYLIBRARYFILES="$MYLIBRARYFILES libtcejdb.so.$MYLIBVER.$MYLIBREV.0"
         MYLIBRARYFILES="$MYLIBRARYFILES libtcejdb.so.$MYLIBVER"
-        MYLIBRARYFILES="$MYLIBRARYFILES libtcejdb.so"
+        MYLIBRARYFILES="$MYLIBRARYFILES libtcejdb.so"		
         ;;
   esac
 fi

@@ -395,6 +395,7 @@ char *(*_tc_bzdecompress)(const char *, int, int *) = NULL;
 
 
 #include <lz4.h>
+#include <fastlzlib.h>
 
 #define LZ4BUFSIZ     8192
 
@@ -410,6 +411,7 @@ static char *_tc_lzcompress_impl(const char *ptr, int size, int *sp){
 	int maxCompressedSize = LZ4_compressBound(size);
 	char* tempBuf;
 	if(!(tempBuf = MYMALLOC(LZ4_compressBound(LZ4BUFSIZ)))){
+		MYFREE(tempBuf);
 		LZ4_free(stream);
 		return NULL;
 	}
@@ -433,15 +435,65 @@ static char *_tc_lzcompress_impl(const char *ptr, int size, int *sp){
 }
 
 
-static char *_tc_lzdecompress_impl(const char *ptr, int size, int *sp){
-	int magicNumber; //problem
-	char* destBuf;
-	if(!(destBuf = MYMALLOC(magicNumber))){				
-		return NULL;
-	}
-	int res = LZ4_decompress_safe(const char* ptr, char* destBuf, int size, int magicNumber);
-	*sp = res;
-	return destBuf;
+static char *_tc_lzdecompress_impl(const char *ptr, int size, int *sp){	
+  zfast_stream zs;
+  zs.bzalloc = NULL;
+  zs.bzfree = NULL;
+  zs.opaque = NULL;
+  if(fastlzlibDecompressInit(&zs) != Z_OK) return NULL;
+  int asiz = size * 2 + 16;
+  if(asiz < LZ4BUFSIZ) asiz = LZ4BUFSIZ;
+  char *buf;
+  if(!(buf = MYMALLOC(asiz))){
+    fastlzlibDecompressEnd(&zs);
+    return NULL;
+  }
+  char obuf[LZ4BUFSIZ];
+  int bsiz = 0;
+  zs.next_in = (char *)ptr;
+  zs.avail_in = size;
+  zs.next_out = obuf;
+  zs.avail_out = LZ4BUFSIZ;
+  int rv;
+  while((rv = fastlzlibDecompress(&zs)) == Z_OK){
+    int osiz = LZ4BUFSIZ - zs.avail_out;
+    if(bsiz + osiz >= asiz){
+      asiz = asiz * 2 + osiz;
+      char *swap;
+      if(!(swap = MYREALLOC(buf, asiz))){
+        MYFREE(buf);
+        fastlzlibDecompressEnd(&zs);
+        return NULL;
+      }
+      buf = swap;
+    }
+    memcpy(buf + bsiz, obuf, osiz);
+    bsiz += osiz;
+    zs.next_out = obuf;
+    zs.avail_out = LZ4BUFSIZ;
+  }
+  if(rv != Z_STREAM_END){
+    MYFREE(buf);
+    fastlzlibDecompressEnd(&zs);
+    return NULL;
+  }
+  int osiz = LZ4BUFSIZ - zs.avail_out;
+  if(bsiz + osiz >= asiz){
+    asiz = asiz * 2 + osiz;
+    char *swap;
+    if(!(swap = MYREALLOC(buf, asiz))){
+      MYFREE(buf);
+      fastlzlibDecompressEnd(&zs);
+      return NULL;
+    }
+    buf = swap;
+  }
+  memcpy(buf + bsiz, obuf, osiz);
+  bsiz += osiz;
+  buf[bsiz] = '\0';
+  *sp = bsiz;
+  fastlzlibDecompressEnd(&zs);
+  return buf;
 } 
  
 #else
