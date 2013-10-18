@@ -711,6 +711,7 @@ enable_swab
 enable_uyield
 enable_tests
 enable_bzip
+enable_lz4
 enable_ubc
 enable_zlib
 enable_shared
@@ -718,6 +719,7 @@ enable_exlzma
 enable_exlzo
 with_zlib
 with_bzip
+with_lz4
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1351,6 +1353,7 @@ Optional Features:
   --enable-uyield         build for detecting race conditions
   --enable-tests          build with testcases
   --enable-bzip           build with BZIP2 compression
+  --enable-lz4            build with LZ4 compression
   --disable-ubc           build without the unified buffer cache assumption
   --disable-zlib          build without ZLIB compression
   --disable-shared        avoid to build shared libraries
@@ -1362,7 +1365,8 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-zlib=DIR         search DIR/include and DIR/lib for ZLIB
   --with-bzip=DIR         search DIR/include and DIR/lib for BZIP2
-
+  --with-lz4=DIR          search DIR/include and DIR/lib for LZ4
+  
 Some influential environment variables:
   CC          C compiler command
   CFLAGS      C compiler flags
@@ -3172,6 +3176,18 @@ then
   enables="$enables (bzip)"
 fi
 
+# Enable LZ4 compression
+# Check whetger --enable-lz4 was given.
+if test "${enable_lz4+set}" = set; then :
+	enableval=$enable_lz4;
+fi
+
+if test "$enable_lz4" = "yes"
+then
+	MYCPPFLAGS="$MYCPPFLAGS -D_MYLZ4"
+	enables="$enables (lz4)"
+fi
+
 # Disable the unified buffer cache assumption
 # Check whether --enable-ubc was given.
 if test "${enable_ubc+set}" = set; then :
@@ -3263,6 +3279,23 @@ then
   CPATH="$CPATH:$with_bzip/include"
   LIBRARY_PATH="$LIBRARY_PATH:$with_bzip/lib"
   LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$with_bzip/lib"
+fi
+
+# Specify the installation path of LZ4
+
+# Check whether --with-lz4 was given.
+if test "${with_lz4+set}" = set; then :
+  withval=$with_lz4;
+fi
+
+if test -n "$with_lz4"
+then
+  MYCPPFLAGS="$MYCPPFLAGS -I$with_lz4/include"
+  MYLDFLAGS="$MYLDFLAGS -L$with_lz4/lib"
+  MYRUNPATH="$MYRUNPATH:$with_lz4/lib"
+  CPATH="$CPATH:$with_lz4/include"
+  LIBRARY_PATH="$LIBRARY_PATH:$with_lz4/lib"
+  LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$with_lz4/lib"
 fi
 
 #================================================================
@@ -4399,6 +4432,17 @@ if test "x$ac_cv_header_bzlib_h" = xyes; then :
   true
 else
   as_fn_error $? "bzlib.h is required" "$LINENO" 5
+fi
+
+
+fi
+if test "$enable_lz4" = "yes"
+then
+  ac_fn_c_check_header_mongrel "$LINENO" "lz4.h" "ac_cv_header_lz4_h" "$ac_includes_default"
+if test "x$ac_cv_header_lz4_h" = xyes; then :
+  true
+else
+  as_fn_error $? "lz4.h is required" "$LINENO" 5
 fi
 
 

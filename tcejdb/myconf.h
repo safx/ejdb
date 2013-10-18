@@ -372,6 +372,15 @@ extern char *(*_tc_bzcompress)(const char *, int, int *);
 extern char *(*_tc_bzdecompress)(const char *, int, int *);
 
 
+/*************************************************************************************************
+ * for LZ4
+ *************************************************************************************************/
+
+
+extern char *(*_tc_lzcompress)(const char *, int, int *);
+
+extern char *(*_tc_lzdecompress)(const char *, int, int *);
+
 
 /*************************************************************************************************
  * for test of custom codec functions

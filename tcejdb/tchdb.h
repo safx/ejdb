@@ -133,7 +133,8 @@ enum { /* enumeration for tuning options */
     HDBTDEFLATE = 1 << 1, /* compress each record with Deflate */
     HDBTBZIP = 1 << 2, /* compress each record with BZIP2 */
     HDBTTCBS = 1 << 3, /* compress each record with TCBS */
-    HDBTEXCODEC = 1 << 4 /* compress each record with custom functions */
+    HDBTEXCODEC = 1 << 4, /* compress each record with custom functions */
+	HDBTLZ4 = 1 << 5 /* compress each record with LZ4 */
 };
 
 enum { /* enumeration for open modes */
@@ -205,7 +206,7 @@ EJDB_EXPORT bool tchdbsetmutex(TCHDB *hdb);
    Note that the tuning parameters should be set before the database is opened. */
 EJDB_EXPORT bool tchdbtune(TCHDB *hdb, int64_t bnum, int8_t apow, int8_t fpow, uint8_t opts);
 
-
+		
 /* Set the caching parameters of a hash database object.
    `hdb' specifies the hash database object which is not opened.
    `rcnum' specifies the maximum number of records to be cached.  If it is not more than 0, the

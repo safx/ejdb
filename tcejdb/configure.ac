@@ -58,7 +58,7 @@ MYRUNPATH="\$(LIBDIR)"
 MYLDLIBPATHENV="LD_LIBRARY_PATH"
 MYPOSTCMD="true"
 
-MYCPPFLAGS="$MYCPPFLAGS -I./fastlzlib/fastlzlib.h"
+MYCPPFLAGS="$MYCPPFLAGS -I./fastlzlib/"
 MYLDFLAGS="$MYLDFLAGS -L./fastlzlib"
 
 # Building paths
@@ -260,6 +260,19 @@ then
   CPATH="$CPATH:$with_bzip/include"
   LIBRARY_PATH="$LIBRARY_PATH:$with_bzip/lib"
   LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$with_bzip/lib"
+fi
+
+# Specify the installation path of LZ4
+AC_ARG_WITH(lz4,
+  AC_HELP_STRING([--with-lz4=DIR], [search DIR/include and DIR/lib for lz4]))
+if test -n "$with_lz4"
+then
+  MYCPPFLAGS="$MYCPPFLAGS -I$with_lz4/include"
+  MYLDFLAGS="$MYLDFLAGS -L$with_lz4/lib"
+  MYRUNPATH="$MYRUNPATH:$with_lz4/lib"
+  CPATH="$CPATH:$with_lz4/include"
+  LIBRARY_PATH="$LIBRARY_PATH:$with_lz4/lib"
+  LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$with_lz4/lib"
 fi
 
 #================================================================
