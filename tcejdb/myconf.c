@@ -407,38 +407,72 @@ char *(*_tc_lzcompress)(const char *, int, int *) = _tc_lzcompress_impl;
 char *(*_tc_lzdecompress)(const char *, int, int *) = _tc_lzdecompress_impl;
  
 static char *_tc_lzcompress_impl(const char *ptr, int size, int *sp){
-	LZ4_Data stream = LZ4_create(ptr);
-	int maxCompressedSize = LZ4_compressBound(size);
-	char* tempBuf;
-	if(!(tempBuf = MYMALLOC(LZ4_compressBound(LZ4BUFSIZ)))){
-		MYFREE(tempBuf);
-		LZ4_free(stream);
-		return NULL;
-	}
-	char* destBuf;
-	if(!(destBuf = MYMALLOC(maxCompressedSize))){		
-		LZ4_free(stream);
-		return NULL;
-	}
-	int bufferSize = 0;
-	while(true){
-		int res = LZ4_compress_continue(stream, ptr, tempBuf, LZ4BUFSIZ);
-		if(0 == res) {
-			break;
-		}
-		memcpy(destBuf + bufferSize, tempBuf, res);
-		bufferSize += res;
-	}
-	*sp = bufferSize;
-	LZ4_free(stream);
-	return destBuf;
+  assert(ptr && size >= 0 && sp);
+  zfast_stream zs;
+  zs.zalloc = NULL;
+  zs.zfree = NULL;
+  zs.opaque = NULL;
+  if(fastlzlibDecompressInit(&zs) != Z_OK) return NULL;
+  int asiz = size + 16;
+  if(asiz < LZ4BUFSIZ) asiz = LZ4BUFSIZ;
+  char *buf;
+  if(!(buf = MYMALLOC(asiz))){
+    fastlzlibCompressEnd(&zs);
+    return NULL;
+  }
+  char obuf[LZ4BUFSIZ];
+  int bsiz = 0;
+  zs.next_in = (char *)ptr;
+  zs.avail_in = size;
+  zs.next_out = obuf;
+  zs.avail_out = LZ4BUFSIZ;
+  int rv;
+  while((rv = fastlzlibCompress(&zs, Z_NO_FLUSH)) == Z_OK){
+    int osiz = LZ4BUFSIZ - zs.avail_out;
+    if(bsiz + osiz > asiz){
+      asiz = asiz * 2 + osiz;
+      char *swap;
+      if(!(swap = MYREALLOC(buf, asiz))){
+        MYFREE(buf);
+        fastlzlibCompressEnd(&zs);
+        return NULL;
+      }
+      buf = swap;
+    }
+    memcpy(buf + bsiz, obuf, osiz);
+    bsiz += osiz;
+    zs.next_out = obuf;
+    zs.avail_out = LZ4BUFSIZ;
+  }
+  if(rv != Z_STREAM_END){
+    MYFREE(buf);
+    fastlzlibCompressEnd(&zs);
+    return NULL;
+  }
+  int osiz = LZ4BUFSIZ - zs.avail_out;
+  if(bsiz + osiz + 1 > asiz){
+    asiz = asiz * 2 + osiz;
+    char *swap;
+    if(!(swap = MYREALLOC(buf, asiz))){
+      MYFREE(buf);
+      fastlzlibCompressEnd(&zs);
+      return NULL;
+    }
+    buf = swap;
+  }
+  memcpy(buf + bsiz, obuf, osiz);
+  bsiz += osiz;
+  buf[bsiz] = '\0';
+  *sp = bsiz;
+  fastlzlibCompressEnd(&zs);
+  return buf;
 }
 
 
 static char *_tc_lzdecompress_impl(const char *ptr, int size, int *sp){	
   zfast_stream zs;
-  zs.bzalloc = NULL;
-  zs.bzfree = NULL;
+  zs.zalloc = NULL;
+  zs.zfree = NULL;
   zs.opaque = NULL;
   if(fastlzlibDecompressInit(&zs) != Z_OK) return NULL;
   int asiz = size * 2 + 16;

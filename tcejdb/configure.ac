@@ -58,8 +58,9 @@ MYRUNPATH="\$(LIBDIR)"
 MYLDLIBPATHENV="LD_LIBRARY_PATH"
 MYPOSTCMD="true"
 
-MYCPPFLAGS="$MYCPPFLAGS -I./fastlzlib/"
+MYCPPFLAGS="$MYCPPFLAGS -I./fastlzlib"
 MYLDFLAGS="$MYLDFLAGS -L./fastlzlib"
+LIBS="-llibfastlz  $LIBS"
 
 # Building paths
 PATH="$PATH:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
