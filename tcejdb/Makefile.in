@@ -870,4 +870,6 @@ platform.o : basedefs.h platform.c win32/platform.c nix/platform.c
 
 nxjson.o : nxjson.h
 
+lz4.o : lz4.h
+
 # END OF FILE

@@ -84,6 +84,10 @@
     <File Name="COPYING"/>
     <File Name="tcatest"/>
     <File Name="tctmttest"/>
+    <File Name="lz4.h"/>
+    <File Name="lz4.c"/>
+    <File Name="configure.ac"/>
+    <File Name="Makefile.in"/>
   </VirtualDirectory>
   <VirtualDirectory Name="nix">
     <File Name="nix/platform.h"/>
