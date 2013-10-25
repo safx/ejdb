@@ -57,11 +57,6 @@ MYCMDLDFLAGS=""
 MYRUNPATH="\$(LIBDIR)"
 MYLDLIBPATHENV="LD_LIBRARY_PATH"
 MYPOSTCMD="true"
-
-MYCPPFLAGS="$MYCPPFLAGS -I./fastlzlib"
-MYLDFLAGS="$MYLDFLAGS -L./fastlzlib"
-LIBS="-llibfastlz  $LIBS"
-
 # Building paths
 PATH="$PATH:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
 PATH="$PATH:/opt/SUNWspro/bin:/usr/ccs/bin:/usr/xpg4/bin:/usr/xpg6/bin:/usr/ucb"
@@ -184,15 +179,6 @@ then
   enables="$enables (bzip)"
 fi
 
-# Enable LZ4 compression
-AC_ARG_ENABLE(lz4,
-  AC_HELP_STRING([--enable-lz4], [build with lz4 compression]))
-if test "$enable_lz4" = "yes|
-then
-  MYCPPFLAGS="$MYCPPFLAGS -D_MYLZ4"
-  enables="$enables (lz4)"
-fi
-
 # Disable the unified buffer cache assumption
 AC_ARG_ENABLE(ubc,
   AC_HELP_STRING([--disable-ubc], [build without the unified buffer cache assumption]))
@@ -263,19 +249,6 @@ then
   LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$with_bzip/lib"
 fi
 
-# Specify the installation path of LZ4
-AC_ARG_WITH(lz4,
-  AC_HELP_STRING([--with-lz4=DIR], [search DIR/include and DIR/lib for lz4]))
-if test -n "$with_lz4"
-then
-  MYCPPFLAGS="$MYCPPFLAGS -I$with_lz4/include"
-  MYLDFLAGS="$MYLDFLAGS -L$with_lz4/lib"
-  MYRUNPATH="$MYRUNPATH:$with_lz4/lib"
-  CPATH="$CPATH:$with_lz4/include"
-  LIBRARY_PATH="$LIBRARY_PATH:$with_lz4/lib"
-  LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$with_lz4/lib"
-fi
-
 #================================================================
 # Checking Commands and Libraries
 #================================================================
@@ -305,10 +278,6 @@ fi
 if test "$enable_bzip" = "yes"
 then
   AC_CHECK_LIB(bz2, main)
-fi
-if test "$enable_lz4" = "yes"
-then
-  AC_CHECK_LIB(lz4, main)
 fi
 if test "$enable_exlzma" = "yes"
 then
@@ -340,10 +309,6 @@ fi
 if test "$enable_bzip" = "yes"
 then
   AC_CHECK_HEADER(bzlib.h, true, AC_MSG_ERROR([bzlib.h is required]))
-fi
-if test "$enable_lz4" = "yes"
-then
-  AC_CHECK_HEADER(lz4.h, true, AC_MSG_ERROR([lz4.h is required]))
 fi
 if test "$enable_exlzma" = "yes"
 then

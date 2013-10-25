@@ -116,7 +116,7 @@
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="" IntermediateDirectory="./Debug" Command="./t2" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(ProjectPath)/testejdb" PauseExecWhenProcTerminates="yes"/>
+      <General OutputFile="" IntermediateDirectory="./Debug" Command="./t4" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(ProjectPath)/testejdb" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[LD_LIBRARY_PATH=../:.]]>
       </Environment>
@@ -187,26 +187,4 @@
       </Completion>
     </Configuration>
   </Settings>
-  <VirtualDirectory Name="fastlzlib">
-    <File Name="fastlzlib/LICENSE"/>
-    <File Name="fastlzlib/fastlzlib.c"/>
-    <File Name="fastlzlib/Makefile"/>
-    <File Name="fastlzlib/LICENSE-LZ4"/>
-    <File Name="fastlzlib/fastlzlib.h"/>
-    <File Name="fastlzlib/fastlzcat"/>
-    <File Name="fastlzlib/fastlzlib-zlib.h"/>
-    <File Name="fastlzlib/fastlzcat.c"/>
-    <File Name="fastlzlib/LICENSE-FASTLZ"/>
-    <File Name="fastlzlib/README"/>
-    <VirtualDirectory Name="fastlz">
-      <File Name="fastlzlib/fastlz/fastlz.h"/>
-      <File Name="fastlzlib/fastlz/fastlz.c"/>
-    </VirtualDirectory>
-    <VirtualDirectory Name="lz4">
-      <File Name="fastlzlib/lz4/lz4.h"/>
-      <File Name="fastlzlib/lz4/lz4.c"/>
-      <File Name="fastlzlib/lz4/lz4hc.c"/>
-      <File Name="fastlzlib/lz4/lz4hc.h"/>
-    </VirtualDirectory>
-  </VirtualDirectory>
 </CodeLite_Project>
