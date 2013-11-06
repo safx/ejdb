@@ -402,119 +402,119 @@ static char *_tc_lzdecompress_impl(const char *ptr, int size, int *sp);
 char *(*_tc_lzcompress)(const char *, int, int *) = _tc_lzcompress_impl;
 char *(*_tc_lzdecompress)(const char *, int, int *) = _tc_lzdecompress_impl;
  
-static char *_tc_lzcompress_impl(const char *ptr, int size, int *sp){
-  assert(ptr && size >= 0 && sp);
-  zfast_stream zs;
-  zs.zalloc = Z_NULL;
-  zs.zfree = Z_NULL;
-  zs.opaque = Z_NULL;
-  if(fastlzlibCompressInit(&zs, Z_DEFAULT_COMPRESSION) != Z_OK) return NULL;
-  int asiz = size + 16;
-  if(asiz < LZ4BUFSIZ) asiz = LZ4BUFSIZ;
-  char *buf;
-  if(!(buf = MYMALLOC(asiz))){
-    fastlzlibCompressEnd(&zs);
-    return NULL;
-  }
-  char obuf[LZ4BUFSIZ];
-  int bsiz = 0;
-  zs.next_in = (char *)ptr;
-  zs.avail_in = size;
-  zs.next_out = obuf;
-  zs.avail_out = LZ4BUFSIZ;
-  int rv;
-  while((rv = fastlzlibCompress(&zs, Z_PARTIAL_FLUSH)) == Z_OK){		
-    int osiz = LZ4BUFSIZ - zs.avail_out;
-    if(bsiz + osiz > asiz){
-      asiz = asiz * 2 + osiz;
-      char *swap;
-      if(!(swap = MYREALLOC(buf, asiz))){
-        MYFREE(buf);
-        fastlzlibCompressEnd(&zs);
-        return NULL;
-      }
-      buf = swap;
-    }
-    memcpy(buf + bsiz, obuf, osiz);
-    bsiz += osiz;
-    zs.next_out = obuf;
-    zs.avail_out = LZ4BUFSIZ;
-  }
-  int osiz = LZ4BUFSIZ - zs.avail_out;
-  if(bsiz + osiz + 1 > asiz){
-    asiz = asiz * 2 + osiz;
-    char *swap;
-    if(!(swap = MYREALLOC(buf, asiz))){
-      MYFREE(buf);
-      fastlzlibCompressEnd(&zs);
-      return NULL;
-    }
-    buf = swap;
-  }
-  memcpy(buf + bsiz, obuf, osiz);
-  bsiz += osiz;
-  buf[bsiz] = '\0';
-  *sp = bsiz;
-  fastlzlibCompressEnd(&zs);
-  return buf;
+static char *_tc_lzcompress_impl(const char *ptr, int size, int *sp)
+{
+	assert(ptr && size >= 0 && sp);
+	zfast_stream zs;
+	zs.zalloc = Z_NULL;
+	zs.zfree = Z_NULL;
+	zs.opaque = Z_NULL;
+	if(fastlzlibCompressInit(&zs, Z_DEFAULT_COMPRESSION) != Z_OK) return NULL;
+	int asiz = size + 16;
+	if(asiz < LZ4BUFSIZ) asiz = LZ4BUFSIZ;
+	char *buf;
+	if(!(buf = MYMALLOC(asiz))) {
+		fastlzlibCompressEnd(&zs);
+		return NULL;
+	}
+	char obuf[LZ4BUFSIZ];
+	int bsiz = 0;
+	zs.next_in = (char *)ptr;
+	zs.avail_in = size;
+	zs.next_out = obuf;
+	zs.avail_out = LZ4BUFSIZ;
+	int rv;
+	while((rv = fastlzlibCompress(&zs, Z_PARTIAL_FLUSH)) == Z_OK) {
+		int osiz = LZ4BUFSIZ - zs.avail_out;
+		if(bsiz + osiz > asiz) {
+			asiz = asiz * 2 + osiz;
+			char *swap;
+			if(!(swap = MYREALLOC(buf, asiz))) {
+				MYFREE(buf);
+				fastlzlibCompressEnd(&zs);
+				return NULL;
+			}
+			buf = swap;
+		}
+		memcpy(buf + bsiz, obuf, osiz);
+		bsiz += osiz;
+		zs.next_out = obuf;
+		zs.avail_out = LZ4BUFSIZ;
+	}
+	int osiz = LZ4BUFSIZ - zs.avail_out;
+	if(bsiz + osiz + 1 > asiz) {
+		asiz = asiz * 2 + osiz;
+		char *swap;
+		if(!(swap = MYREALLOC(buf, asiz))) {
+			MYFREE(buf);
+			fastlzlibCompressEnd(&zs);
+			return NULL;
+		}
+		buf = swap;
+	}
+	memcpy(buf + bsiz, obuf, osiz);
+	bsiz += osiz;
+	buf[bsiz] = '\0';
+	*sp = bsiz;
+	fastlzlibCompressEnd(&zs);
+	return buf;
 }
-
-
-static char *_tc_lzdecompress_impl(const char *ptr, int size, int *sp){	
-  zfast_stream zs;
-  zs.zalloc = NULL;
-  zs.zfree = NULL;
-  zs.opaque = NULL;
-  if(fastlzlibDecompressInit(&zs) != Z_OK) return NULL;
-  int asiz = size * 2 + 16;
-  if(asiz < LZ4BUFSIZ) asiz = LZ4BUFSIZ;
-  char *buf;
-  if(!(buf = MYMALLOC(asiz))){
-    fastlzlibDecompressEnd(&zs);
-    return NULL;
-  }
-  char obuf[LZ4BUFSIZ];
-  int bsiz = 0;
-  zs.next_in = (char *)ptr;
-  zs.avail_in = size;
-  zs.next_out = obuf;
-  zs.avail_out = LZ4BUFSIZ;
-  int rv;
-  while((rv = fastlzlibDecompress(&zs)) == Z_OK){
-    int osiz = LZ4BUFSIZ - zs.avail_out;
-    if(bsiz + osiz >= asiz){
-      asiz = asiz * 2 + osiz;
-      char *swap;
-      if(!(swap = MYREALLOC(buf, asiz))){
-        MYFREE(buf);
-        fastlzlibDecompressEnd(&zs);
-        return NULL;
-      }
-      buf = swap;
-    }
-    memcpy(buf + bsiz, obuf, osiz);
-    bsiz += osiz;
-    zs.next_out = obuf;
-    zs.avail_out = LZ4BUFSIZ;
-  }
-  int osiz = LZ4BUFSIZ - zs.avail_out;
-  if(bsiz + osiz >= asiz){
-    asiz = asiz * 2 + osiz;
-    char *swap;
-    if(!(swap = MYREALLOC(buf, asiz))){
-      MYFREE(buf);
-      fastlzlibDecompressEnd(&zs);
-      return NULL;
-    }
-    buf = swap;
-  }
-  memcpy(buf + bsiz, obuf, osiz);
-  bsiz += osiz;
-  buf[bsiz] = '\0';
-  *sp = bsiz;
-  fastlzlibDecompressEnd(&zs);
-  return buf;
-} 
+static char *_tc_lzdecompress_impl(const char *ptr, int size, int *sp)
+{
+	zfast_stream zs;
+	zs.zalloc = NULL;
+	zs.zfree = NULL;
+	zs.opaque = NULL;
+	if(fastlzlibDecompressInit(&zs) != Z_OK) return NULL;
+	int asiz = size * 2 + 16;
+	if(asiz < LZ4BUFSIZ) asiz = LZ4BUFSIZ;
+	char *buf;
+	if(!(buf = MYMALLOC(asiz))) {
+		fastlzlibDecompressEnd(&zs);
+		return NULL;
+	}
+	char obuf[LZ4BUFSIZ];
+	int bsiz = 0;
+	zs.next_in = (char *)ptr;
+	zs.avail_in = size;
+	zs.next_out = obuf;
+	zs.avail_out = LZ4BUFSIZ;
+	int rv;
+	while((rv = fastlzlibDecompress(&zs)) == Z_OK) {
+		int osiz = LZ4BUFSIZ - zs.avail_out;
+		if(bsiz + osiz >= asiz) {
+			asiz = asiz * 2 + osiz;
+			char *swap;
+			if(!(swap = MYREALLOC(buf, asiz))) {
+				MYFREE(buf);
+				fastlzlibDecompressEnd(&zs);
+				return NULL;
+			}
+			buf = swap;
+		}
+		memcpy(buf + bsiz, obuf, osiz);
+		bsiz += osiz;
+		zs.next_out = obuf;
+		zs.avail_out = LZ4BUFSIZ;
+	}
+	int osiz = LZ4BUFSIZ - zs.avail_out;
+	if(bsiz + osiz >= asiz) {
+		asiz = asiz * 2 + osiz;
+		char *swap;
+		if(!(swap = MYREALLOC(buf, asiz))) {
+			MYFREE(buf);
+			fastlzlibDecompressEnd(&zs);
+			return NULL;
+		}
+		buf = swap;
+	}
+	memcpy(buf + bsiz, obuf, osiz);
+	bsiz += osiz;
+	buf[bsiz] = '\0';
+	*sp = bsiz;
+	fastlzlibDecompressEnd(&zs);
+	return buf;
+}
 
 /*************************************************************************************************
  * for test of custom codec functions
