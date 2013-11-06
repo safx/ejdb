@@ -2,6 +2,7 @@
 #include "myconf.h"
 #include "ejdb_private.h"
 #include "CUnit/Basic.h"
+#include "tchdb.h"
 
 /*
  * CUnit Test Suite
@@ -330,6 +331,27 @@ void testBSONExportImport2() {
     bson_del(nmeta);
 }
 
+void testTicket17(){
+	TCHDB *hdb = tchdbnew();		
+	tchdbtune(hdb, 0, -1, -1, HDBTLZ4);	
+	tchdbopen(hdb, "dbt4_17", HDBOCREAT | HDBOWRITER); 
+	char fmt[48];
+	sprintf(fmt, "%%0%dd", 39);
+	char kbuf[48];
+	int ksiz = sprintf(kbuf, fmt, 20);		
+	if(!tchdbput(hdb, kbuf, ksiz, kbuf, ksiz)) {
+		fprintf(stderr, "%d: %s: error: %s\n",
+            __LINE__, "testTicket17", "Error to store a record into a hash database object");			
+	}
+	char *result = (char *)tchdbget(hdb, kbuf, ksiz, &ksiz);
+	if(strcmp(kbuf, result) != 0){
+			fprintf(stderr, "%d: %s: error: %s\n",
+            __LINE__, "testTicket17", "Records do not match");
+	}	
+	tchdbclose(hdb);
+	tchdbdel(hdb);
+}
+
 int init_suite(void) {
     return 0;
 }
@@ -357,7 +379,8 @@ int main() {
     if (
             (NULL == CU_add_test(pSuite, "testTicket53", testTicket53)) ||
             (NULL == CU_add_test(pSuite, "testBSONExportImport", testBSONExportImport)) ||
-            (NULL == CU_add_test(pSuite, "testBSONExportImport2", testBSONExportImport2))
+            (NULL == CU_add_test(pSuite, "testBSONExportImport2", testBSONExportImport2)) ||
+			(NULL == CU_add_test(pSuite, "testTicket17", testTicket17))
             ) {
         CU_cleanup_registry();
         return CU_get_error();

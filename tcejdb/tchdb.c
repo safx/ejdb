@@ -473,7 +473,7 @@ bool tchdbput(TCHDB *hdb, const void *kbuf, int ksiz, const void *vbuf, int vsiz
         } else if (hdb->opts & HDBTTCBS) {
             zbuf = tcbsencode(vbuf, vsiz, &vsiz);
         } else if (hdb->opts & HDBTLZ4) {
-			zbuf = _tc_lzcompress(vbuf, vsiz, &vsiz);
+			 zbuf = _tc_lzcompress(vbuf, vsiz, &vsiz);
 		} else {
             zbuf = hdb->enc(vbuf, vsiz, &vsiz, hdb->encop);
         }
@@ -4449,7 +4449,7 @@ static char *tchdbgetimpl(TCHDB *hdb, const char *kbuf, int ksiz, uint64_t bidx,
                     } else if (hdb->opts & HDBTTCBS) {
                         zbuf = tcbsdecode(rec.vbuf, rec.vsiz, &zsiz);
                     } else if (hdb->opts & HDBTLZ4) {
-						zbuf = _tc_lzcompress(rec.vbuf, rec.vsiz, &zsiz);
+						zbuf = _tc_lzdecompress(rec.vbuf, rec.vsiz, &zsiz);
 					} else {
                         zbuf = hdb->dec(rec.vbuf, rec.vsiz, &zsiz, hdb->decop);
                     }
@@ -4544,7 +4544,7 @@ static int tchdbgetintoxstrimpl(TCHDB *hdb, const char *kbuf, int ksiz, uint64_t
                     } else if (hdb->opts & HDBTTCBS) {
                         zbuf = tcbsdecode(rec.vbuf, rec.vsiz, &zsiz);
                     } else if (hdb->opts & HDBTLZ4) {
-						zbuf = _tc_lzcompress(rec.vbuf, rec.vsiz, &zsiz);
+						zbuf = _tc_lzdecompress(rec.vbuf, rec.vsiz, &zsiz);
 					} else {
                         zbuf = hdb->dec(rec.vbuf, rec.vsiz, &zsiz, hdb->decop);
                     }
@@ -4644,7 +4644,7 @@ static int tchdbgetintobuf(TCHDB *hdb, const char *kbuf, int ksiz, uint64_t bidx
                     } else if (hdb->opts & HDBTTCBS) {
                         zbuf = tcbsdecode(rec.vbuf, rec.vsiz, &zsiz);
                     } else if (hdb->opts & HDBTLZ4) {
-						zbuf = _tc_lzcompress(rec.vbuf, rec.vsiz, &zsiz);
+						zbuf = _tc_lzdecompress(rec.vbuf, rec.vsiz, &zsiz);
 					} else {
                         zbuf = hdb->dec(rec.vbuf, rec.vsiz, &zsiz, hdb->decop);
                     }
@@ -4716,7 +4716,7 @@ static char *tchdbgetnextimpl(TCHDB *hdb, const char *kbuf, int ksiz, int *sp,
                         } else if (hdb->opts & HDBTTCBS) {
                             zbuf = tcbsdecode(rec.vbuf, rec.vsiz, &zsiz);
                         } else if (hdb->opts & HDBTLZ4){
-							zbuf = _tc_lzcompress(rec.vbuf, rec.vsiz, &zsiz);
+							zbuf = _tc_lzdecompress(rec.vbuf, rec.vsiz, &zsiz);
 						} else {
                             zbuf = hdb->dec(rec.vbuf, rec.vsiz, &zsiz, hdb->decop);
                         }
@@ -4815,7 +4815,7 @@ static char *tchdbgetnextimpl(TCHDB *hdb, const char *kbuf, int ksiz, int *sp,
                                 } else if (hdb->opts & HDBTTCBS) {
                                     zbuf = tcbsdecode(rec.vbuf, rec.vsiz, &zsiz);
                                 } else if (hdb->opts & HDBTLZ4) {
-									zbuf = _tc_lzcompress(rec.vbuf, rec.vsiz, &zsiz);
+									zbuf = _tc_lzdecompress(rec.vbuf, rec.vsiz, &zsiz);
 								} else {
                                     zbuf = hdb->dec(rec.vbuf, rec.vsiz, &zsiz, hdb->decop);
                                 }
@@ -4932,7 +4932,7 @@ static int tchdbvsizimpl(TCHDB *hdb, const char *kbuf, int ksiz, uint64_t bidx, 
                     } else if (hdb->opts & HDBTTCBS) {
                         zbuf = tcbsdecode(rec.vbuf, rec.vsiz, &zsiz);
                     } else if(hdb->opts & HDBTLZ4) {
-						zbuf = _tc_lzcompress(rec.vbuf, rec.vsiz, &zsiz);
+						zbuf = _tc_lzdecompress(rec.vbuf, rec.vsiz, &zsiz);
 					} else {
                         zbuf = hdb->dec(rec.vbuf, rec.vsiz, &zsiz, hdb->decop);
                     }
@@ -5031,7 +5031,7 @@ static bool tchdbiternextintoxstr2(TCHDB *hdb, uint64_t *iter, TCXSTR *kxstr, TC
                 } else if (hdb->opts & HDBTTCBS) {
                     zbuf = tcbsdecode(rec.vbuf, rec.vsiz, &zsiz);
                 } else if (hdb->opts & HDBTLZ4) {
-					zbuf = _tc_lzcompress(rec.vbuf, rec.vsiz, &zsiz);
+					zbuf = _tc_lzdecompress(rec.vbuf, rec.vsiz, &zsiz);
 				} else {
                     zbuf = hdb->dec(rec.vbuf, rec.vsiz, &zsiz, hdb->decop);
                 }
@@ -5115,7 +5115,7 @@ static bool tchdboptimizeimpl(TCHDB *hdb, int64_t bnum, int8_t apow, int8_t fpow
             } else if (hdb->opts & HDBTTCBS) {
                 zbuf = tcbsdecode(rec.vbuf, rec.vsiz, &zsiz);
             } else if (hdb->opts & HDBTLZ4) {
-				zbuf = _tc_lzcompress(rec.vbuf, rec.vsiz, &zsiz);
+				zbuf = _tc_lzdecompress(rec.vbuf, rec.vsiz, &zsiz);
 			} else {
                 zbuf = hdb->dec(rec.vbuf, rec.vsiz, &zsiz, hdb->decop);
             }
@@ -5432,7 +5432,7 @@ static bool tchdbforeachimpl(TCHDB *hdb, TCITER iter, void *op) {
                     } else if (hdb->opts & HDBTTCBS) {
                         zbuf = tcbsdecode(rec.vbuf, rec.vsiz, &zsiz);
                     } else if (hdb->opts & HDBTLZ4) {
-						zbuf = _tc_lzcompress(rec.vbuf, rec.vsiz, &zsiz);
+						zbuf = _tc_lzdecompress(rec.vbuf, rec.vsiz, &zsiz);
 					} else {
                         zbuf = hdb->dec(rec.vbuf, rec.vsiz, &zsiz, hdb->decop);
                     }

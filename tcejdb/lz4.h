@@ -39,7 +39,6 @@ EJDB_EXTERN_C_START
 
 /* extracted from fastlz.h */
 #define FASTLZ_VERSION_STRING "0.1.0"
-
 /**
  * The zfast structure is identical to zlib one, except for the "state" opaque
  * member.
@@ -55,7 +54,7 @@ typedef z_stream zfast_stream;
 typedef enum zfast_stream_compressor {
   COMPRESSOR_FASTLZ,
   COMPRESSOR_LZ4,
-  COMPRESSOR_DEFAULT = COMPRESSOR_FASTLZ
+  COMPRESSOR_DEFAULT = COMPRESSOR_LZ4
 } zfast_stream_compressor;
 
 /**

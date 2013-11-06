@@ -391,7 +391,7 @@ char *(*_tc_bzdecompress)(const char *, int, int *) = NULL;
  * for LZ4
  *************************************************************************************************/
 
-#include "fastlzlib.h"
+#include "lz4.h"
 
 #define LZ4BUFSIZ     8192
 
@@ -405,10 +405,10 @@ char *(*_tc_lzdecompress)(const char *, int, int *) = _tc_lzdecompress_impl;
 static char *_tc_lzcompress_impl(const char *ptr, int size, int *sp){
   assert(ptr && size >= 0 && sp);
   zfast_stream zs;
-  zs.zalloc = NULL;
-  zs.zfree = NULL;
-  zs.opaque = NULL;
-  if(fastlzlibDecompressInit(&zs) != Z_OK) return NULL;
+  zs.zalloc = Z_NULL;
+  zs.zfree = Z_NULL;
+  zs.opaque = Z_NULL;
+  if(fastlzlibCompressInit(&zs, Z_DEFAULT_COMPRESSION) != Z_OK) return NULL;
   int asiz = size + 16;
   if(asiz < LZ4BUFSIZ) asiz = LZ4BUFSIZ;
   char *buf;
@@ -423,7 +423,7 @@ static char *_tc_lzcompress_impl(const char *ptr, int size, int *sp){
   zs.next_out = obuf;
   zs.avail_out = LZ4BUFSIZ;
   int rv;
-  while((rv = fastlzlibCompress(&zs, Z_NO_FLUSH)) == Z_OK){
+  while((rv = fastlzlibCompress(&zs, Z_PARTIAL_FLUSH)) == Z_OK){		
     int osiz = LZ4BUFSIZ - zs.avail_out;
     if(bsiz + osiz > asiz){
       asiz = asiz * 2 + osiz;
@@ -439,11 +439,6 @@ static char *_tc_lzcompress_impl(const char *ptr, int size, int *sp){
     bsiz += osiz;
     zs.next_out = obuf;
     zs.avail_out = LZ4BUFSIZ;
-  }
-  if(rv != Z_STREAM_END){
-    MYFREE(buf);
-    fastlzlibCompressEnd(&zs);
-    return NULL;
   }
   int osiz = LZ4BUFSIZ - zs.avail_out;
   if(bsiz + osiz + 1 > asiz){
@@ -501,11 +496,6 @@ static char *_tc_lzdecompress_impl(const char *ptr, int size, int *sp){
     bsiz += osiz;
     zs.next_out = obuf;
     zs.avail_out = LZ4BUFSIZ;
-  }
-  if(rv != Z_STREAM_END){
-    MYFREE(buf);
-    fastlzlibDecompressEnd(&zs);
-    return NULL;
   }
   int osiz = LZ4BUFSIZ - zs.avail_out;
   if(bsiz + osiz >= asiz){
