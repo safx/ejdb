@@ -72,7 +72,8 @@ enum { /* enumeration for tuning options */
     TDBTDEFLATE = 1 << 1, /* compress each page with Deflate */
     TDBTBZIP = 1 << 2, /* compress each record with BZIP2 */
     TDBTTCBS = 1 << 3, /* compress each page with TCBS */
-    TDBTEXCODEC = 1 << 4 /* compress each record with outer functions */
+    TDBTEXCODEC = 1 << 4, /* compress each record with outer functions */
+    TDBTLZ4 = 1 << 5 /* compress each record with LZ4 */
 };
 
 enum { /* enumeration for open modes */

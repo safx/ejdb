@@ -755,8 +755,11 @@ bson* ejdbmeta(EJDB *jb) {
         bson_append_start_object(bs, "options"); //coll.options
         bson_append_long(bs, "buckets", coll->tdb->hdb->bnum);
         bson_append_long(bs, "cachedrecords", coll->tdb->hdb->rcnum);
-        bson_append_bool(bs, "large", (coll->tdb->opts & TDBTLARGE));
-        bson_append_bool(bs, "compressed", (coll->tdb->opts & TDBTDEFLATE));
+        bson_append_bool(bs, "large", (coll->tdb->opts & TDBTLARGE));        
+        int compressmode;
+        if(coll->tdb->opts & TDBTDEFLATE) compressmode = JBDEFLATE;
+        if(coll->tdb->opts & TDBTLZ4) compressmode = JBLZ4;
+        bson_append_long(bs, "compressmode", compressmode);
         bson_append_finish_object(bs); //eof coll.options
 
         bson_append_start_array(bs, "indexes"); //coll.indexes[]
@@ -1288,6 +1291,8 @@ static bool _importcoll(EJDB *jb, const char *bspath, TCLIST *cnames, int flags,
                 const char *key = BSON_ITERATOR_KEY(&sit);
                 if (strcmp("compressed", key) == 0 && bt == BSON_BOOL) {
                     cops.compressed = bson_iterator_bool(&sit);
+                } else if (strcmp("compressmode", key) == 0 && BSON_IS_NUM_TYPE(bt)) {
+                  cops.compressmode = bson_iterator_int(&sit);  
                 } else if (strcmp("large", key) == 0 && bt == BSON_BOOL) {
                     cops.large = bson_iterator_bool(&sit);
                 } else if (strcmp("cachedrecords", key) == 0 && BSON_IS_NUM_TYPE(bt)) {
@@ -4185,6 +4190,7 @@ static bool _metasetopts(EJDB *jb, const char *colname, EJCOLLOPTS *opts) {
     bson_init(bsopts);
     bson_append_bool(bsopts, "compressed", opts->compressed);
     bson_append_bool(bsopts, "large", opts->large);
+    bson_append_int(bsopts, "compressmode", opts->compressmode);
     bson_append_int(bsopts, "cachedrecords", opts->cachedrecords);
     bson_append_int(bsopts, "records", opts->records);
     bson_finish(bsopts);
@@ -4205,6 +4211,10 @@ static bool _metagetopts(EJDB *jb, const char *colname, EJCOLLOPTS *opts) {
     bson_type bt = bson_find(&it, bsopts, "compressed");
     if (bt == BSON_BOOL) {
         opts->compressed = bson_iterator_bool(&it);
+    }
+    bt = bson_find(&it, bsopts, "compressmode");
+    if(BSON_IS_NUM_TYPE(bt)){
+        opts->compressmode = bson_iterator_long(&it);
     }
     bt = bson_find(&it, bsopts, "large");
     if (bt == BSON_BOOL) {
@@ -5344,9 +5354,19 @@ static bool _createcoldb(const char *colname, EJDB *jb, EJCOLLOPTS *opts, TCTDB 
         if (opts->large) {
             tflags |= TDBTLARGE;
         }
-        if (opts->compressed) {
-            tflags |= TDBTDEFLATE;
-        }
+        switch (opts->compressmode) {
+            case JBDEFLATE:
+                tflags |= TDBTDEFLATE;
+                break;
+            case JBLZ4:
+                tflags |= TDBTLZ4;
+                break;                                
+            default:
+                if (opts->compressed) {
+                    tflags |= TDBTDEFLATE;
+                }
+                break;
+        }    
         tctdbtune(cdb, bnum, 0, 0, tflags);
     }
     const char *mdbpath = jb->metadb->hdb->path;

@@ -232,6 +232,7 @@ bool tctdbtune(TCTDB *tdb, int64_t bnum, int8_t apow, int8_t fpow, uint8_t opts)
     if (opts & TDBTBZIP) hopts |= HDBTBZIP;
     if (opts & TDBTTCBS) hopts |= HDBTTCBS;
     if (opts & TDBTEXCODEC) hopts |= HDBTEXCODEC;
+    if (opts & TDBTLZ4) hopts |= HDBTLZ4; 
     bnum = (bnum > 0) ? bnum : TDBDEFBNUM;
     apow = (apow >= 0) ? apow : TDBDEFAPOW;
     fpow = (fpow >= 0) ? fpow : TDBDEFFPOW;
@@ -1945,6 +1946,7 @@ static bool tctdbopenimpl(TCTDB *tdb, const char *path, int omode) {
     if (hopts & HDBTBZIP) opts |= TDBTBZIP;
     if (hopts & HDBTTCBS) opts |= TDBTTCBS;
     if (hopts & HDBTEXCODEC) opts |= TDBTEXCODEC;
+    if (hopts & HDBTLZ4) opts |= TDBTLZ4;
     tdb->opts = opts;
     tdb->tran = false;
     return true;
@@ -2208,6 +2210,7 @@ static bool tctdboptimizeimpl(TCTDB *tdb, int64_t bnum, int8_t apow, int8_t fpow
     if (opts & TDBTBZIP) hopts |= HDBTBZIP;
     if (opts & TDBTTCBS) hopts |= HDBTTCBS;
     if (opts & TDBTEXCODEC) hopts |= HDBTEXCODEC;
+    if (opts & TDBTLZ4) hopts |= HDBTLZ4;
     tchdbtune(thdb, bnum, apow, fpow, hopts);
     if (tchdbopen(thdb, tpath, HDBOWRITER | HDBOCREAT | HDBOTRUNC) && tchdbcopyopaque(thdb, hdb, 0, -1)) {
         if (!tchdbiterinit(hdb)) err = true;

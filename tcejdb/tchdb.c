@@ -4932,7 +4932,7 @@ static int tchdbvsizimpl(TCHDB *hdb, const char *kbuf, int ksiz, uint64_t bidx, 
                     } else if (hdb->opts & HDBTTCBS) {
                         zbuf = tcbsdecode(rec.vbuf, rec.vsiz, &zsiz);
                     } else if(hdb->opts & HDBTLZ4) {
-						zbuf = _tc_lzdecompress(rec.vbuf, rec.vsiz, &zsiz);
+                        zbuf = _tc_lzdecompress(rec.vbuf, rec.vsiz, &zsiz);
 					} else {
                         zbuf = hdb->dec(rec.vbuf, rec.vsiz, &zsiz, hdb->decop);
                     }

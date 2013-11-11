@@ -333,9 +333,10 @@ void testBSONExportImport2() {
 
 void testTicket17()
 {
-	TCHDB *hdb = tchdbnew();
+	/* Testing hdb */
+    TCHDB *hdb = tchdbnew();
 	tchdbtune(hdb, 0, -1, -1, HDBTLZ4);
-	tchdbopen(hdb, "dbt4_17", HDBOCREAT | HDBOWRITER);
+	tchdbopen(hdb, "dbt4_17_1", HDBOCREAT | HDBOWRITER);
 	char fmt[48];
 	sprintf(fmt, "%%0%dd", 39);
 	char kbuf[48];
@@ -351,6 +352,18 @@ void testTicket17()
 	}
 	tchdbclose(hdb);
 	tchdbdel(hdb);
+    
+    /* Testing ejdb */
+    EJDB *jb = ejdbnew();
+    CU_ASSERT_TRUE_FATAL(ejdbopen(jb, "dbt4_17", JBOWRITER | JBOCREAT | JBOTRUNC));
+    EJCOLLOPTS opts = {0};
+    opts.compressmode = JBLZ4;
+    EJCOLL *coll = ejdbcreatecoll(jb, "optscoll", &opts);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(coll);
+    hdb = coll->tdb->hdb;
+    CU_ASSERT_TRUE(hdb->opts & HDBTLZ4);
+    ejdbclose(jb);
+    ejdbdel(jb);
 }
 
 int init_suite(void) {
