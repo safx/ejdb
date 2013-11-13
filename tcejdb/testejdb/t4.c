@@ -350,6 +350,7 @@ void testTicket17()
 		fprintf(stderr, "%d: %s: error: %s\n",
 		        __LINE__, "testTicket17", "Records do not match");
 	}
+    MYFREE(result);
 	tchdbclose(hdb);
 	tchdbdel(hdb);
     
