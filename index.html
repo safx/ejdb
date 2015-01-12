@@ -30,14 +30,19 @@
 
       </header>
       <section>
-        <h2>
-<a name="ejdb-aims-to-be-a-fast-mongodb-like-library-which-can-be-embedded-into-cc-net-nodejs-python-lua-java-ruby-go-applications-under-terms-of-lgpl-license" class="anchor" href="#ejdb-aims-to-be-a-fast-mongodb-like-library-which-can-be-embedded-into-cc-net-nodejs-python-lua-java-ruby-go-applications-under-terms-of-lgpl-license"><span class="octicon octicon-link"></span></a>EJDB aims to be a fast <a href="http://mongodb.org">MongoDB</a>-like library which can be embedded into C/C++, .Net, NodeJS, Python, Lua, Java, Ruby, Go applications under terms of LGPL license.</h2>
+        <h1>
+<a id="note" class="anchor" href="#note" aria-hidden="true"><span class="octicon octicon-link"></span></a>NOTE</h1>
+
+<p>Despate a long pause in the project activity the team came back.  We are working on the next version of EJDB engine (EJDB2). We will make some maintenance tasks of the current version of EJDB but no more big changes in the current stable codebase.</p>
+
+<h2>
+<a id="ejdb-aims-to-be-a-fast-mongodb-like-library-which-can-be-embedded-into-cc-net-nodejs-python-lua-java-ruby-go-applications-under-terms-of-lgpl-license" class="anchor" href="#ejdb-aims-to-be-a-fast-mongodb-like-library-which-can-be-embedded-into-cc-net-nodejs-python-lua-java-ruby-go-applications-under-terms-of-lgpl-license" aria-hidden="true"><span class="octicon octicon-link"></span></a>EJDB aims to be a fast <a href="http://mongodb.org">MongoDB</a>-like library which can be embedded into C/C++, .Net, NodeJS, Python, Lua, Java, Ruby, Go applications under terms of LGPL license.</h2>
 
 <p>EJDB is the C library based on modified version of <a href="http://fallabs.com/tokyocabinet/">Tokyo Cabinet</a>.
 JSON representation of queries and data implemented with API based on <a href="https://github.com/mongodb/mongo-c-driver/tree/master/src/">C BSON</a></p>
 
 <h1>
-<a name="news" class="anchor" href="#news"><span class="octicon octicon-link"></span></a>News</h1>
+<a id="news" class="anchor" href="#news" aria-hidden="true"><span class="octicon octicon-link"></span></a>News</h1>
 
 <ul>
 <li>
@@ -91,8 +96,10 @@ JSON representation of queries and data implemented with API based on <a href="h
 <li>
 <code>2013-01-22</code> <strong><a href="https://github.com/Softmotions/ejdb/wiki/Collection-joins">Collection joins now supported</a></strong>
 </li>
-</ul><h1>
-<a name="features" class="anchor" href="#features"><span class="octicon octicon-link"></span></a>Features</h1>
+</ul>
+
+<h1>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Features</h1>
 
 <ul>
 <li>LGPL license allows you to embed this library into proprietary software.</li>
@@ -104,8 +111,10 @@ JSON representation of queries and data implemented with API based on <a href="h
 <li>Node.js/Python/Lua/Java/Ruby/.Net/Go bindings</li>
 <li><a href="https://github.com/thejustinwalsh/airejdb">Adobe Air Native Extension (ANE) for EJDB</a></li>
 <li><a href="https://github.com/hww3/pike_modules-ejdb">Pike language binding</a></li>
-</ul><h1>
-<a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h1>
+</ul>
+
+<h1>
+<a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h1>
 
 <ul>
 <li><strong><a href="http://blog.abigopal.com/post/51616277039/ejdb">The brief intro to the EJDB</a></strong></li>
@@ -139,440 +148,441 @@ JSON representation of queries and data implemented with API based on <a href="h
 <li><strong><a href="https://github.com/kyamagu/matlab-ejdb">Matlab</a></strong></li>
 </ul>
 </li>
-</ul><h1>
-<a name="community" class="anchor" href="#community"><span class="octicon octicon-link"></span></a>Community</h1>
+</ul>
+
+<h1>
+<a id="community" class="anchor" href="#community" aria-hidden="true"><span class="octicon octicon-link"></span></a>Community</h1>
 
 <ul>
 <li><strong><a href="https://twitter.com/ejdblab">ejdblab@twitter.com</a></strong></li>
 <li><strong>We use <a href="http://groups.google.com/group/ejdb">EJDB Google group</a> as our mailing list.</strong></li>
 <li><a href="https://github.com/Softmotions/ejdb/wiki/Projects-using-EJDB">Projects using EJDB</a></li>
-</ul><h1>
-<a name="ejdb-nodejs" class="anchor" href="#ejdb-nodejs"><span class="octicon octicon-link"></span></a>EJDB NodeJS</h1>
+</ul>
+
+<h1>
+<a id="ejdb-nodejs" class="anchor" href="#ejdb-nodejs" aria-hidden="true"><span class="octicon octicon-link"></span></a>EJDB NodeJS</h1>
 
 <h2>
-<a name="one-snippet-intro" class="anchor" href="#one-snippet-intro"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
+<a id="one-snippet-intro" class="anchor" href="#one-snippet-intro" aria-hidden="true"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
-<div class="highlight highlight-JavaScript"><pre><span class="kd">var</span> <span class="nx">EJDB</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"ejdb"</span><span class="p">);</span>
-<span class="c1">//Open zoo DB</span>
-<span class="kd">var</span> <span class="nx">jb</span> <span class="o">=</span> <span class="nx">EJDB</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s2">"zoo"</span><span class="p">,</span> <span class="nx">EJDB</span><span class="p">.</span><span class="nx">DEFAULT_OPEN_MODE</span> <span class="o">|</span> <span class="nx">EJDB</span><span class="p">.</span><span class="nx">JBOTRUNC</span><span class="p">);</span>
+<div class="highlight highlight-JavaScript"><pre><span class="pl-s">var</span> EJDB <span class="pl-k">=</span> <span class="pl-s3">require</span>(<span class="pl-s1"><span class="pl-pds">"</span>ejdb<span class="pl-pds">"</span></span>);
+<span class="pl-c">//Open zoo DB</span>
+<span class="pl-s">var</span> jb <span class="pl-k">=</span> EJDB.<span class="pl-s3">open</span>(<span class="pl-s1"><span class="pl-pds">"</span>zoo<span class="pl-pds">"</span></span>, EJDB.DEFAULT_OPEN_MODE | EJDB.JBOTRUNC);
 
-<span class="kd">var</span> <span class="nx">parrot1</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"name"</span> <span class="o">:</span> <span class="s2">"Grenny"</span><span class="p">,</span>
-    <span class="s2">"type"</span> <span class="o">:</span> <span class="s2">"African Grey"</span><span class="p">,</span>
-    <span class="s2">"male"</span> <span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="s2">"age"</span> <span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">"birthdate"</span> <span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(),</span>
-    <span class="s2">"likes"</span> <span class="o">:</span> <span class="p">[</span><span class="s2">"green color"</span><span class="p">,</span> <span class="s2">"night"</span><span class="p">,</span> <span class="s2">"toys"</span><span class="p">],</span>
-    <span class="s2">"extra1"</span> <span class="o">:</span> <span class="kc">null</span>
-<span class="p">};</span>
-<span class="kd">var</span> <span class="nx">parrot2</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"name"</span> <span class="o">:</span> <span class="s2">"Bounty"</span><span class="p">,</span>
-    <span class="s2">"type"</span> <span class="o">:</span> <span class="s2">"Cockatoo"</span><span class="p">,</span>
-    <span class="s2">"male"</span> <span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
-    <span class="s2">"age"</span> <span class="o">:</span> <span class="mi">15</span><span class="p">,</span>
-    <span class="s2">"birthdate"</span> <span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(),</span>
-    <span class="s2">"likes"</span> <span class="o">:</span> <span class="p">[</span><span class="s2">"sugar cane"</span><span class="p">]</span>
-<span class="p">};</span>
+<span class="pl-s">var</span> parrot1 <span class="pl-k">=</span> {
+    <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-s1"><span class="pl-pds">"</span>Grenny<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-s1"><span class="pl-pds">"</span>African Grey<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>male<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-c1">true</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-c1">1</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>birthdate<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-k">new</span> <span class="pl-en">Date</span>(),
+    <span class="pl-s1"><span class="pl-pds">"</span>likes<span class="pl-pds">"</span></span> <span class="pl-k">:</span> [<span class="pl-s1"><span class="pl-pds">"</span>green color<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>night<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>toys<span class="pl-pds">"</span></span>],
+    <span class="pl-s1"><span class="pl-pds">"</span>extra1<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-c1">null</span>
+};
+<span class="pl-s">var</span> parrot2 <span class="pl-k">=</span> {
+    <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-s1"><span class="pl-pds">"</span>Bounty<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-s1"><span class="pl-pds">"</span>Cockatoo<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>male<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-c1">false</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-c1">15</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>birthdate<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-k">new</span> <span class="pl-en">Date</span>(),
+    <span class="pl-s1"><span class="pl-pds">"</span>likes<span class="pl-pds">"</span></span> <span class="pl-k">:</span> [<span class="pl-s1"><span class="pl-pds">"</span>sugar cane<span class="pl-pds">"</span></span>]
+};
 
-<span class="nx">jb</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="s2">"parrots"</span><span class="p">,</span> <span class="p">[</span><span class="nx">parrot1</span><span class="p">,</span> <span class="nx">parrot2</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">oids</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-        <span class="k">return</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"Grenny OID: "</span> <span class="o">+</span> <span class="nx">parrot1</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]);</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"Bounty OID: "</span> <span class="o">+</span> <span class="nx">parrot2</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]);</span>
+jb.save(<span class="pl-s1"><span class="pl-pds">"</span>parrots<span class="pl-pds">"</span></span>, [parrot1, parrot2], <span class="pl-st">function</span>(<span class="pl-vpf">err</span>, <span class="pl-vpf">oids</span>) {
+    <span class="pl-k">if</span> (err) {
+        <span class="pl-en">console</span><span class="pl-s3">.error</span>(err);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-en">console</span><span class="pl-s3">.log</span>(<span class="pl-s1"><span class="pl-pds">"</span>Grenny OID: <span class="pl-pds">"</span></span> <span class="pl-k">+</span> parrot1[<span class="pl-s1"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span>]);
+    <span class="pl-en">console</span><span class="pl-s3">.log</span>(<span class="pl-s1"><span class="pl-pds">"</span>Bounty OID: <span class="pl-pds">"</span></span> <span class="pl-k">+</span> parrot2[<span class="pl-s1"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span>]);
 
-    <span class="nx">jb</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="s2">"parrots"</span><span class="p">,</span>
-            <span class="p">{</span><span class="s2">"likes"</span> <span class="o">:</span> <span class="s2">"toys"</span><span class="p">},</span>
-            <span class="p">{</span><span class="s2">"$orderby"</span> <span class="o">:</span> <span class="p">{</span><span class="s2">"name"</span> <span class="o">:</span> <span class="mi">1</span><span class="p">}},</span>
-            <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">cursor</span><span class="p">,</span> <span class="nx">count</span><span class="p">)</span> <span class="p">{</span>
-                <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-                    <span class="k">return</span><span class="p">;</span>
-                <span class="p">}</span>
-                <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"Found "</span> <span class="o">+</span> <span class="nx">count</span> <span class="o">+</span> <span class="s2">" parrots"</span><span class="p">);</span>
-                <span class="k">while</span> <span class="p">(</span><span class="nx">cursor</span><span class="p">.</span><span class="nx">next</span><span class="p">())</span> <span class="p">{</span>
-                    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">cursor</span><span class="p">.</span><span class="nx">field</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="o">+</span> <span class="s2">" likes toys!"</span><span class="p">);</span>
-                <span class="p">}</span>
-                <span class="nx">cursor</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> <span class="c1">//It's not mandatory to close cursor explicitly</span>
-                <span class="nx">jb</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> <span class="c1">//Close the database</span>
-            <span class="p">});</span>
-<span class="p">});</span>
-</pre></div>
+    jb.<span class="pl-s3">find</span>(<span class="pl-s1"><span class="pl-pds">"</span>parrots<span class="pl-pds">"</span></span>,
+            {<span class="pl-s1"><span class="pl-pds">"</span>likes<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-s1"><span class="pl-pds">"</span>toys<span class="pl-pds">"</span></span>},
+            {<span class="pl-s1"><span class="pl-pds">"</span>$orderby<span class="pl-pds">"</span></span> <span class="pl-k">:</span> {<span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-c1">1</span>}},
+            <span class="pl-st">function</span>(<span class="pl-vpf">err</span>, <span class="pl-vpf">cursor</span>, <span class="pl-vpf">count</span>) {
+                <span class="pl-k">if</span> (err) {
+                    <span class="pl-en">console</span><span class="pl-s3">.error</span>(err);
+                    <span class="pl-k">return</span>;
+                }
+                <span class="pl-en">console</span><span class="pl-s3">.log</span>(<span class="pl-s1"><span class="pl-pds">"</span>Found <span class="pl-pds">"</span></span> <span class="pl-k">+</span> count <span class="pl-k">+</span> <span class="pl-s1"><span class="pl-pds">"</span> parrots<span class="pl-pds">"</span></span>);
+                <span class="pl-k">while</span> (cursor.<span class="pl-sc">next</span>()) {
+                    <span class="pl-en">console</span><span class="pl-s3">.log</span>(cursor.field(<span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>) <span class="pl-k">+</span> <span class="pl-s1"><span class="pl-pds">"</span> likes toys!<span class="pl-pds">"</span></span>);
+                }
+                cursor.<span class="pl-s3">close</span>(); <span class="pl-c">//It's not mandatory to close cursor explicitly</span>
+                jb.<span class="pl-s3">close</span>(); <span class="pl-c">//Close the database</span>
+            });
+});</pre></div>
 
 <p><strong><a href="https://github.com/Softmotions/ejdb-node">EJDB NodeJS binding page</a></strong></p>
 
 <h1>
-<a name="ejdb-python" class="anchor" href="#ejdb-python"><span class="octicon octicon-link"></span></a>EJDB Python</h1>
+<a id="ejdb-python" class="anchor" href="#ejdb-python" aria-hidden="true"><span class="octicon octicon-link"></span></a>EJDB Python</h1>
 
 <h2>
-<a name="one-snippet-intro-1" class="anchor" href="#one-snippet-intro-1"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
+<a id="one-snippet-intro-1" class="anchor" href="#one-snippet-intro-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
-<div class="highlight highlight-python"><pre><span class="kn">import</span> <span class="nn">pyejdb</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<div class="highlight highlight-python"><pre><span class="pl-k">import</span> pyejdb
+<span class="pl-k">from</span> datetime <span class="pl-k">import</span> datetime
 
-<span class="c">#Open database</span>
-<span class="n">ejdb</span> <span class="o">=</span> <span class="n">pyejdb</span><span class="o">.</span><span class="n">EJDB</span><span class="p">(</span><span class="s">"zoo"</span><span class="p">,</span> <span class="n">pyejdb</span><span class="o">.</span><span class="n">DEFAULT_OPEN_MODE</span> <span class="o">|</span> <span class="n">pyejdb</span><span class="o">.</span><span class="n">JBOTRUNC</span><span class="p">)</span>
+<span class="pl-c">#Open database</span>
+ejdb <span class="pl-k">=</span> pyejdb.EJDB(<span class="pl-s1"><span class="pl-pds">"</span>zoo<span class="pl-pds">"</span></span>, pyejdb.DEFAULT_OPEN_MODE <span class="pl-k">|</span> pyejdb.JBOTRUNC)
 
-<span class="n">parrot1</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s">"name"</span><span class="p">:</span> <span class="s">"Grenny"</span><span class="p">,</span>
-    <span class="s">"type"</span><span class="p">:</span> <span class="s">"African Grey"</span><span class="p">,</span>
-    <span class="s">"male"</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-    <span class="s">"age"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s">"birthdate"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
-    <span class="s">"likes"</span><span class="p">:</span> <span class="p">[</span><span class="s">"green color"</span><span class="p">,</span> <span class="s">"night"</span><span class="p">,</span> <span class="s">"toys"</span><span class="p">],</span>
-    <span class="s">"extra1"</span><span class="p">:</span> <span class="bp">None</span>
-<span class="p">}</span>
-<span class="n">parrot2</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s">"name"</span><span class="p">:</span> <span class="s">"Bounty"</span><span class="p">,</span>
-    <span class="s">"type"</span><span class="p">:</span> <span class="s">"Cockatoo"</span><span class="p">,</span>
-    <span class="s">"male"</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
-    <span class="s">"age"</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
-    <span class="s">"birthdate"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
-    <span class="s">"likes"</span><span class="p">:</span> <span class="p">[</span><span class="s">"sugar cane"</span><span class="p">],</span>
-    <span class="s">"extra1"</span><span class="p">:</span> <span class="bp">None</span>
-<span class="p">}</span>
-<span class="n">ejdb</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">"parrots2"</span><span class="p">,</span> <span class="n">parrot1</span><span class="p">,</span> <span class="n">parrot2</span><span class="p">)</span>
+parrot1 <span class="pl-k">=</span> {
+    <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>Grenny<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>African Grey<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>male<span class="pl-pds">"</span></span>: <span class="pl-c1">True</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span>: <span class="pl-c1">1</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>birthdate<span class="pl-pds">"</span></span>: datetime.utcnow(),
+    <span class="pl-s1"><span class="pl-pds">"</span>likes<span class="pl-pds">"</span></span>: [<span class="pl-s1"><span class="pl-pds">"</span>green color<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>night<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>toys<span class="pl-pds">"</span></span>],
+    <span class="pl-s1"><span class="pl-pds">"</span>extra1<span class="pl-pds">"</span></span>: <span class="pl-c1">None</span>
+}
+parrot2 <span class="pl-k">=</span> {
+    <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>Bounty<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>Cockatoo<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>male<span class="pl-pds">"</span></span>: <span class="pl-c1">False</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span>: <span class="pl-c1">15</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>birthdate<span class="pl-pds">"</span></span>: datetime.utcnow(),
+    <span class="pl-s1"><span class="pl-pds">"</span>likes<span class="pl-pds">"</span></span>: [<span class="pl-s1"><span class="pl-pds">"</span>sugar cane<span class="pl-pds">"</span></span>],
+    <span class="pl-s1"><span class="pl-pds">"</span>extra1<span class="pl-pds">"</span></span>: <span class="pl-c1">None</span>
+}
+ejdb.save(<span class="pl-s1"><span class="pl-pds">"</span>parrots2<span class="pl-pds">"</span></span>, parrot1, parrot2)
 
-<span class="k">with</span> <span class="n">ejdb</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">"parrots2"</span><span class="p">,</span> <span class="p">{</span><span class="s">"likes"</span> <span class="p">:</span> <span class="s">"toys"</span><span class="p">},</span>
-          <span class="n">hints</span><span class="o">=</span><span class="p">{</span><span class="s">"$orderby"</span> <span class="p">:</span> <span class="p">[(</span><span class="s">"name"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]})</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">"found </span><span class="si">%s</span><span class="s"> parrots"</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">cur</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="si">%s</span><span class="s"> likes toys!"</span> <span class="o">%</span> <span class="n">p</span><span class="p">[</span><span class="s">"name"</span><span class="p">])</span>
+<span class="pl-k">with</span> ejdb.find(<span class="pl-s1"><span class="pl-pds">"</span>parrots2<span class="pl-pds">"</span></span>, {<span class="pl-s1"><span class="pl-pds">"</span>likes<span class="pl-pds">"</span></span> : <span class="pl-s1"><span class="pl-pds">"</span>toys<span class="pl-pds">"</span></span>},
+          <span class="pl-vpf">hints</span><span class="pl-k">=</span>{<span class="pl-s1"><span class="pl-pds">"</span>$orderby<span class="pl-pds">"</span></span> : [(<span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-c1">1</span>)]}) <span class="pl-k">as</span> cur:
+    <span class="pl-k">print</span>(<span class="pl-s1"><span class="pl-pds">"</span>found <span class="pl-c1">%s</span> parrots<span class="pl-pds">"</span></span> <span class="pl-k">%</span> <span class="pl-s3">len</span>(cur))
+    <span class="pl-k">for</span> p <span class="pl-k">in</span> cur:
+        <span class="pl-k">print</span>(<span class="pl-s1"><span class="pl-pds">"</span><span class="pl-c1">%s</span> likes toys!<span class="pl-pds">"</span></span> <span class="pl-k">%</span> p[<span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>])
 
-<span class="n">ejdb</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
+ejdb.close()</pre></div>
 
 <p><strong><a href="https://github.com/Softmotions/ejdb-python">EJDB Python 2.7/3.x binding page</a></strong></p>
 
 <h1>
-<a name="ejdb-lua" class="anchor" href="#ejdb-lua"><span class="octicon octicon-link"></span></a>EJDB Lua</h1>
+<a id="ejdb-lua" class="anchor" href="#ejdb-lua" aria-hidden="true"><span class="octicon octicon-link"></span></a>EJDB Lua</h1>
 
 <h2>
-<a name="one-snippet-intro-2" class="anchor" href="#one-snippet-intro-2"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
+<a id="one-snippet-intro-2" class="anchor" href="#one-snippet-intro-2" aria-hidden="true"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
-<div class="highlight highlight-lua"><pre><span class="kd">local</span> <span class="n">ejdb</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s2">"</span><span class="s">ejdb"</span><span class="p">)</span>
-<span class="kd">local</span> <span class="n">inspect</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s2">"</span><span class="s">ejdb.inspect"</span><span class="p">)</span>
-<span class="kd">local</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">ejdb</span><span class="p">.</span><span class="n">Q</span>
+<div class="highlight highlight-lua"><pre><span class="pl-k">local</span> ejdb <span class="pl-k">=</span> <span class="pl-s3">require</span>(<span class="pl-s1"><span class="pl-pds">"</span>ejdb<span class="pl-pds">"</span></span>)
+<span class="pl-k">local</span> inspect <span class="pl-k">=</span> <span class="pl-s3">require</span>(<span class="pl-s1"><span class="pl-pds">"</span>ejdb.inspect<span class="pl-pds">"</span></span>)
+<span class="pl-k">local</span> Q <span class="pl-k">=</span> ejdb.<span class="pl-vo">Q</span>
 
-<span class="c1">-- Used modes:</span>
-<span class="c1">-- 'r' - read</span>
-<span class="c1">-- 'w' - write</span>
-<span class="c1">-- 'c' - create db if not exists</span>
-<span class="c1">-- 't' - truncate existing db</span>
-<span class="kd">local</span> <span class="n">db</span> <span class="o">=</span> <span class="n">ejdb</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"</span><span class="s">zoo"</span><span class="p">,</span> <span class="s2">"</span><span class="s">rwct"</span><span class="p">)</span>
+<span class="pl-c">-- Used modes:</span>
+<span class="pl-c">-- 'r' - read</span>
+<span class="pl-c">-- 'w' - write</span>
+<span class="pl-c">-- 'c' - create db if not exists</span>
+<span class="pl-c">-- 't' - truncate existing db</span>
+<span class="pl-k">local</span> db <span class="pl-k">=</span> ejdb.<span class="pl-s3">open</span>(<span class="pl-s1"><span class="pl-pds">"</span>zoo<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>rwct<span class="pl-pds">"</span></span>)
 
-<span class="c1">-- Unordered lua table</span>
-<span class="kd">local</span> <span class="n">parrot1</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="n">name</span> <span class="o">=</span> <span class="s2">"</span><span class="s">Grenny"</span><span class="p">,</span>
-  <span class="nb">type</span> <span class="o">=</span> <span class="s2">"</span><span class="s">African Grey"</span><span class="p">,</span>
-  <span class="n">male</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>
-  <span class="n">age</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-  <span class="n">birthhdate</span> <span class="o">=</span> <span class="n">ejdb</span><span class="p">.</span><span class="n">toDateNow</span><span class="p">(),</span>
-  <span class="n">likes</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">"</span><span class="s">green color"</span><span class="p">,</span> <span class="s2">"</span><span class="s">night"</span><span class="p">,</span> <span class="s2">"</span><span class="s">toys"</span> <span class="p">},</span>
-  <span class="n">extra1</span> <span class="o">=</span> <span class="n">ejdb</span><span class="p">.</span><span class="n">toNull</span><span class="p">()</span>
-<span class="p">}</span>
+<span class="pl-c">-- Unordered lua table</span>
+<span class="pl-k">local</span> parrot1 <span class="pl-k">=</span> {
+  name <span class="pl-k">=</span> <span class="pl-s1"><span class="pl-pds">"</span>Grenny<span class="pl-pds">"</span></span>,
+  type <span class="pl-k">=</span> <span class="pl-s1"><span class="pl-pds">"</span>African Grey<span class="pl-pds">"</span></span>,
+  male <span class="pl-k">=</span> <span class="pl-c1">true</span>,
+  age <span class="pl-k">=</span> <span class="pl-c1">1</span>,
+  birthhdate <span class="pl-k">=</span> ejdb.<span class="pl-s3">toDateNow</span>(),
+  likes <span class="pl-k">=</span> { <span class="pl-s1"><span class="pl-pds">"</span>green color<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>night<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>toys<span class="pl-pds">"</span></span> },
+  extra1 <span class="pl-k">=</span> ejdb.<span class="pl-s3">toNull</span>()
+}
 
-<span class="c1">-- Preserve order of BSON keys</span>
-<span class="kd">local</span> <span class="n">parrot2</span> <span class="o">=</span> <span class="n">Q</span><span class="p">();</span>
-<span class="n">parrot2</span><span class="p">:</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">name"</span><span class="p">,</span> <span class="s2">"</span><span class="s">Bounty"</span><span class="p">):</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">type"</span><span class="p">,</span> <span class="s2">"</span><span class="s">Cockatoo"</span><span class="p">):</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">male"</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
-<span class="n">parrot2</span><span class="p">:</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">age"</span><span class="p">,</span> <span class="mi">15</span><span class="p">):</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">birthdate"</span><span class="p">,</span>
-  <span class="n">ejdb</span><span class="p">.</span><span class="n">toDate</span><span class="p">({</span> <span class="n">year</span> <span class="o">=</span> <span class="mi">2013</span><span class="p">,</span> <span class="n">month</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">day</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">hour</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sec</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">}))</span>
-<span class="n">parrot2</span><span class="p">:</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">likes"</span><span class="p">,</span> <span class="p">{</span> <span class="s2">"</span><span class="s">sugar cane"</span> <span class="p">}):</span><span class="n">KV</span><span class="p">(</span><span class="s2">"</span><span class="s">extra1"</span><span class="p">,</span> <span class="n">ejdb</span><span class="p">.</span><span class="n">toNull</span><span class="p">())</span>
+<span class="pl-c">-- Preserve order of BSON keys</span>
+<span class="pl-k">local</span> parrot2 <span class="pl-k">=</span> <span class="pl-s3">Q</span>();
+parrot2:<span class="pl-s3">KV</span>(<span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>Bounty<span class="pl-pds">"</span></span>):<span class="pl-s3">KV</span>(<span class="pl-s1"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>Cockatoo<span class="pl-pds">"</span></span>):<span class="pl-s3">KV</span>(<span class="pl-s1"><span class="pl-pds">"</span>male<span class="pl-pds">"</span></span>, <span class="pl-c1">false</span>)
+parrot2:<span class="pl-s3">KV</span>(<span class="pl-s1"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span>, <span class="pl-c1">15</span>):<span class="pl-s3">KV</span>(<span class="pl-s1"><span class="pl-pds">"</span>birthdate<span class="pl-pds">"</span></span>,
+  ejdb.<span class="pl-s3">toDate</span>({ year <span class="pl-k">=</span> <span class="pl-c1">2013</span>, month <span class="pl-k">=</span> <span class="pl-c1">1</span>, day <span class="pl-k">=</span> <span class="pl-c1">1</span>, hour <span class="pl-k">=</span> <span class="pl-c1">0</span>, sec <span class="pl-k">=</span> <span class="pl-c1">1</span> }))
+parrot2:<span class="pl-s3">KV</span>(<span class="pl-s1"><span class="pl-pds">"</span>likes<span class="pl-pds">"</span></span>, { <span class="pl-s1"><span class="pl-pds">"</span>sugar cane<span class="pl-pds">"</span></span> }):<span class="pl-s3">KV</span>(<span class="pl-s1"><span class="pl-pds">"</span>extra1<span class="pl-pds">"</span></span>, ejdb.<span class="pl-s3">toNull</span>())
 
-<span class="c1">--IF YOU WANT SOME DATA INSPECTIONS:</span>
-<span class="c1">--print(ejdb.print_bson(parrot2:toBSON()))</span>
-<span class="c1">--local obj = ejdb.from_bson(parrot2:toBSON())</span>
-<span class="c1">--print(inspect(obj));</span>
+<span class="pl-c">--IF YOU WANT SOME DATA INSPECTIONS:</span>
+<span class="pl-c">--print(ejdb.print_bson(parrot2:toBSON()))</span>
+<span class="pl-c">--local obj = ejdb.from_bson(parrot2:toBSON())</span>
+<span class="pl-c">--print(inspect(obj));</span>
 
-<span class="n">db</span><span class="p">:</span><span class="n">save</span><span class="p">(</span><span class="s2">"</span><span class="s">parrots2"</span><span class="p">,</span> <span class="n">parrot1</span><span class="p">)</span>
-<span class="n">db</span><span class="p">:</span><span class="n">save</span><span class="p">(</span><span class="s2">"</span><span class="s">parrots2"</span><span class="p">,</span> <span class="n">parrot2</span><span class="p">)</span>
+db:<span class="pl-s3">save</span>(<span class="pl-s1"><span class="pl-pds">"</span>parrots2<span class="pl-pds">"</span></span>, parrot1)
+db:<span class="pl-s3">save</span>(<span class="pl-s1"><span class="pl-pds">"</span>parrots2<span class="pl-pds">"</span></span>, parrot2)
 
-<span class="c1">-- Below two equivalent queries:</span>
-<span class="c1">-- Q1</span>
-<span class="kd">local</span> <span class="n">res</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span>
-<span class="n">db</span><span class="p">:</span><span class="n">find</span><span class="p">(</span><span class="s2">"</span><span class="s">parrots2"</span><span class="p">,</span> <span class="n">Q</span><span class="p">(</span><span class="s2">"</span><span class="s">likes"</span><span class="p">,</span> <span class="s2">"</span><span class="s">toys"</span><span class="p">):</span><span class="n">OrderBy</span><span class="p">(</span><span class="s2">"</span><span class="s">name asc"</span><span class="p">,</span> <span class="s2">"</span><span class="s">age desc"</span><span class="p">))</span>
-<span class="k">for</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">#</span><span class="n">res</span> <span class="k">do</span> <span class="c1">-- iterate one</span>
-  <span class="kd">local</span> <span class="n">ob</span> <span class="o">=</span> <span class="n">res</span><span class="p">:</span><span class="n">object</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-  <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="s">"</span> <span class="o">..</span> <span class="n">ob</span><span class="p">[</span><span class="s2">"</span><span class="s">name"</span><span class="p">]</span> <span class="o">..</span> <span class="s2">"</span><span class="s"> likes toys #1"</span><span class="p">)</span>
-<span class="k">end</span>
+<span class="pl-c">-- Below two equivalent queries:</span>
+<span class="pl-c">-- Q1</span>
+<span class="pl-k">local</span> res, count, log <span class="pl-k">=</span>
+db:<span class="pl-s3">find</span>(<span class="pl-s1"><span class="pl-pds">"</span>parrots2<span class="pl-pds">"</span></span>, <span class="pl-s3">Q</span>(<span class="pl-s1"><span class="pl-pds">"</span>likes<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>toys<span class="pl-pds">"</span></span>):<span class="pl-s3">OrderBy</span>(<span class="pl-s1"><span class="pl-pds">"</span>name asc<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>age desc<span class="pl-pds">"</span></span>))
+<span class="pl-k">for</span> i <span class="pl-k">=</span> <span class="pl-c1">1</span>, <span class="pl-k">#</span>res <span class="pl-k">do</span> <span class="pl-c">-- iterate one</span>
+  <span class="pl-k">local</span> ob <span class="pl-k">=</span> res:<span class="pl-s3">object</span>(i)
+  <span class="pl-s3">print</span>(<span class="pl-s1"><span class="pl-pds">"</span><span class="pl-pds">"</span></span> <span class="pl-k">..</span> ob[<span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>] <span class="pl-k">..</span> <span class="pl-s1"><span class="pl-pds">"</span> likes toys #1<span class="pl-pds">"</span></span>)
+<span class="pl-k">end</span>
 
-<span class="c1">-- Q2</span>
-<span class="kd">local</span> <span class="n">res</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span>
-<span class="n">db</span><span class="p">:</span><span class="n">find</span><span class="p">(</span><span class="s2">"</span><span class="s">parrots2"</span><span class="p">,</span> <span class="n">Q</span><span class="p">():</span><span class="n">F</span><span class="p">(</span><span class="s2">"</span><span class="s">likes"</span><span class="p">):</span><span class="n">Eq</span><span class="p">(</span><span class="s2">"</span><span class="s">toys"</span><span class="p">):</span><span class="n">OrderBy</span><span class="p">({</span> <span class="n">name</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">},</span> <span class="p">{</span> <span class="n">age</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="p">}))</span>
-<span class="k">for</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">#</span><span class="n">res</span> <span class="k">do</span> <span class="c1">-- iterate one</span>
-  <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="s">"</span> <span class="o">..</span> <span class="n">res</span><span class="p">:</span><span class="n">field</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s2">"</span><span class="s">name"</span><span class="p">)</span> <span class="o">..</span> <span class="s2">"</span><span class="s"> likes toys #2"</span><span class="p">)</span>
-<span class="k">end</span>
+<span class="pl-c">-- Q2</span>
+<span class="pl-k">local</span> res, count, log <span class="pl-k">=</span>
+db:<span class="pl-s3">find</span>(<span class="pl-s1"><span class="pl-pds">"</span>parrots2<span class="pl-pds">"</span></span>, <span class="pl-s3">Q</span>():<span class="pl-s3">F</span>(<span class="pl-s1"><span class="pl-pds">"</span>likes<span class="pl-pds">"</span></span>):<span class="pl-s3">Eq</span>(<span class="pl-s1"><span class="pl-pds">"</span>toys<span class="pl-pds">"</span></span>):<span class="pl-s3">OrderBy</span>({ name <span class="pl-k">=</span> <span class="pl-c1">1</span> }, { age <span class="pl-k">=</span> <span class="pl-k">-</span><span class="pl-c1">1</span> }))
+<span class="pl-k">for</span> i <span class="pl-k">=</span> <span class="pl-c1">1</span>, <span class="pl-k">#</span>res <span class="pl-k">do</span> <span class="pl-c">-- iterate one</span>
+  <span class="pl-s3">print</span>(<span class="pl-s1"><span class="pl-pds">"</span><span class="pl-pds">"</span></span> <span class="pl-k">..</span> res:<span class="pl-s3">field</span>(i, <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>) <span class="pl-k">..</span> <span class="pl-s1"><span class="pl-pds">"</span> likes toys #2<span class="pl-pds">"</span></span>)
+<span class="pl-k">end</span>
 
-<span class="c1">-- Second way to iterate</span>
-<span class="k">for</span> <span class="n">vobj</span><span class="p">,</span> <span class="n">idx</span> <span class="k">in</span> <span class="n">res</span><span class="p">()</span> <span class="k">do</span>
-  <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="s">"</span> <span class="o">..</span> <span class="n">vobj</span><span class="p">[</span><span class="s2">"</span><span class="s">name"</span><span class="p">]</span> <span class="o">..</span> <span class="s2">"</span><span class="s"> likes toys #3"</span><span class="p">)</span>
-<span class="k">end</span>
+<span class="pl-c">-- Second way to iterate</span>
+<span class="pl-k">for</span> vobj, idx <span class="pl-k">in</span> <span class="pl-s3">res</span>() <span class="pl-k">do</span>
+  <span class="pl-s3">print</span>(<span class="pl-s1"><span class="pl-pds">"</span><span class="pl-pds">"</span></span> <span class="pl-k">..</span> vobj[<span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>] <span class="pl-k">..</span> <span class="pl-s1"><span class="pl-pds">"</span> likes toys #3<span class="pl-pds">"</span></span>)
+<span class="pl-k">end</span>
 
-<span class="n">db</span><span class="p">:</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
+db:<span class="pl-s3">close</span>()</pre></div>
 
 <p><strong><a href="https://github.com/Softmotions/ejdb-lua">EJDB Lua binding page</a></strong></p>
 
 <h1>
-<a name="ejdb-go" class="anchor" href="#ejdb-go"><span class="octicon octicon-link"></span></a>EJDB Go</h1>
+<a id="ejdb-go" class="anchor" href="#ejdb-go" aria-hidden="true"><span class="octicon octicon-link"></span></a>EJDB Go</h1>
 
 <h2>
-<a name="one-snippet-intro-3" class="anchor" href="#one-snippet-intro-3"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
+<a id="one-snippet-intro-3" class="anchor" href="#one-snippet-intro-3" aria-hidden="true"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
-<div class="highlight highlight-go"><pre><span class="kn">package</span> <span class="nx">ejdbtutorial</span>
+<div class="highlight highlight-go"><pre><span class="pl-k">package</span> ejdbtutorial
 
-<span class="kn">import</span> <span class="p">(</span>
-    <span class="s">"fmt"</span>
-    <span class="s">"github.com/mkilling/goejdb"</span>
-    <span class="s">"labix.org/v2/mgo/bson"</span>
-    <span class="s">"os"</span>
-<span class="p">)</span>
+<span class="pl-k">import</span> (
+    <span class="pl-s1"><span class="pl-pds">"</span>fmt<span class="pl-pds">"</span></span>
+    <span class="pl-s1"><span class="pl-pds">"</span>github.com/mkilling/goejdb<span class="pl-pds">"</span></span>
+    <span class="pl-s1"><span class="pl-pds">"</span>labix.org/v2/mgo/bson<span class="pl-pds">"</span></span>
+    <span class="pl-s1"><span class="pl-pds">"</span>os<span class="pl-pds">"</span></span>
+)
 
-<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// Create a new database file and open it</span>
-    <span class="nx">jb</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">goejdb</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="s">"addressbook"</span><span class="p">,</span> <span class="nx">JBOWRITER</span> <span class="p">|</span> <span class="nx">JBOCREAT</span> <span class="p">|</span> <span class="nx">JBOTRUNC</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-        <span class="nx">os</span><span class="p">.</span><span class="nx">Exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="p">}</span>
-    <span class="c1">// Get or create collection 'contacts'</span>
-    <span class="nx">coll</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">jb</span><span class="p">.</span><span class="nx">CreateColl</span><span class="p">(</span><span class="s">"contacts"</span><span class="p">,</span> <span class="kc">nil</span><span class="p">)</span>
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+    <span class="pl-c">// Create a new database file and open it</span>
+    <span class="pl-vo">jb</span>, <span class="pl-vo">err</span> <span class="pl-k">:=</span> goejdb.<span class="pl-s3">Open</span>(<span class="pl-s1"><span class="pl-pds">"</span>addressbook<span class="pl-pds">"</span></span>, JBOWRITER | JBOCREAT | JBOTRUNC)
+    <span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+        os.<span class="pl-s3">Exit</span>(<span class="pl-c1">1</span>)
+    }
+    <span class="pl-c">// Get or create collection 'contacts'</span>
+    <span class="pl-vo">coll</span>, <span class="pl-vo">_</span> <span class="pl-k">:=</span> jb.<span class="pl-s3">CreateColl</span>(<span class="pl-s1"><span class="pl-pds">"</span>contacts<span class="pl-pds">"</span></span>, <span class="pl-c1">nil</span>)
 
-    <span class="c1">// Insert one record:</span>
-    <span class="c1">// JSON: {'name' : 'Bruce', 'phone' : '333-222-333', 'age' : 58}</span>
-    <span class="nx">rec</span> <span class="o">:=</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{}</span> <span class="p">{</span><span class="s">"name"</span> <span class="p">:</span> <span class="s">"Bruce"</span><span class="p">,</span> <span class="s">"phone"</span> <span class="p">:</span> <span class="s">"333-222-333"</span><span class="p">,</span> <span class="s">"age"</span> <span class="p">:</span> <span class="mi">58</span><span class="p">}</span>
-    <span class="nx">bsrec</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">bson</span><span class="p">.</span><span class="nx">Marshal</span><span class="p">(</span><span class="nx">rec</span><span class="p">)</span>
-    <span class="nx">coll</span><span class="p">.</span><span class="nx">SaveBson</span><span class="p">(</span><span class="nx">bsrec</span><span class="p">)</span>
-    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">"\nSaved Bruce"</span><span class="p">)</span>
+    <span class="pl-c">// Insert one record:</span>
+    <span class="pl-c">// JSON: {'name' : 'Bruce', 'phone' : '333-222-333', 'age' : 58}</span>
+    <span class="pl-vo">rec</span> <span class="pl-k">:=</span> <span class="pl-s">map</span>[<span class="pl-st">string</span>]<span class="pl-k">interface</span>{} {<span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span> : <span class="pl-s1"><span class="pl-pds">"</span>Bruce<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>phone<span class="pl-pds">"</span></span> : <span class="pl-s1"><span class="pl-pds">"</span>333-222-333<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span> : <span class="pl-c1">58</span>}
+    <span class="pl-vo">bsrec</span>, <span class="pl-vo">_</span> <span class="pl-k">:=</span> bson.<span class="pl-s3">Marshal</span>(rec)
+    coll.<span class="pl-s3">SaveBson</span>(bsrec)
+    fmt.<span class="pl-s3">Printf</span>(<span class="pl-s1"><span class="pl-pds">"</span><span class="pl-cce">\n</span>Saved Bruce<span class="pl-pds">"</span></span>)
 
-    <span class="c1">// Now execute query</span>
-    <span class="nx">res</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">coll</span><span class="p">.</span><span class="nx">Find</span><span class="p">(</span><span class="s">`{"name" : {"$begin" : "Bru"}}`</span><span class="p">)</span> <span class="c1">// Name starts with 'Bru' string</span>
-    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">"\n\nRecords found: %d\n"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">res</span><span class="p">))</span>
+    <span class="pl-c">// Now execute query</span>
+    <span class="pl-vo">res</span>, <span class="pl-vo">_</span> <span class="pl-k">:=</span> coll.<span class="pl-s3">Find</span>(<span class="pl-s1"><span class="pl-pds">`</span>{"name" : {"$begin" : "Bru"}}<span class="pl-pds">`</span></span>) <span class="pl-c">// Name starts with 'Bru' string</span>
+    fmt.<span class="pl-s3">Printf</span>(<span class="pl-s1"><span class="pl-pds">"</span><span class="pl-cce">\n\n</span>Records found: <span class="pl-c1">%d</span><span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, <span class="pl-s3">len</span>(res))
 
-    <span class="c1">// Now print the result set records</span>
-    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">bs</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">res</span> <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">m</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{}</span>
-        <span class="nx">bson</span><span class="p">.</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">bs</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">m</span><span class="p">)</span>
-        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">m</span><span class="p">)</span>
-    <span class="p">}</span>
+    <span class="pl-c">// Now print the result set records</span>
+    <span class="pl-k">for</span> <span class="pl-vo">_</span>, <span class="pl-vo">bs</span> <span class="pl-k">:=</span> <span class="pl-k">range</span> res {
+        <span class="pl-k">var</span> <span class="pl-vo">m</span> <span class="pl-s">map</span>[<span class="pl-st">string</span>]<span class="pl-k">interface</span>{}
+        bson.<span class="pl-s3">Unmarshal</span>(bs, &amp;m)
+        fmt.<span class="pl-s3">Println</span>(m)
+    }
 
-    <span class="c1">// Close database</span>
-    <span class="nx">jb</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
-<span class="p">}</span>
-</pre></div>
+    <span class="pl-c">// Close database</span>
+    jb.<span class="pl-s3">Close</span>()
+}</pre></div>
 
 <p><strong><a href="https://github.com/mkilling/goejdb">EJDB Go binding page</a></strong></p>
 
 <h1>
-<a name="ejdb-ruby" class="anchor" href="#ejdb-ruby"><span class="octicon octicon-link"></span></a>EJDB Ruby</h1>
+<a id="ejdb-ruby" class="anchor" href="#ejdb-ruby" aria-hidden="true"><span class="octicon octicon-link"></span></a>EJDB Ruby</h1>
 
 <h2>
-<a name="one-snippet-intro-4" class="anchor" href="#one-snippet-intro-4"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
+<a id="one-snippet-intro-4" class="anchor" href="#one-snippet-intro-4" aria-hidden="true"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
-<div class="highlight highlight-Ruby"><pre><span class="nb">require</span> <span class="s2">"rbejdb"</span>
+<div class="highlight highlight-Ruby"><pre><span class="pl-k">require</span> <span class="pl-s1"><span class="pl-pds">"</span>rbejdb<span class="pl-pds">"</span></span>
 
-<span class="c1">#Open zoo DB</span>
-<span class="n">jb</span> <span class="o">=</span> <span class="no">EJDB</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"zoo"</span><span class="p">,</span> <span class="ss">EJDB</span><span class="p">:</span><span class="ss">:DEFAULT_OPEN_MODE</span> <span class="o">|</span> <span class="ss">EJDB</span><span class="p">:</span><span class="ss">:JBOTRUNC</span><span class="p">)</span>
+<span class="pl-c">#Open zoo DB</span>
+jb <span class="pl-k">=</span> <span class="pl-s3">EJDB</span>.open(<span class="pl-s1"><span class="pl-pds">"</span>zoo<span class="pl-pds">"</span></span>, <span class="pl-s3">EJDB</span>::<span class="pl-vo">DEFAULT_OPEN_MODE</span> <span class="pl-k">|</span> <span class="pl-s3">EJDB</span>::<span class="pl-vo">JBOTRUNC</span>)
 
-<span class="n">parrot1</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"name"</span> <span class="o">=&gt;</span> <span class="s2">"Grenny"</span><span class="p">,</span>
-    <span class="s2">"type"</span> <span class="o">=&gt;</span> <span class="s2">"African Grey"</span><span class="p">,</span>
-    <span class="s2">"male"</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
-    <span class="s2">"age"</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">"birthdate"</span> <span class="o">=&gt;</span> <span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="p">,</span>
-    <span class="s2">"likes"</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="s2">"green color"</span><span class="p">,</span> <span class="s2">"night"</span><span class="p">,</span> <span class="s2">"toys"</span><span class="o">]</span><span class="p">,</span>
-    <span class="s2">"extra1"</span> <span class="o">=&gt;</span> <span class="kp">nil</span>
-<span class="p">}</span>
-<span class="n">parrot2</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"name"</span> <span class="o">=&gt;</span> <span class="s2">"Bounty"</span><span class="p">,</span>
-    <span class="s2">"type"</span> <span class="o">=&gt;</span> <span class="s2">"Cockatoo"</span><span class="p">,</span>
-    <span class="s2">"male"</span> <span class="o">=&gt;</span> <span class="kp">false</span><span class="p">,</span>
-    <span class="s2">"age"</span> <span class="o">=&gt;</span> <span class="mi">15</span><span class="p">,</span>
-    <span class="s2">"birthdate"</span> <span class="o">=&gt;</span> <span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="p">,</span>
-    <span class="s2">"likes"</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="s2">"sugar cane"</span><span class="o">]</span><span class="p">,</span>
-    <span class="s2">"extra1"</span> <span class="o">=&gt;</span> <span class="kp">nil</span>
-<span class="p">}</span>
+parrot1 <span class="pl-k">=</span> {
+    <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>Grenny<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>African Grey<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>male<span class="pl-pds">"</span></span> =&gt; <span class="pl-c1">true</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span> =&gt; <span class="pl-c1">1</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>birthdate<span class="pl-pds">"</span></span> =&gt; <span class="pl-s3">Time</span>.now,
+    <span class="pl-s1"><span class="pl-pds">"</span>likes<span class="pl-pds">"</span></span> =&gt; [<span class="pl-s1"><span class="pl-pds">"</span>green color<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>night<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>toys<span class="pl-pds">"</span></span>],
+    <span class="pl-s1"><span class="pl-pds">"</span>extra1<span class="pl-pds">"</span></span> =&gt; <span class="pl-c1">nil</span>
+}
+parrot2 <span class="pl-k">=</span> {
+    <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>Bounty<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>Cockatoo<span class="pl-pds">"</span></span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>male<span class="pl-pds">"</span></span> =&gt; <span class="pl-c1">false</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span> =&gt; <span class="pl-c1">15</span>,
+    <span class="pl-s1"><span class="pl-pds">"</span>birthdate<span class="pl-pds">"</span></span> =&gt; <span class="pl-s3">Time</span>.now,
+    <span class="pl-s1"><span class="pl-pds">"</span>likes<span class="pl-pds">"</span></span> =&gt; [<span class="pl-s1"><span class="pl-pds">"</span>sugar cane<span class="pl-pds">"</span></span>],
+    <span class="pl-s1"><span class="pl-pds">"</span>extra1<span class="pl-pds">"</span></span> =&gt; <span class="pl-c1">nil</span>
+}
 
-<span class="n">jb</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"parrots"</span><span class="p">,</span> <span class="n">parrot1</span><span class="p">,</span> <span class="n">parrot2</span><span class="p">)</span>
-<span class="nb">puts</span> <span class="s2">"Grenny OID: </span><span class="si">#{</span><span class="n">parrot1</span><span class="o">[</span><span class="s2">"_id"</span><span class="o">]</span><span class="si">}</span><span class="s2">"</span>
-<span class="nb">puts</span> <span class="s2">"Bounty OID: </span><span class="si">#{</span><span class="n">parrot2</span><span class="o">[</span><span class="s2">"_id"</span><span class="o">]</span><span class="si">}</span><span class="s2">"</span>
+jb.save(<span class="pl-s1"><span class="pl-pds">"</span>parrots<span class="pl-pds">"</span></span>, parrot1, parrot2)
+puts <span class="pl-s1"><span class="pl-pds">"</span>Grenny OID: <span class="pl-pse">#{</span><span class="pl-s2">parrot1[<span class="pl-s1"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span>]</span><span class="pl-pse"><span class="pl-s2">}</span></span><span class="pl-pds">"</span></span>
+puts <span class="pl-s1"><span class="pl-pds">"</span>Bounty OID: <span class="pl-pse">#{</span><span class="pl-s2">parrot2[<span class="pl-s1"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span>]</span><span class="pl-pse"><span class="pl-s2">}</span></span><span class="pl-pds">"</span></span>
 
-<span class="n">results</span> <span class="o">=</span> <span class="n">jb</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"parrots"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"likes"</span> <span class="o">=&gt;</span> <span class="s2">"toys"</span><span class="p">},</span> <span class="p">{</span><span class="s2">"$orderby"</span> <span class="o">=&gt;</span> <span class="p">{</span><span class="s2">"name"</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">}})</span>
+results <span class="pl-k">=</span> jb.find(<span class="pl-s1"><span class="pl-pds">"</span>parrots<span class="pl-pds">"</span></span>, {<span class="pl-s1"><span class="pl-pds">"</span>likes<span class="pl-pds">"</span></span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>toys<span class="pl-pds">"</span></span>}, {<span class="pl-s1"><span class="pl-pds">"</span>$orderby<span class="pl-pds">"</span></span> =&gt; {<span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span> =&gt; <span class="pl-c1">1</span>}})
 
-<span class="nb">puts</span> <span class="s2">"Found </span><span class="si">#{</span><span class="n">results</span><span class="o">.</span><span class="n">count</span><span class="si">}</span><span class="s2"> parrots"</span>
+puts <span class="pl-s1"><span class="pl-pds">"</span>Found <span class="pl-pse">#{</span><span class="pl-s2">results.count</span><span class="pl-pse"><span class="pl-s2">}</span></span> parrots<span class="pl-pds">"</span></span>
 
-<span class="n">results</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span> <span class="o">|</span><span class="n">res</span><span class="o">|</span>
-  <span class="nb">puts</span> <span class="s2">"</span><span class="si">#{</span><span class="n">res</span><span class="o">[</span><span class="s1">'name'</span><span class="o">]</span><span class="si">}</span><span class="s2"> likes toys!"</span>
-<span class="p">}</span>
+results.each { |<span class="pl-vo">res</span>|
+  puts <span class="pl-s1"><span class="pl-pds">"</span><span class="pl-pse">#{</span><span class="pl-s2">res[<span class="pl-s1"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span>]</span><span class="pl-pse"><span class="pl-s2">}</span></span> likes toys!<span class="pl-pds">"</span></span>
+}
 
-<span class="n">results</span><span class="o">.</span><span class="n">close</span> <span class="c1">#It's not mandatory to close cursor explicitly</span>
-<span class="n">jb</span><span class="o">.</span><span class="n">close</span> <span class="c1">#Close the database</span>
-
+results.close <span class="pl-c">#It's not mandatory to close cursor explicitly</span>
+jb.close <span class="pl-c">#Close the database</span>
 </pre></div>
 
 <p><strong><a href="https://github.com/Softmotions/ejdb-ruby">EJDB Ruby binding page</a></strong></p>
 
 <h1>
-<a name="ejdb-adobe-air" class="anchor" href="#ejdb-adobe-air"><span class="octicon octicon-link"></span></a>EJDB Adobe AIR</h1>
+<a id="ejdb-adobe-air" class="anchor" href="#ejdb-adobe-air" aria-hidden="true"><span class="octicon octicon-link"></span></a>EJDB Adobe AIR</h1>
 
 <h2>
-<a name="one-snippet-intro-5" class="anchor" href="#one-snippet-intro-5"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
+<a id="one-snippet-intro-5" class="anchor" href="#one-snippet-intro-5" aria-hidden="true"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
-<div class="highlight highlight-as3"><pre><span class="c1">// Open the zoo DB</span>
-<span class="kd">var</span> <span class="n">db</span><span class="p">:</span><span class="kt">EJDBDatabase</span> <span class="o">=</span> <span class="n">EJDB</span><span class="o">.</span><span class="na">open</span><span class="o">(</span><span class="s2">"zoo"</span><span class="o">,</span> <span class="n">EJDB</span><span class="o">.</span><span class="na">DEFAULT_OPEN_MODE</span> <span class="o">|</span> <span class="n">EJDB</span><span class="o">.</span><span class="na">JBOTRUNC</span><span class="o">)</span> <span class="k">as</span> <span class="n">EJDBDatabase</span><span class="o">;</span>
+<div class="highlight highlight-as3"><pre><span class="pl-c">// Open the zoo DB</span>
+var db:EJDBDatabase = EJDB.open("zoo", EJDB.DEFAULT_OPEN_MODE | EJDB.JBOTRUNC) as EJDBDatabase;
 
-<span class="kd">var</span> <span class="n">parrot1</span><span class="p">:</span><span class="kt">Object</span> <span class="o">=</span> <span class="o">{</span>
-    <span class="s2">"name"</span> <span class="o">:</span> <span class="s2">"Grenny"</span><span class="o">,</span>
-    <span class="s2">"type"</span> <span class="o">:</span> <span class="s2">"African Grey"</span><span class="o">,</span>
-    <span class="s2">"male"</span> <span class="o">:</span> <span class="kc">true</span><span class="o">,</span>
-    <span class="s2">"age"</span> <span class="o">:</span> <span class="mi">1</span><span class="o">,</span>
-    <span class="s2">"birthdate"</span> <span class="o">:</span> <span class="k">new</span> <span class="kt">Date</span><span class="o">(),</span>
-    <span class="s2">"likes"</span> <span class="o">:</span> <span class="o">[</span><span class="s2">"green color"</span><span class="o">,</span> <span class="s2">"night"</span><span class="o">,</span> <span class="s2">"toys"</span><span class="o">],</span>
-    <span class="s2">"extra1"</span> <span class="o">:</span> <span class="kc">null</span>
-<span class="o">};</span>
-<span class="kd">var</span> <span class="n">parrot2</span><span class="p">:</span><span class="kt">Object</span> <span class="o">=</span> <span class="o">{</span>
-    <span class="s2">"name"</span> <span class="o">:</span> <span class="s2">"Bounty"</span><span class="o">,</span>
-    <span class="s2">"type"</span> <span class="o">:</span> <span class="s2">"Cockatoo"</span><span class="o">,</span>
-    <span class="s2">"male"</span> <span class="o">:</span> <span class="kc">false</span><span class="o">,</span>
-    <span class="s2">"age"</span> <span class="o">:</span> <span class="mi">15</span><span class="o">,</span>
-    <span class="s2">"birthdate"</span> <span class="o">:</span> <span class="k">new</span> <span class="kt">Date</span><span class="o">(),</span>
-    <span class="s2">"likes"</span> <span class="o">:</span> <span class="o">[</span><span class="s2">"sugar cane"</span><span class="o">]</span>
-<span class="o">};</span>
+var parrot1:Object = {
+    <span class="pl-s1">"name"</span> : <span class="pl-s1">"Grenny"</span>,
+    <span class="pl-s1">"type"</span> : <span class="pl-s1">"African Grey"</span>,
+    <span class="pl-s1">"male"</span> : true,
+    <span class="pl-s1">"age"</span> : 1,
+    <span class="pl-s1">"birthdate"</span> : new Date(),
+    <span class="pl-s1">"likes"</span> : [<span class="pl-s1">"green color"</span>, <span class="pl-s1">"night"</span>, <span class="pl-s1">"toys"</span>],
+    <span class="pl-s1">"extra1"</span> : null
+};
+var parrot2:Object = {
+    <span class="pl-s1">"name"</span> : <span class="pl-s1">"Bounty"</span>,
+    <span class="pl-s1">"type"</span> : <span class="pl-s1">"Cockatoo"</span>,
+    <span class="pl-s1">"male"</span> : false,
+    <span class="pl-s1">"age"</span> : 15,
+    <span class="pl-s1">"birthdate"</span> : new Date(),
+    <span class="pl-s1">"likes"</span> : [<span class="pl-s1">"sugar cane"</span>]
+};
 
-<span class="kd">var</span> <span class="n">oids</span><span class="p">:</span><span class="kt">Array</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="s2">"parrots"</span><span class="o">,</span> <span class="o">[</span><span class="n">parrot1</span><span class="o">,</span> <span class="n">parrot2</span><span class="o">]);</span>
-<span class="nf">trace</span><span class="o">(</span><span class="s2">"Grenny OID: "</span> <span class="o">+</span> <span class="n">parrot1</span><span class="o">.</span><span class="na">_id</span><span class="o">);</span>
-<span class="nf">trace</span><span class="o">(</span><span class="s2">"Bounty OID: "</span> <span class="o">+</span> <span class="n">parrot2</span><span class="o">.</span><span class="na">_id</span><span class="o">);</span>
+var oids:Array = db.save("parrots", [parrot1, parrot2]);
+trace("Grenny OID: " + parrot1._id);
+trace("Bounty OID: " + parrot2._id);
 
-<span class="kd">var</span> <span class="n">cursor</span><span class="p">:</span><span class="kt">EJDBCursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="na">find</span><span class="o">(</span><span class="s2">"parrots"</span><span class="o">,</span>
-    <span class="o">{</span><span class="s2">"likes"</span> <span class="o">:</span> <span class="s2">"toys"</span><span class="o">},</span>
-    <span class="o">[],</span>
-    <span class="o">{</span><span class="s2">"$orderby"</span> <span class="o">:</span> <span class="o">{</span><span class="s2">"name"</span> <span class="o">:</span> <span class="mi">1</span><span class="o">}}</span>
-<span class="o">);</span>
+var cursor:EJDBCursor = db.find("parrots",
+    {<span class="pl-s1">"likes"</span> : <span class="pl-s1">"toys"</span>},
+    [],
+    {<span class="pl-s1">"$orderby"</span> : {<span class="pl-s1">"name"</span> <span class="pl-k">:</span> <span class="pl-c1">1</span>}}
+);
 
-<span class="nf">trace</span><span class="o">(</span><span class="s2">"Found "</span> <span class="o">+</span> <span class="n">cursor</span><span class="o">.</span><span class="na">length</span> <span class="o">+</span> <span class="s2">" parrots"</span><span class="o">);</span>
-<span class="k">while</span> <span class="o">(</span><span class="n">cursor</span><span class="o">.</span><span class="na">next</span><span class="o">())</span> <span class="o">{</span>
-    <span class="nf">trace</span><span class="o">(</span><span class="n">cursor</span><span class="o">.</span><span class="na">field</span><span class="o">(</span><span class="s2">"name"</span><span class="o">)</span> <span class="o">+</span> <span class="s2">" likes toys!"</span><span class="o">);</span>
-<span class="o">}</span>
+trace("Found " + cursor.length + " parrots");
+while (cursor.next()) {
+    trace(cursor.field(<span class="pl-s1">"name"</span>) + <span class="pl-s1">" likes toys!"</span>);
+}
 
-<span class="n">cursor</span><span class="o">.</span><span class="na">close</span><span class="o">();</span> <span class="c1">// It IS mandatory to close cursor explicitly to free up resources</span>
-<span class="n">db</span><span class="o">.</span><span class="na">close</span><span class="o">();</span> <span class="c1">// Close the database</span>
-</pre></div>
+cursor.close(); <span class="pl-c">// It IS mandatory to close cursor explicitly to free up resources</span>
+db.close(); <span class="pl-c">// Close the database</span></pre></div>
 
 <p><strong><a href="https://github.com/thejustinwalsh/airejdb">Adobe Air Native Extension (ANE) for EJDB</a></strong></p>
 
 <h1>
-<a name="ejdb-c-library" class="anchor" href="#ejdb-c-library"><span class="octicon octicon-link"></span></a>EJDB C Library</h1>
+<a id="ejdb-c-library" class="anchor" href="#ejdb-c-library" aria-hidden="true"><span class="octicon octicon-link"></span></a>EJDB C Library</h1>
 
 <h2>
-<a name="one-snippet-intro-6" class="anchor" href="#one-snippet-intro-6"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
+<a id="one-snippet-intro-6" class="anchor" href="#one-snippet-intro-6" aria-hidden="true"><span class="octicon octicon-link"></span></a>One snippet intro</h2>
 
-<div class="highlight highlight-C"><pre><span class="cp">#include &lt;tcejdb/ejdb.h&gt;</span>
+<div class="highlight highlight-C"><pre>#<span class="pl-k">include</span> <span class="pl-s1"><span class="pl-pds">&lt;</span>tcejdb/ejdb.h<span class="pl-pds">&gt;</span></span>
 
-<span class="k">static</span> <span class="n">EJDB</span> <span class="o">*</span><span class="n">jb</span><span class="p">;</span>
+<span class="pl-s">static</span> EJDB *jb;
 
-<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="n">jb</span> <span class="o">=</span> <span class="n">ejdbnew</span><span class="p">();</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ejdbopen</span><span class="p">(</span><span class="n">jb</span><span class="p">,</span> <span class="s">"addressbook"</span><span class="p">,</span> <span class="n">JBOWRITER</span> <span class="o">|</span> <span class="n">JBOCREAT</span> <span class="o">|</span> <span class="n">JBOTRUNC</span><span class="p">))</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="c1">//Get or create collection 'contacts'</span>
-    <span class="n">EJCOLL</span> <span class="o">*</span><span class="n">coll</span> <span class="o">=</span> <span class="n">ejdbcreatecoll</span><span class="p">(</span><span class="n">jb</span><span class="p">,</span> <span class="s">"contacts"</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="pl-st">int</span> <span class="pl-en">main</span>() {
+    jb = <span class="pl-s3">ejdbnew</span>();
+    <span class="pl-k">if</span> (!<span class="pl-s3">ejdbopen</span>(jb, <span class="pl-s1"><span class="pl-pds">"</span>addressbook<span class="pl-pds">"</span></span>, JBOWRITER | JBOCREAT | JBOTRUNC)) {
+        <span class="pl-k">return</span> <span class="pl-c1">1</span>;
+    }
+    <span class="pl-c">//Get or create collection 'contacts'</span>
+    EJCOLL *coll = <span class="pl-s3">ejdbcreatecoll</span>(jb, <span class="pl-s1"><span class="pl-pds">"</span>contacts<span class="pl-pds">"</span></span>, <span class="pl-c1">NULL</span>);
 
-    <span class="n">bson</span> <span class="n">bsrec</span><span class="p">;</span>
-    <span class="kt">bson_oid_t</span> <span class="n">oid</span><span class="p">;</span>
+    bson bsrec;
+    <span class="pl-s3">bson_oid_t</span> oid;
 
-    <span class="c1">//Insert one record:</span>
-    <span class="c1">//JSON: {'name' : 'Bruce', 'phone' : '333-222-333', 'age' : 58}</span>
-    <span class="n">bson_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bsrec</span><span class="p">);</span>
-    <span class="n">bson_append_string</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bsrec</span><span class="p">,</span> <span class="s">"name"</span><span class="p">,</span> <span class="s">"Bruce"</span><span class="p">);</span>
-    <span class="n">bson_append_string</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bsrec</span><span class="p">,</span> <span class="s">"phone"</span><span class="p">,</span> <span class="s">"333-222-333"</span><span class="p">);</span>
-    <span class="n">bson_append_int</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bsrec</span><span class="p">,</span> <span class="s">"age"</span><span class="p">,</span> <span class="mi">58</span><span class="p">);</span>
-    <span class="n">bson_finish</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bsrec</span><span class="p">);</span>
-    <span class="c1">//Save BSON</span>
-    <span class="n">ejdbsavebson</span><span class="p">(</span><span class="n">coll</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bsrec</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">oid</span><span class="p">);</span>
-    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"</span><span class="se">\n</span><span class="s">Saved Bruce"</span><span class="p">);</span>
-    <span class="n">bson_destroy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bsrec</span><span class="p">);</span>
+    <span class="pl-c">//Insert one record:</span>
+    <span class="pl-c">//JSON: {'name' : 'Bruce', 'phone' : '333-222-333', 'age' : 58}</span>
+    <span class="pl-s3">bson_init</span>(&amp;bsrec);
+    <span class="pl-s3">bson_append_string</span>(&amp;bsrec, <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>Bruce<span class="pl-pds">"</span></span>);
+    <span class="pl-s3">bson_append_string</span>(&amp;bsrec, <span class="pl-s1"><span class="pl-pds">"</span>phone<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>333-222-333<span class="pl-pds">"</span></span>);
+    <span class="pl-s3">bson_append_int</span>(&amp;bsrec, <span class="pl-s1"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span>, <span class="pl-c1">58</span>);
+    <span class="pl-s3">bson_finish</span>(&amp;bsrec);
+    <span class="pl-c">//Save BSON</span>
+    <span class="pl-s3">ejdbsavebson</span>(coll, &amp;bsrec, &amp;oid);
+    <span class="pl-s3">fprintf</span>(stderr, <span class="pl-s1"><span class="pl-pds">"</span><span class="pl-cce">\n</span>Saved Bruce<span class="pl-pds">"</span></span>);
+    <span class="pl-s3">bson_destroy</span>(&amp;bsrec);
 
-    <span class="c1">//Now execute query</span>
-    <span class="c1">//QUERY: {'name' : {'$begin' : 'Bru'}} //Name starts with 'Bru' string</span>
-    <span class="n">bson</span> <span class="n">bq1</span><span class="p">;</span>
-    <span class="n">bson_init_as_query</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bq1</span><span class="p">);</span>
-    <span class="n">bson_append_start_object</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bq1</span><span class="p">,</span> <span class="s">"name"</span><span class="p">);</span>
-    <span class="n">bson_append_string</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bq1</span><span class="p">,</span> <span class="s">"$begin"</span><span class="p">,</span> <span class="s">"Bru"</span><span class="p">);</span>
-    <span class="n">bson_append_finish_object</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bq1</span><span class="p">);</span>
-    <span class="n">bson_finish</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bq1</span><span class="p">);</span>
+    <span class="pl-c">//Now execute query</span>
+    <span class="pl-c">//QUERY: {'name' : {'$begin' : 'Bru'}} //Name starts with 'Bru' string</span>
+    bson bq1;
+    <span class="pl-s3">bson_init_as_query</span>(&amp;bq1);
+    <span class="pl-s3">bson_append_start_object</span>(&amp;bq1, <span class="pl-s1"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>);
+    <span class="pl-s3">bson_append_string</span>(&amp;bq1, <span class="pl-s1"><span class="pl-pds">"</span>$begin<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>Bru<span class="pl-pds">"</span></span>);
+    <span class="pl-s3">bson_append_finish_object</span>(&amp;bq1);
+    <span class="pl-s3">bson_finish</span>(&amp;bq1);
 
-    <span class="n">EJQ</span> <span class="o">*</span><span class="n">q1</span> <span class="o">=</span> <span class="n">ejdbcreatequery</span><span class="p">(</span><span class="n">jb</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bq1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    EJQ *q1 = <span class="pl-s3">ejdbcreatequery</span>(jb, &amp;bq1, <span class="pl-c1">NULL</span>, <span class="pl-c1">0</span>, <span class="pl-c1">NULL</span>);
 
-    <span class="kt">uint32_t</span> <span class="n">count</span><span class="p">;</span>
-    <span class="n">TCLIST</span> <span class="o">*</span><span class="n">res</span> <span class="o">=</span> <span class="n">ejdbqryexecute</span><span class="p">(</span><span class="n">coll</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">count</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"</span><span class="se">\n\n</span><span class="s">Records found: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
+    <span class="pl-s3">uint32_t</span> count;
+    TCLIST *res = <span class="pl-s3">ejdbqryexecute</span>(coll, q1, &amp;count, <span class="pl-c1">0</span>, <span class="pl-c1">NULL</span>);
+    <span class="pl-s3">fprintf</span>(stderr, <span class="pl-s1"><span class="pl-pds">"</span><span class="pl-cce">\n\n</span>Records found: <span class="pl-c1">%d</span><span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, count);
 
-    <span class="c1">//Now print the result set records</span>
-    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">TCLISTNUM</span><span class="p">(</span><span class="n">res</span><span class="p">);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-        <span class="kt">void</span> <span class="o">*</span><span class="n">bsdata</span> <span class="o">=</span> <span class="n">TCLISTVALPTR</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
-        <span class="n">bson_print_raw</span><span class="p">(</span><span class="n">bsdata</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="pl-c">//Now print the result set records</span>
+    <span class="pl-k">for</span> (<span class="pl-st">int</span> i = <span class="pl-c1">0</span>; i &lt; <span class="pl-s3">TCLISTNUM</span>(res); ++i) {
+        <span class="pl-st">void</span> *bsdata = <span class="pl-s3">TCLISTVALPTR</span>(res, i);
+        <span class="pl-s3">bson_print_raw</span>(bsdata, <span class="pl-c1">0</span>);
+    }
+    <span class="pl-s3">fprintf</span>(stderr, <span class="pl-s1"><span class="pl-pds">"</span><span class="pl-cce">\n</span><span class="pl-pds">"</span></span>);
 
-    <span class="c1">//Dispose result set</span>
-    <span class="n">tclistdel</span><span class="p">(</span><span class="n">res</span><span class="p">);</span>
+    <span class="pl-c">//Dispose result set</span>
+    <span class="pl-s3">tclistdel</span>(res);
 
-    <span class="c1">//Dispose query</span>
-    <span class="n">ejdbquerydel</span><span class="p">(</span><span class="n">q1</span><span class="p">);</span>
-    <span class="n">bson_destroy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bq1</span><span class="p">);</span>
+    <span class="pl-c">//Dispose query</span>
+    <span class="pl-s3">ejdbquerydel</span>(q1);
+    <span class="pl-s3">bson_destroy</span>(&amp;bq1);
 
-    <span class="c1">//Close database</span>
-    <span class="n">ejdbclose</span><span class="p">(</span><span class="n">jb</span><span class="p">);</span>
-    <span class="n">ejdbdel</span><span class="p">(</span><span class="n">jb</span><span class="p">);</span>
-    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+    <span class="pl-c">//Close database</span>
+    <span class="pl-s3">ejdbclose</span>(jb);
+    <span class="pl-s3">ejdbdel</span>(jb);
+    <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+}</pre></div>
 
 <p>You can save this code in <code>csnippet.c</code> And build:</p>
 
-<div class="highlight highlight-sh"><pre>gcc -std<span class="o">=</span>c99 -Wall -pedantic  -c -o csnippet.o csnippet.c
-gcc -o csnippet csnippet.o -ltcejdb
-</pre></div>
+<div class="highlight highlight-sh"><pre>gcc -std=c99 -Wall -pedantic  -c -o csnippet.o csnippet.c
+gcc -o csnippet csnippet.o -ltcejdb</pre></div>
 
 <h2>
-<a name="building--installation" class="anchor" href="#building--installation"><span class="octicon octicon-link"></span></a>Building &amp; Installation</h2>
+<a id="building--installation" class="anchor" href="#building--installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building &amp; Installation</h2>
 
 <ul>
 <li><a href="https://github.com/Softmotions/ejdb/blob/master/tcejdb/WIN32.md">Installation on windows</a></li>
 <li><a href="https://github.com/Softmotions/ejdb/wiki/Debian-Ubuntu-installation">Installation on Debian/Ubuntu</a></li>
-</ul><h2>
-<a name="manual-installation" class="anchor" href="#manual-installation"><span class="octicon octicon-link"></span></a>Manual installation</h2>
+</ul>
+
+<h2>
+<a id="manual-installation" class="anchor" href="#manual-installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Manual installation</h2>
 
 <h3>
-<a name="prerequisites" class="anchor" href="#prerequisites"><span class="octicon octicon-link"></span></a>Prerequisites</h3>
+<a id="prerequisites" class="anchor" href="#prerequisites" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prerequisites</h3>
 
 <p><strong>System libraries:</strong></p>
 
 <ul>
 <li>gcc</li>
 <li>zlib-dev</li>
-</ul><h3>
-<a name="build-and-install" class="anchor" href="#build-and-install"><span class="octicon octicon-link"></span></a>Build and install</h3>
+</ul>
 
-<div class="highlight highlight-sh"><pre>   <span class="nb">cd</span> ./tcejdb
-   ./configure --prefix<span class="o">=</span>&lt;installation prefix&gt; <span class="o">&amp;&amp;</span> make <span class="o">&amp;&amp;</span> make check
-   make install
-</pre></div>
+<h3>
+<a id="build-and-install" class="anchor" href="#build-and-install" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build and install</h3>
+
+<div class="highlight highlight-sh"><pre>   <span class="pl-s3">cd</span> ./tcejdb
+   ./configure --prefix=<span class="pl-k">&lt;</span>installation prefix<span class="pl-k">&gt;</span> <span class="pl-k">&amp;&amp;</span> make <span class="pl-k">&amp;&amp;</span> make check
+   make install</pre></div>
 
 <ul>
 <li>library name: <strong>tcejdb</strong> (with pkgconfig)</li>
 <li>main include header: <code>&lt;tcejdb/ejdb.h&gt;</code>
 </li>
-</ul><h2>
-<a name="c-api" class="anchor" href="#c-api"><span class="octicon octicon-link"></span></a>C API</h2>
+</ul>
+
+<h2>
+<a id="c-api" class="anchor" href="#c-api" aria-hidden="true"><span class="octicon octicon-link"></span></a>C API</h2>
 
 <p>EJDB API presented in <strong><a href="https://github.com/Softmotions/ejdb/blob/master/tcejdb/ejdb.h">ejdb.h</a></strong> C header file.</p>
 
 <p>JSON processing API: <strong><a href="https://github.com/Softmotions/ejdb/blob/master/tcejdb/bson.h">bson.h</a></strong></p>
 
 <h2>
-<a name="queries" class="anchor" href="#queries"><span class="octicon octicon-link"></span></a>Queries</h2>
+<a id="queries" class="anchor" href="#queries" aria-hidden="true"><span class="octicon octicon-link"></span></a>Queries</h2>
 
 <pre><code>/**
  * Create query object.
@@ -674,15 +684,17 @@ EJDB_EXPORT EJQ* ejdbcreatequery(EJDB *jb, bson *qobj, bson *orqobjs, int orqobj
 </code></pre>
 
 <h2>
-<a name="ejdb-c-samples" class="anchor" href="#ejdb-c-samples"><span class="octicon octicon-link"></span></a>EJDB C Samples</h2>
+<a id="ejdb-c-samples" class="anchor" href="#ejdb-c-samples" aria-hidden="true"><span class="octicon octicon-link"></span></a>EJDB C Samples</h2>
 
 <p>You can find some code samples in:</p>
 
 <ul>
 <li><a href="https://github.com/Softmotions/ejdb/tree/master/tcejdb/samples">tcejdb/samples</a></li>
 <li><a href="https://github.com/Softmotions/ejdb/tree/master/tcejdb/testejdb">tcejdb/testejdb</a></li>
-</ul><h2>
-<a name="basic-ejdb-architecture" class="anchor" href="#basic-ejdb-architecture"><span class="octicon octicon-link"></span></a>Basic EJDB architecture</h2>
+</ul>
+
+<h2>
+<a id="basic-ejdb-architecture" class="anchor" href="#basic-ejdb-architecture" aria-hidden="true"><span class="octicon octicon-link"></span></a>Basic EJDB architecture</h2>
 
 <p><strong>EJDB database files structure</strong></p>
 
@@ -715,21 +727,25 @@ EJDB_EXPORT EJQ* ejdbcreatequery(EJDB *jb, bson *qobj, bson *orqobjs, int orqobj
 <code>.tok</code> Array index</li>
 </ul>
 </li>
-</ul><h2>
-<a name="limitations" class="anchor" href="#limitations"><span class="octicon octicon-link"></span></a>Limitations</h2>
+</ul>
+
+<h2>
+<a id="limitations" class="anchor" href="#limitations" aria-hidden="true"><span class="octicon octicon-link"></span></a>Limitations</h2>
 
 <ul>
 <li>One ejdb database can handle up to 1024 collections.</li>
 <li>Indexes for objects in nested arrays currently not supported (#37)</li>
-</ul><h2>
-<a name="todo" class="anchor" href="#todo"><span class="octicon octicon-link"></span></a>TODO</h2>
+</ul>
+
+<h2>
+<a id="todo" class="anchor" href="#todo" aria-hidden="true"><span class="octicon octicon-link"></span></a>TODO</h2>
 
 <ul>
 <li>Collect collection index statistic</li>
 </ul>
       </section>
       <footer>
-        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
       </footer>
     </div>
     <!--[if !IE]><script>fixScale(document);</script><![endif]-->
