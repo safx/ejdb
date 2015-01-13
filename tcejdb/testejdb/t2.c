@@ -3135,6 +3135,7 @@ void testUpdate1() { //https://github.com/Softmotions/ejdb/issues/9
     tclistdel(q1res);
     tcxstrdel(log);
     ejdbquerydel(q1);
+	
 }
 
 void testUpdate2() { //https://github.com/Softmotions/ejdb/issues/9
@@ -3192,6 +3193,112 @@ void testUpdate2() { //https://github.com/Softmotions/ejdb/issues/9
     tcxstrdel(log);
     ejdbquerydel(q1);
 
+}
+
+void testUpdate3() {
+    EJCOLL *coll = ejdbcreatecoll(jb, "contacts", NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(coll);
+
+	//q5: {name: 'John Travolta', $rename: { "name" : "fullName"}}
+    bson bsq1;
+    bson_iterator it;
+
+	bson_init_as_query(&bsq1);
+    bson_append_string(&bsq1, "name", "John Travolta");
+    bson_append_start_object(&bsq1, "$rename");
+    bson_append_string(&bsq1, "name", "fullName");
+    //bson_append_finish_object(&bsq1);
+    bson_append_finish_object(&bsq1);
+    bson_finish(&bsq1);
+    CU_ASSERT_FALSE_FATAL(bsq1.err);
+
+    EJQ *q1 = ejdbcreatequery(jb, &bsq1, NULL, 0, NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(q1);
+    uint32_t count = 0;
+    TCXSTR *log = tcxstrnew();
+    TCLIST *q1res = ejdbqryexecute(coll, q1, &count, 0, log);
+
+    //fprintf(stderr, "%s", TCXSTRPTR(log));
+    CU_ASSERT_EQUAL(1, count);
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "UPDATING MODE: YES"));
+
+
+    bson_destroy(&bsq1);
+    tclistdel(q1res);
+    tcxstrdel(log);
+    ejdbquerydel(q1);
+
+    bson_init_as_query(&bsq1);
+    bson_append_string(&bsq1, "fullName", "John Travolta");
+    bson_append_finish_object(&bsq1);
+    bson_finish(&bsq1);
+    CU_ASSERT_FALSE_FATAL(bsq1.err);
+
+    q1 = ejdbcreatequery(jb, &bsq1, NULL, 0, NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(q1);
+    count = 0;
+    log = tcxstrnew();
+    q1res = ejdbqryexecute(coll, q1, &count, 0, log);
+
+    for (int i = 0; i < TCLISTNUM(q1res); ++i) {
+        CU_ASSERT_TRUE(!bson_compare_string("John Travolta", TCLISTVALPTR(q1res, i), "fullName"));
+        bson_iterator_from_buffer(&it, TCLISTVALPTR(q1res, i));
+        CU_ASSERT_TRUE(bson_find_from_buffer(&it, TCLISTVALPTR(q1res, i), "name") == BSON_EOO);
+    }
+
+    bson_destroy(&bsq1);
+    tclistdel(q1res);
+    tcxstrdel(log);
+    ejdbquerydel(q1);
+	
+	//q6: {name: 'John Travolta', $rename: { "fullName" : "name"}}
+	bson_init_as_query(&bsq1);
+    bson_append_string(&bsq1, "fullName", "John Travolta");
+    bson_append_start_object(&bsq1, "$rename");
+    bson_append_string(&bsq1, "fullName", "name");
+    //bson_append_finish_object(&bsq1);
+    bson_append_finish_object(&bsq1);
+    bson_finish(&bsq1);
+    CU_ASSERT_FALSE_FATAL(bsq1.err);
+
+    q1 = ejdbcreatequery(jb, &bsq1, NULL, 0, NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(q1);
+    count = 0;
+    log = tcxstrnew();
+    q1res = ejdbqryexecute(coll, q1, &count, 0, log);
+
+    //fprintf(stderr, "%s", TCXSTRPTR(log));
+    CU_ASSERT_EQUAL(1, count);
+    CU_ASSERT_PTR_NOT_NULL(strstr(TCXSTRPTR(log), "UPDATING MODE: YES"));
+
+    bson_destroy(&bsq1);
+    tclistdel(q1res);
+    tcxstrdel(log);
+    ejdbquerydel(q1);
+
+    bson_init_as_query(&bsq1);
+    bson_append_string(&bsq1, "fullName", "John Travolta");
+    bson_append_finish_object(&bsq1);
+    bson_finish(&bsq1);
+    CU_ASSERT_FALSE_FATAL(bsq1.err);
+
+    q1 = ejdbcreatequery(jb, &bsq1, NULL, 0, NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(q1);
+    count = 0;
+    log = tcxstrnew();
+    q1res = ejdbqryexecute(coll, q1, &count, 0, log);
+
+    for (int i = 0; i < TCLISTNUM(q1res); ++i) {
+        CU_ASSERT_TRUE(!bson_compare_string("John Travolta", TCLISTVALPTR(q1res, i), "name"));
+        bson_iterator_from_buffer(&it, TCLISTVALPTR(q1res, i));
+        CU_ASSERT_TRUE(bson_find_from_buffer(&it, TCLISTVALPTR(q1res, i), "fullName") == BSON_EOO);
+    }
+
+    bson_destroy(&bsq1);
+    tclistdel(q1res);
+    tcxstrdel(log);
+    ejdbquerydel(q1);
+	
 }
 
 void testTicket88() { //https://github.com/Softmotions/ejdb/issues/88
@@ -5053,6 +5160,7 @@ int main() {
             (NULL == CU_add_test(pSuite, "testTicket8", testTicket8)) ||
             (NULL == CU_add_test(pSuite, "testUpdate1", testUpdate1)) ||
             (NULL == CU_add_test(pSuite, "testUpdate2", testUpdate2)) ||
+            (NULL == CU_add_test(pSuite, "testUpdate3", testUpdate3)) ||
             (NULL == CU_add_test(pSuite, "testQueryBool", testQueryBool)) ||
             (NULL == CU_add_test(pSuite, "testDropAll", testDropAll)) ||
             (NULL == CU_add_test(pSuite, "testTokens$begin", testTokens$begin)) ||
