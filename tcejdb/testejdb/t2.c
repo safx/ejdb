@@ -5520,6 +5520,86 @@ void testSlice(void) {
 	ejdbquerydel(q1);
 }
 
+void testWildcardInFields() {
+    EJCOLL *coll = ejdbcreatecoll(jb, "wc_fields", NULL);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(coll);
+
+    bson b;
+    bson_oid_t oid;
+
+    bson_init(&b);
+    bson_append_int(&b, "z", 33);
+    bson_append_start_object(&b, "c");
+    bson_append_start_array(&b, "arr");
+    bson_append_start_object(&b, "0");
+    bson_append_string(&b, "key", "title");
+    bson_append_string(&b, "value", "some title");
+    bson_append_finish_object(&b);
+    bson_append_start_object(&b, "1");
+    bson_append_string(&b, "key", "comment");
+    bson_append_string(&b, "value", "some comment");
+    bson_append_finish_object(&b);
+    bson_append_finish_array(&b);
+    bson_append_finish_object(&b);
+    bson_finish(&b);
+    CU_ASSERT_TRUE(ejdbsavebson(coll, &b, &oid));
+
+    bson_iterator bi;
+    BSON_ITERATOR_INIT(&bi, &b);
+    CU_ASSERT_TRUE(BSON_IS_STRING_TYPE(bson_find_fieldpath_value("c.arr.0.key", &bi)));
+    BSON_ITERATOR_INIT(&bi, &b);
+    CU_ASSERT_TRUE(BSON_IS_STRING_TYPE(bson_find_fieldpath_value("c.arr.0.value", &bi)));
+
+    BSON_ITERATOR_INIT(&bi, &b);
+    CU_ASSERT_TRUE(BSON_IS_STRING_TYPE(bson_find_fieldpath_value("c.arr.1.key", &bi)));
+    BSON_ITERATOR_INIT(&bi, &b);
+    CU_ASSERT_TRUE(BSON_IS_STRING_TYPE(bson_find_fieldpath_value("c.arr.1.value", &bi)));
+
+    bson_destroy(&b);
+	
+    bson bsq;
+    bson_init_as_query(&bsq);
+    bson_finish(&bsq);
+    CU_ASSERT_FALSE_FATAL(bsq.err);
+    
+    bson bshints;
+    bson_init_as_query(&bshints);
+    bson_append_start_object(&bshints, "$fields");
+    bson_append_int(&bshints, "c.arr.*.key", 1);
+    bson_append_finish_object(&bshints);
+    bson_finish(&bshints);
+    CU_ASSERT_FALSE_FATAL(bshints.err);
+	
+	EJQ *q1 = ejdbcreatequery(jb, &bsq, NULL, 0, &bshints);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(q1);
+	
+	uint32_t count = 0;
+    TCLIST *q1res = ejdbqryexecute(coll, q1, &count, 0, NULL);
+	CU_ASSERT_EQUAL(TCLISTNUM(q1res), 1);
+    for (int i = 0; i < TCLISTNUM(q1res); ++i) {
+		void *bsdata = TCLISTVALPTR(q1res, i);
+        CU_ASSERT_PTR_NOT_NULL_FATAL(bsdata);
+        
+        BSON_ITERATOR_FROM_BUFFER(&bi, bsdata);
+        CU_ASSERT_TRUE(BSON_IS_STRING_TYPE(bson_find_fieldpath_value("c.arr.0.key", &bi)));
+        
+        BSON_ITERATOR_FROM_BUFFER(&bi, bsdata);
+        CU_ASSERT_EQUAL(bson_find_fieldpath_value("c.arr.0.value", &bi), BSON_EOO);
+        
+        BSON_ITERATOR_FROM_BUFFER(&bi, bsdata);
+        CU_ASSERT_TRUE(BSON_IS_STRING_TYPE(bson_find_fieldpath_value("c.arr.1.key", &bi)));
+        
+        BSON_ITERATOR_FROM_BUFFER(&bi, bsdata);
+        CU_ASSERT_EQUAL(bson_find_fieldpath_value("c.arr.1.value", &bi), BSON_EOO);
+        
+        // debug
+        //bson_print_raw(bsdata, 0);
+    }
+	tclistdel(q1res);
+	bson_destroy(&bsq);
+    bson_destroy(&bshints);
+	ejdbquerydel(q1);    
+}
 
 
 int main() {
@@ -5605,8 +5685,8 @@ int main() {
             (NULL == CU_add_test(pSuite, "testTicket101", testTicket101)) || 
             (NULL == CU_add_test(pSuite, "testTicket110", testTicket110)) ||
 			(NULL == CU_add_test(pSuite, "testSlice", testSlice)) ||
-            (NULL == CU_add_test(pSuite, "testMetaInfo", testMetaInfo))
-
+            (NULL == CU_add_test(pSuite, "testMetaInfo", testMetaInfo)) ||
+            (NULL == CU_add_test(pSuite, "testWildcardInFields", testWildcardInFields))
     ) {
         CU_cleanup_registry();
         return CU_get_error();

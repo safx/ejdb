@@ -1740,6 +1740,32 @@ static bson_visitor_cmd_t _bsonstripvisitor_include(const char *ipath, int ipath
             return BSON_VCMD_OK;
         }
         buf = tcmapget(ifields, ipath, ipathlen, &bufsz);
+        if (!buf && strchr(ipath, '.')) {
+            char ipath_new[ipathlen];
+            bool start = false;
+            bool finish = false;
+            int d = 0;
+            for (int s = 0; s < ipathlen; ++s) {
+                if (ipath[s] == '.') {
+                    if (!start) {
+                        start = true;
+                        ipath_new[d++] = ipath[s];
+                        ipath_new[d++] = '*';
+                        continue;
+                    }
+                    else if (!finish)
+                        finish = true;
+                }
+
+                if (start && !finish)
+                    continue;
+
+                ipath_new[d++] = ipath[s];
+            }
+
+            if (start && finish)
+                buf = tcmapget(ifields, ipath_new, d, &bufsz);
+        }
         if (buf) {
             ictx->matched++;
             bson_append_field_from_iterator2(k, it, sctx->bsout);
@@ -1758,7 +1784,12 @@ static bson_visitor_cmd_t _bsonstripvisitor_include(const char *ipath, int ipath
                 tcmapiterinit(ifields);
                 while ((ifpath = tcmapiternext2(ifields)) != NULL) {
                     int i = 0;
-                    for (; i < ipathlen && *(ifpath + i) == *(ipath + i); ++i);
+                    for (; i < ipathlen; ++i) {
+                        if ( *(ifpath + i) != *(ipath + i) ) {
+                            if (*(ifpath + i) == '*') i = ipathlen;
+                            break;
+                        }
+                    }
                     if (i == ipathlen) { //ipath prefixes some included field
                         ictx->nstack++;
                         if (bt == BSON_OBJECT) {
@@ -1789,9 +1820,6 @@ static bson_visitor_cmd_t _bsonstripvisitor_include(const char *ipath, int ipath
         }
     }
 
-    if (ictx->nstack == 0 && ictx->matched == TCMAPRNUM(ifields)) {
-        return BSON_VCMD_TERMINATE;
-    }
     return rv;
 }
 
