@@ -20,5 +20,5 @@ Multiprocess database access
 ----------------------------
 
 EJDB can be used by threads within a single process only. EJDB |ejdbversion| is no
-allowed for using by different OS processes.
+allowed for using from different OS processes.
 
