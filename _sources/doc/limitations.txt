@@ -1,10 +1,10 @@
 .. _limitations:
 
-Known EJDB limitation
-=====================
+Known EJDB limitations
+======================
 
-Tokyo Cabinet
--------------
+Tokyo Cabinet issues
+--------------------
 
 Limited concurrency and scalability on big data sets (>10M records) This is known issue of tokyocabinet.
 The problem is caused by many factors:
@@ -22,3 +22,16 @@ Multiprocess database access
 EJDB can be used by threads within a single process only. EJDB |ejdbversion| is no
 allowed for using from different OS processes.
 
+
+Indexes
+-------
+
+* Compound indexes are not supported
+* Indexes for nested array objects are not working `#37 <https://github.com/Softmotions/ejdb/issues/37>`_
+
+
+Misc
+----
+
+* The `_id` primary key field of every document must have :term:`ObjectId` type only.
+* The `_id` primary key field cannot be traversed in sorted order in queries.

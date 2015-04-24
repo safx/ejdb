@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>Known EJDB limitation &mdash; EJDB</title>
+    <title>Known EJDB limitations &mdash; EJDB</title>
     
 <link rel="stylesheet" href="../_static/theme.css" type="text/css"/>
 <link rel="stylesheet" href="../_static/pygments.css" type="text/css"/>
@@ -20,9 +20,11 @@
 
         <div class="page-content">
             <ul>
-<li><a class="reference internal" href="#">Known EJDB limitation</a><ul>
-<li><a class="reference internal" href="#tokyo-cabinet">Tokyo Cabinet</a></li>
+<li><a class="reference internal" href="#">Known EJDB limitations</a><ul>
+<li><a class="reference internal" href="#tokyo-cabinet-issues">Tokyo Cabinet issues</a></li>
 <li><a class="reference internal" href="#multiprocess-database-access">Multiprocess database access</a></li>
+<li><a class="reference internal" href="#indexes">Indexes</a></li>
+<li><a class="reference internal" href="#misc">Misc</a></li>
 </ul>
 </li>
 </ul>
@@ -134,9 +136,11 @@
 <li class="toctree-l2"><a class="reference internal" href="iexp/index.html#command-response">Command response</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Known EJDB limitation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#tokyo-cabinet">Tokyo Cabinet</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Known EJDB limitations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tokyo-cabinet-issues">Tokyo Cabinet issues</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#multiprocess-database-access">Multiprocess database access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#indexes">Indexes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#misc">Misc</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="mongodb.html">Mongodb compatibility</a><ul>
@@ -176,10 +180,10 @@
             </div>
             <div class="page-content">
                 
-  <div class="section" id="known-ejdb-limitation">
-<span id="limitations"></span><h1>Known EJDB limitation<a class="headerlink" href="#known-ejdb-limitation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="tokyo-cabinet">
-<h2>Tokyo Cabinet<a class="headerlink" href="#tokyo-cabinet" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="known-ejdb-limitations">
+<span id="limitations"></span><h1>Known EJDB limitations<a class="headerlink" href="#known-ejdb-limitations" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="tokyo-cabinet-issues">
+<h2>Tokyo Cabinet issues<a class="headerlink" href="#tokyo-cabinet-issues" title="Permalink to this headline">¶</a></h2>
 <p>Limited concurrency and scalability on big data sets (&gt;10M records) This is known issue of tokyocabinet.
 The problem is caused by many factors:</p>
 <ul class="simple">
@@ -195,6 +199,20 @@ may lead to relatively high deviation of data access time.</li>
 <h2>Multiprocess database access<a class="headerlink" href="#multiprocess-database-access" title="Permalink to this headline">¶</a></h2>
 <p>EJDB can be used by threads within a single process only. EJDB 1.2.7 is no
 allowed for using from different OS processes.</p>
+</div>
+<div class="section" id="indexes">
+<h2>Indexes<a class="headerlink" href="#indexes" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Compound indexes are not supported</li>
+<li>Indexes for nested array objects are not working <a class="reference external" href="https://github.com/Softmotions/ejdb/issues/37">#37</a></li>
+</ul>
+</div>
+<div class="section" id="misc">
+<h2>Misc<a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>The <cite>_id</cite> primary key field of every document must have <a class="reference internal" href="ql/ql.html#term-objectid"><span class="xref std std-term">ObjectId</span></a> type only.</li>
+<li>The <cite>_id</cite> primary key field cannot be traversed in sorted order in queries.</li>
+</ul>
 </div>
 </div>
 
