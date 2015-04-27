@@ -2,21 +2,21 @@
 
 Query language
 ==============
-The form of EJDB queries inspired by `Mongodb <http://mongodb.org>`_ and follows the same philosophy. In many cases
+The form of EJDB queries is inspired by `Mongodb <http://mongodb.org>`_ and follows the same philosophy. In many cases
 EJDB queries are fully comparable with mongodb counterparts. Every EJDB query object can be considered as
-JSON document which specifies the way how to retrieve or update a set of documents stored in particular database collection.
-The query objects can be joined together by `AND` or `OR` logical conjunctions. The way how to actually specify
-queries depends on an API of particular EJDB :ref:`language binding <bindings>`, anyway we will use an abstract
+JSON document which specifies the way of retrieving/updating a set of documents stored in particular database collection.
+The query objects can be joined together by `AND` or `OR` logical conjunctions. The way of how to actually specify
+queries depends on an API of particular EJDB :ref:`language binding <bindings>`. Anyway we will use an abstract
 queries represented as plain JSONs with some showcases where :ref:`EJDB Nodejs CLI API <cli>` is used.
 
-First we define the following terms: :term:`abstract document` as a metadocument for all
-documents containing in particular collection without an actual field values and with all
+First, we define the following terms: :term:`abstract document` as a metadocument for all
+the documents from a particular collection without an actual field values and with all the
 possible document fields and their types belonging to any document in the collection.
 You can consider `abstract document` as a prototype for all possible documents in the collection.
 In the context of an `abstract document` a :term:`fieldpath` is the path consisting of JSON field names traversed
 from the document's root to the particular document field.
 
-EJDB aims to be query compatible with mongodb since it would provide easy
+EJDB aims to be query compatible with mongodb since it would provide an easy
 application migration from/to mongodb and adoption of many developers experienced with
 mongodb.
 
@@ -33,7 +33,7 @@ Simple matching
 
 ``{fieldpath1 : value1, fieldpath2 : value2, ...}``
 
-Select all documents there their `fieldpath` values exactly matched to the values provided in the query.
+Select all documents which `fieldpath` values are exactly matched to the values provided in the query.
 
 **Example:**
 
@@ -46,7 +46,7 @@ Select all documents there their `fieldpath` values exactly matched to the value
       age: 39 }
 
 
-As argument of simple matching query values you can use a regular expressions:
+As an argument of simple matching query values you can use a regular expressions:
 
 .. code-block:: js
 
@@ -107,8 +107,8 @@ The field value is not equal to any of provided alternatives.
 
 .. note::
 
-    Negation operations: `$not` and `$nin` are not using collection indexes
-    so they can be slower in comparison to other matching operations.
+    Negation operations: `$not` and `$nin` do not use collection indexes
+    so they can be slower in comparison with other matching operations.
 
 
 .. _$in:
@@ -184,7 +184,7 @@ Fieldpath starts with the specified prefix:
 Simple projections
 ******************
 
-You may select only specific document fields by providing `$fields` query :ref:`hints <qhints>`:
+You can select only specific document fields by providing `$fields` query :ref:`hints <qhints>`:
 
 .. code-block:: js
 
@@ -212,7 +212,7 @@ In order to use the logical `OR` joining of query clauses you have two options:
 
     ejdb> db.addressbook.find({}, [{age: 38}, {age: 39}]);
 
-In this example the array of `OR` joined query clauses passed as the second argument of the `find` function.
+In this example the array of `OR` joined query clauses is passed as the second argument of the `find` function.
 
 2. Use `$or` query operator in the following form:
 
@@ -283,7 +283,7 @@ String tokens matching:
 
 ``{fieldpath:  {$stror: [value1, value2, ....]}``
 
-* If the `fieldpath` holds a `string` value the `$stror` operator converts this value
+* If the `fieldpath` holds a `string` value, the `$stror` operator converts this value
   into an array of string tokens by splitting original value into a set of tokens separated by space `' '`
   or comma `','` characters. Then the operator selects documents whose set of tokens contains any token
   specified in `$stror` array ``[value1, value2, ...]``.
@@ -345,7 +345,7 @@ $exists
 ``{fieldpath: {$exists: true|false}}``
 
 When `$exists` value set to `true`, the documents that contain the `fieldpath` will be matched,
-including documents where the value of `fieldpath` is null. Otherwise this operator returns documents
+including documents where the value of `fieldpath` is null. Otherwise this operator returns the documents
 that do not contain the specified `fieldpath`.
 
 .. _$elemMatch:
@@ -389,7 +389,7 @@ If you specify only a single query condition in the `$elemMatch` operator, you d
 
 .. note::
 
-    Only one `$elemMatch` operator allowed in the context of one array `fieldpath`.
+    Only one `$elemMatch` operator is allowed in the context of one array `fieldpath`.
 
 
 .. _qhints:
@@ -529,7 +529,7 @@ $set
 The `$set` directive sets the value of the specified fields.
 
 If the `fieldpath` does not exist in the document, `$set` will add a new fields with the specified value(s).
-The `$set` can create all required subdocuments within the updated documents on order to ensure what `fieldpath`
+The `$set` can create all required subdocuments within the updated documents in order to ensure what `fieldpath`
 exists in each of them. If you specify multiple field-value pairs, `$set` will update or create each field.
 
 **Example:**
@@ -555,7 +555,7 @@ $upsert
 
 ``{query, $upsert : {fieldpath1: value1, fieldpath2: value2, ...}}``
 
-Atomic upsert. If documents matched to the specified `query` are found then `$upsert` will performs as `$set`_
+Atomic upsert. If documents matched to the specified `query` are found, then `$upsert` will perform a `$set`_
 operation, otherwise a new document will be inserted with its fields being initialised to
 the provided values.
 
@@ -624,7 +624,7 @@ $inc
 ``{$inc: {fieldpath1: delta1, fieldpath2: delta2, ... }}``
 
 Increment numeric field value by specified `delta`. The increment `delta`
-can be positive or negative number. The `$inc` operator does not create the specified
+can be of positive or negative number. The `$inc` operator does not create the specified
 `fieldpath` if it is not exists in the document.
 
 **Example:**
@@ -676,7 +676,7 @@ $ (update)
 **********
 
 The positional `$` operator identifies an element in an array
-to update without explicitly specifying the position of the element in the array.
+to update the position of the element in the array without explicitly specifying it.
 
 **Example:**
 
@@ -696,7 +696,7 @@ to update without explicitly specifying the position of the element in the array
     { _id: '5537447f19808d3c0000000a',
       a: [ 'b', 'cc', 'd' ] }
 
-If the specified array `fieldpath` is not contained in the query the `$ (update)`
+If the specified array `fieldpath` is not contained in the query, the `$ (update)`
 operator has no effect it that case.
 
 
@@ -737,8 +737,8 @@ This is atomic operation.
 
 ``{query, $addToSetAll: {fieldpath1: [...], fieldpath2: [...], ...}}``
 
-Add a set of values to the array of every `fieldpath` specified in the query,
-in this case every value will be added only if it was not contained in the target array.
+Add a set of values to the array of every `fieldpath` specified in the query.
+In this case every value will be added only if it was not contained in the target array.
 
 .. seealso::
     The `$addToSet` and `$addToSetAll` are the dual operations to
@@ -818,7 +818,7 @@ $rename
 ``{query, $rename' : {fieldpath1 : name1, fieldpath2 : name2, ...}}``
 
 Sets a new `name` to the field pointed by `fieldpath`.
-If the document already has a field with the specified `name`,
+If the document has already had a field with the specified `name`,
 the `$rename` operator removes that field and renames the field pointed by `fieldpath`
 to the new `name`.
 
@@ -831,7 +831,7 @@ $slice (projection)
 1. ``${..., $do: {fieldpath : {$slice : limit}}``
 2. ``${..., $do: {fieldpath : {$slice : [offset, limit]}}``
 
-The `$slice` operator used in context of `$do`_ directive and
+The `$slice` operator is used in the context of `$do`_ directive and
 limits a number of array items returned for document fields pointed by `fieldpath`.
 
 Only non negative offsets are supported by the `$slice` projection. (EJDB |ejdbversion|)
@@ -881,10 +881,10 @@ The `$do` action directive is used in the following cases:
 Some performance considerations
 -------------------------------
 
-* Only one index may be used in search query operation.
+* Only one index can be used in search query operation.
 
-* Negate operations: `$not`_ and `$nin`_ not using indexes
-  so they can be slow in comparison to other matching operations.
+* Negate operations: `$not`_ and `$nin`_ do not use indexes
+  so they can be slow in comparison with other matching operations.
 
 * It is better to execute update queries with `JBQRYCOUNT` control flag set
   to avoid unnecessarily data fetching. (C API)
@@ -901,9 +901,9 @@ Glossary
         format as `defined in Mongodb BSON specification <http://docs.mongodb.org/manual/reference/object-id/>`_.
 
     abstract document
-        Abstract document is a  metadocument for all documents containing in particular collection without an actual
-        field values and with all possible document fields and their types belonging to any document the collection.
-        You can consider `abstract document` as a prototype for all possible documents in the collection.
+        Abstract document is a  metadocument for all the documents included in a particular collection without an actual
+        field values and with all the possible document fields and their types belonging to any document of the collection.
+        You can consider `abstract document` as a prototype for all the possible documents of the collection.
 
     fieldpath
         In the context of an :term:`abstract document` a `fieldpath`

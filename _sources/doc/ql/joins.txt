@@ -7,8 +7,8 @@ Joins can be specified in query within the :ref:`$do`:
 
 ``{..., $do : {fieldpath1: {$join: collection1}, fieldpath2 : {$join: collection2}} }``
 
-Where a value specified by `fieldpath` should point to `OID`s` of objects stored
-in the specific `collection`. Its value can be OID, string representation of OID, or array of OIDs.
+Here a value specified by `fieldpath` should point to `OID`s` of objects stored
+in the specific `collection`. Its value could be OID, string representation of OID, or an array of OIDs.
 Upon query execution OID value stored in `fieldpath` will be replaced by
 joined objects fetched from `collection`.
 

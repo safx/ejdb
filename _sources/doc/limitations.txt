@@ -1,7 +1,7 @@
 .. _limitations:
 
-Known EJDB limitations
-======================
+Known limitations
+=================
 
 Tokyo Cabinet issues
 --------------------
@@ -19,7 +19,7 @@ The problem is caused by many factors:
 Multiprocess database access
 ----------------------------
 
-EJDB can be used by threads within a single process only. EJDB |ejdbversion| is no
+EJDB can be used by threads within a single process only. EJDB |ejdbversion| is not
 allowed for using from different OS processes.
 
 
@@ -33,5 +33,5 @@ Indexes
 Misc
 ----
 
-* The `_id` primary key field of every document must have :term:`ObjectId` type only.
+* The `_id` primary key field of every document must be only of :term:`ObjectId` type.
 * The `_id` primary key field cannot be traversed in sorted order in queries.

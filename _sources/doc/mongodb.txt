@@ -116,13 +116,13 @@ Update operators
         -
     *   - $addToSet, $pull
         - Y
-        - The EJDB specific :ref:`$addToSetAll`, :ref:`$pullAll` also implemented.
+        - The EJDB specific :ref:`$addToSetAll`, :ref:`$pullAll` are also implemented.
     *   - $setOnInsert
         - YN
-        - Special :ref:`$upsert` operator used. Behaviour is a bit different
+        - Special :ref:`$upsert` operator is used. Behaviour is a bit different
     *   - $each
         - YN
-        - `$addToSetAll` used instead
+        - `$addToSetAll` is used instead
     *   - $rename
         - Y
         -
@@ -157,7 +157,7 @@ Various operators
         - EJDB :ref:`$max` operator is used
     *   - $hint
         - N
-        - Explicit index selection hints are reserved. But not in use in the current EJDB version
+        - Explicit index selection hints are reserved. But they can not be used in the current EJDB version
     *   - $max, $min, $returnKey, $comment
         - N
         -

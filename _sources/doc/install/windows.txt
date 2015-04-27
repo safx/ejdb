@@ -1,7 +1,7 @@
 Windows
 =======
 
-**The latest precompiled binary distributions for windows:**
+**The latest precompiled binary distributions for Windows:**
 
 * |ejdb_w64_dl|_.
 * |ejdb_w32_dl|_.

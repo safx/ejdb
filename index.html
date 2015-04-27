@@ -23,6 +23,7 @@
 <li><a class="reference internal" href="#mission">Mission</a></li>
 <li><a class="reference internal" href="#license">License</a></li>
 <li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#community">Community</a></li>
 <li><a class="reference internal" href="#documentation">Documentation</a></li>
 </ul>
 </li>
@@ -135,7 +136,7 @@
 <li class="toctree-l2"><a class="reference internal" href="doc/iexp/index.html#command-response">Command response</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="doc/limitations.html">Known EJDB limitations</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="doc/limitations.html">Known limitations</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="doc/limitations.html#tokyo-cabinet-issues">Tokyo Cabinet issues</a></li>
 <li class="toctree-l2"><a class="reference internal" href="doc/limitations.html#multiprocess-database-access">Multiprocess database access</a></li>
 <li class="toctree-l2"><a class="reference internal" href="doc/limitations.html#indexes">Indexes</a></li>
@@ -177,21 +178,21 @@
 <h2>Mission<a class="headerlink" href="#mission" title="Permalink to this headline">¶</a></h2>
 <p>EJDB is the embeddable (in-process) database engine designed for querying collections
 of <a class="reference external" href="http://json.org">JSON</a> documents and persisting data.
-EJDB implemented as C library based on <a class="reference external" href="http://fallabs.com/tokyocabinet/">Tokyo Cabinet</a>
-key-value storage engine. EJDB design inspired by <a class="reference external" href="http://mongodb.org">Mongodb</a> and follows the same philosophy ,
+EJDB is implemented as a C library based on <a class="reference external" href="http://fallabs.com/tokyocabinet/">Tokyo Cabinet</a>
+key-value storage engine. EJDB design is inspired by <a class="reference external" href="http://mongodb.org">Mongodb</a> and follows the same philosophy ,
 especially for the <a class="reference internal" href="doc/ql/ql.html#ql"><span>query language</span></a></p>
 <p>EJDB is good for:</p>
 <ul class="simple">
-<li>In-process database for standalone desktop applications. (The SQLite niche).</li>
-<li>Games development.</li>
-<li>Simple server-side solution.</li>
-<li>Whenever a fast in-process data-communication with storage layer is much preferred over TCP/IP transport.</li>
+<li>In-process database for standalone desktop applications. (The SQLite niche);</li>
+<li>Games development;</li>
+<li>Simple server-side solution;</li>
+<li>Whenever a fast in-process data-communication with storage layer is much preferred over TCP/IP transport;</li>
 </ul>
 </div>
 <div class="section" id="license">
 <h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
-<p>EJDB is the open source project distributed under terms of <a class="reference external" href="http://opensource.org/licenses/LGPL-2.1">GNU LGPL v2.1</a>
-license. Basically this means you can freely use it in your commercial and open source projects, but
+<p>EJDB is the open source project distributed under the terms of <a class="reference external" href="http://opensource.org/licenses/LGPL-2.1">GNU LGPL v2.1</a>
+license. Basically, that means you can freely use it in your commercial and open source projects, but
 if you change some part of EJDB code you should open-source these changes under LGPL licence.</p>
 </div>
 <div class="section" id="features">
@@ -202,6 +203,14 @@ if you change some part of EJDB code you should open-source these changes under 
 <li>Mongodb-like queries and overall philosophy.</li>
 <li>Collection joins in query language.</li>
 <li>Language bindings: Nodejs, Python, Lua, Java, Ruby, .Net, Go</li>
+</ul>
+</div>
+<div class="section" id="community">
+<h2>Community<a class="headerlink" href="#community" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/Softmotions/ejdb">EJDB on Github</a></li>
+<li><a class="reference external" href="https://twitter.com/ejdblab">&#64;ejdblab Twitter</a></li>
+<li><a class="reference external" href="https://groups.google.com/forum/#!forum/ejdb">Google groups</a></li>
 </ul>
 </div>
 <div class="section" id="documentation">
@@ -217,7 +226,7 @@ if you change some part of EJDB code you should open-source these changes under 
 <li class="toctree-l1"><a class="reference internal" href="doc/internals/index.html">EJDB Internals</a></li>
 <li class="toctree-l1"><a class="reference internal" href="doc/bindings/index.html">Language bindings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="doc/iexp/index.html">Import/Export database data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="doc/limitations.html">Known EJDB limitations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc/limitations.html">Known limitations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="doc/mongodb.html">Mongodb compatibility</a></li>
 </ul>
 </div>

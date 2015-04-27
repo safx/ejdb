@@ -4,7 +4,7 @@
 Import/Export database data
 ===========================
 
-Exporting or import EJDB database data can be done by using `ejdbcommand` API function in language
+Export or import of the database data can be done by using `ejdbcommand` API function in language
 binding of your choice.
 
 C API

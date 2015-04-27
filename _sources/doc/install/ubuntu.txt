@@ -2,7 +2,7 @@ Ubuntu/Debian
 =============
 
 In order to install the latest `libejdb` distribution on
-Ubuntu boxes you may use `EJDB Launchpad PPA <https://launchpad.net/~adamansky/+archive/ubuntu/ejdb>`_
+Ubuntu boxes you can use `EJDB Launchpad PPA <https://launchpad.net/~adamansky/+archive/ubuntu/ejdb>`_
 repository.
 
 .. code-block:: sh

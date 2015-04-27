@@ -21,14 +21,14 @@ Document storage model
 ----------------------
 
 Every EJDB collection is a table database (`tctdb <https://github.com/Softmotions/ejdb/blob/master/src/tctdb/tctdb.h>`_) stored in separate file which is schema-free table storage.
-Collection data records stored in rows splitted into set of user defined columns as shown by following table:
+Collection data records stored in rows are splitted into set of user defined columns. It's shown in the following table:
 
 .. image:: tctdbdoc.png
 
 
-* Every JSON document encoded to the `BSON <http://bsonspec.org/>`_ data format and stored as part of `tctdb` data record.
-* Using `tctdb` gains the ability to easily associate metadata as extra tctdb columns adjusted with document record,
-  it gives us the following benefits:
+* Every JSON document is encoded to the `BSON <http://bsonspec.org/>`_ data format and stored as a part of `tctdb` data record.
+* Using `tctdb` gains the ability to easily associate metadata as and extra tctdb columns adjusted with document record.
+  It gives us the following benefits:
 
   * Security attributes can be easily attached to documents, so the row level ACL may be implemented.
   * Document access stats can be stored in metadata for further query/index optimizations.
@@ -41,14 +41,14 @@ Collection data records stored in rows splitted into set of user defined columns
 Indexing
 --------
 
-In order to speed up execution of some queries
-a values pointed by some document fields need to be indexed.
+In order to speed up execution of some queries,
+a values pointed by some document fields have to be indexed.
 In our implementation every defined indexed field
 is backed by B+ tree database. Field values are
 stored in the B+ tree `tcbdb <https://github.com/Softmotions/ejdb/blob/master/src/tcbdb/tcbdb.h>`_
 and point to the primary keys (:term:`ObjectId`) of
-BSON documents they refer. Four types of field indexes are
-supported:
+BSON documents they refer to. There are four types of field indexes
+which are supported:
 
 * String index for matching string values. This is B+
   tree, where a comparison function sorts indexed
@@ -61,12 +61,12 @@ supported:
 * Index for numeric types. A comparison function
   treats indexed values as numbers.
 * Inverted index for matching values in JSON arrays
-  or in string values treated as set of space delimited
+  or in string values treated as a set of space delimited
   tokens. Indexes of this type are used for effective matching in an array
   as well as for :ref:`$strand` and :ref:`$stror` operations.
 
 Let us consider the index structure of sample collection
-of documents called `Books` and pictured below.
+of documents named `Books`.
 In the collection publisher names and book's tags are indexed fields.
 
 .. image:: indexing.png
@@ -83,19 +83,18 @@ underlying hash database.
 
 Index for every indexed fieldpath stored in separate B+ tree file managed by tcbdb.
 
-Only one index used during query execution.
-Major index selection among possible candidates based on number of empirical rules.
+Only one index is used during query execution.
+Major index selection among possible candidates is based on the number of empirical rules.
 Collections access/selectivity stats are not taken into account in the current EJDB  |ejdbversion| release.
 EJDB supports token matching inverted indexes backed by B+ tree. Arrays, :ref:`$stror`, :ref:`$strand` matching.
 
 The following factors are taken into account
 when choosing an query index:
 
-* The index for query is selected among all indexes
-  but only for fields presented in query.
-* If the query specifies sorting rules most likely the
-  index of the first sorted field will be used. In this
-  case, using fast inorder traversal of B+ tree for
+* The index for a query is selected among all indexes
+  but only for fields presented in a query.
+* If a query specifies sorting rules the index of the first sorted field will be most likely used.
+  In this case, using of fast inorder traversal of B+ tree for
   sorted field will speed up query execution.
 
 .. If EJDB founds more than one index suitable for
@@ -133,11 +132,11 @@ Locking
 -------
 
 EJDB uses `pthreads` and `winpthreads` libs to accomplish read-write API access locking.
-EJDB can be used by threads within a single process only. EJDB |ejdbversion| is no
+EJDB can be used by threads within a single process only. EJDB |ejdbversion| is not
 allowed for using by different OS processes.
 
 Data-locking routines in tchdb are quite optimal but intricate.
-We have done some work on the reorganization of tchdb locks and get rid
+We have done some work on the reorganization of tchdb locks and got rid
 of reentrant/recursive mutexes.
 
 
@@ -145,8 +144,8 @@ Transactions
 ------------
 
 EJDB provides atomic and durable non parallel and read-uncommited collection level transactions,
-i.e., for a single point in a time only one transaction for collection is active.
-Data written in a transaction is visible for other non transactional readers.
+i.e., There is only one transaction for collection is active for a single point in a time.
+The data written in a transaction is visible for other non transactional readers.
 EJDB transaction system utilizes write ahead logging to provide
 consistent transaction rollbacks.
 

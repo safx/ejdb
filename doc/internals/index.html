@@ -137,7 +137,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../iexp/index.html#command-response">Command response</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../limitations.html">Known EJDB limitations</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="../limitations.html">Known limitations</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../limitations.html#tokyo-cabinet-issues">Tokyo Cabinet issues</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../limitations.html#multiprocess-database-access">Multiprocess database access</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../limitations.html#indexes">Indexes</a></li>
@@ -209,12 +209,12 @@ provided by <a class="reference external" href="http://fallabs.com/tokyocabinet/
 <div class="section" id="document-storage-model">
 <h2><a class="toc-backref" href="#id6">Document storage model</a><a class="headerlink" href="#document-storage-model" title="Permalink to this headline">¶</a></h2>
 <p>Every EJDB collection is a table database (<a class="reference external" href="https://github.com/Softmotions/ejdb/blob/master/src/tctdb/tctdb.h">tctdb</a>) stored in separate file which is schema-free table storage.
-Collection data records stored in rows splitted into set of user defined columns as shown by following table:</p>
+Collection data records stored in rows are splitted into set of user defined columns. It&#8217;s shown in the following table:</p>
 <img alt="../../_images/tctdbdoc.png" src="../../_images/tctdbdoc.png" />
 <ul class="simple">
-<li>Every JSON document encoded to the <a class="reference external" href="http://bsonspec.org/">BSON</a> data format and stored as part of <cite>tctdb</cite> data record.</li>
-<li>Using <cite>tctdb</cite> gains the ability to easily associate metadata as extra tctdb columns adjusted with document record,
-it gives us the following benefits:<ul>
+<li>Every JSON document is encoded to the <a class="reference external" href="http://bsonspec.org/">BSON</a> data format and stored as a part of <cite>tctdb</cite> data record.</li>
+<li>Using <cite>tctdb</cite> gains the ability to easily associate metadata as and extra tctdb columns adjusted with document record.
+It gives us the following benefits:<ul>
 <li>Security attributes can be easily attached to documents, so the row level ACL may be implemented.</li>
 <li>Document access stats can be stored in metadata for further query/index optimizations.</li>
 </ul>
@@ -228,14 +228,14 @@ in the current 1.2.7 release.</p>
 </div>
 <div class="section" id="indexing">
 <h2><a class="toc-backref" href="#id7">Indexing</a><a class="headerlink" href="#indexing" title="Permalink to this headline">¶</a></h2>
-<p>In order to speed up execution of some queries
-a values pointed by some document fields need to be indexed.
+<p>In order to speed up execution of some queries,
+a values pointed by some document fields have to be indexed.
 In our implementation every defined indexed field
 is backed by B+ tree database. Field values are
 stored in the B+ tree <a class="reference external" href="https://github.com/Softmotions/ejdb/blob/master/src/tcbdb/tcbdb.h">tcbdb</a>
 and point to the primary keys (<a class="reference internal" href="../ql/ql.html#term-objectid"><span class="xref std std-term">ObjectId</span></a>) of
-BSON documents they refer. Four types of field indexes are
-supported:</p>
+BSON documents they refer to. There are four types of field indexes
+which are supported:</p>
 <ul class="simple">
 <li>String index for matching string values. This is B+
 tree, where a comparison function sorts indexed
@@ -248,12 +248,12 @@ insensitive string matching.</li>
 <li>Index for numeric types. A comparison function
 treats indexed values as numbers.</li>
 <li>Inverted index for matching values in JSON arrays
-or in string values treated as set of space delimited
+or in string values treated as a set of space delimited
 tokens. Indexes of this type are used for effective matching in an array
 as well as for <a class="reference internal" href="../ql/ql.html#strand"><span>$strand</span></a> and <a class="reference internal" href="../ql/ql.html#stror"><span>$stror</span></a> operations.</li>
 </ul>
 <p>Let us consider the index structure of sample collection
-of documents called <cite>Books</cite> and pictured below.
+of documents named <cite>Books</cite>.
 In the collection publisher names and book&#8217;s tags are indexed fields.</p>
 <img alt="../../_images/indexing.png" src="../../_images/indexing.png" />
 <p><cite>id, name, publisher.name, tags.0, tags.1</cite> each of them is a <a class="reference internal" href="../ql/ql.html#term-fieldpath"><span class="xref std std-term">fieldpath</span></a></p>
@@ -265,18 +265,17 @@ underlying hash database.</p>
 field data type to be only 12-byte <a class="reference internal" href="../ql/ql.html#term-objectid"><span class="xref std std-term">ObjectId</span></a></p>
 </div>
 <p>Index for every indexed fieldpath stored in separate B+ tree file managed by tcbdb.</p>
-<p>Only one index used during query execution.
-Major index selection among possible candidates based on number of empirical rules.
+<p>Only one index is used during query execution.
+Major index selection among possible candidates is based on the number of empirical rules.
 Collections access/selectivity stats are not taken into account in the current EJDB  1.2.7 release.
 EJDB supports token matching inverted indexes backed by B+ tree. Arrays, <a class="reference internal" href="../ql/ql.html#stror"><span>$stror</span></a>, <a class="reference internal" href="../ql/ql.html#strand"><span>$strand</span></a> matching.</p>
 <p>The following factors are taken into account
 when choosing an query index:</p>
 <ul class="simple">
-<li>The index for query is selected among all indexes
-but only for fields presented in query.</li>
-<li>If the query specifies sorting rules most likely the
-index of the first sorted field will be used. In this
-case, using fast inorder traversal of B+ tree for
+<li>The index for a query is selected among all indexes
+but only for fields presented in a query.</li>
+<li>If a query specifies sorting rules the index of the first sorted field will be most likely used.
+In this case, using of fast inorder traversal of B+ tree for
 sorted field will speed up query execution.</li>
 </ul>
 <p>EJDB supports a special type of case-insensitive string indexes used by <a class="reference internal" href="../ql/ql.html#icase"><span>$icase</span></a> matching operation where all
@@ -304,17 +303,17 @@ so one <cite>fieldpath</cite> may be associated with number of different B+ inde
 <div class="section" id="locking">
 <h2><a class="toc-backref" href="#id8">Locking</a><a class="headerlink" href="#locking" title="Permalink to this headline">¶</a></h2>
 <p>EJDB uses <cite>pthreads</cite> and <cite>winpthreads</cite> libs to accomplish read-write API access locking.
-EJDB can be used by threads within a single process only. EJDB 1.2.7 is no
+EJDB can be used by threads within a single process only. EJDB 1.2.7 is not
 allowed for using by different OS processes.</p>
 <p>Data-locking routines in tchdb are quite optimal but intricate.
-We have done some work on the reorganization of tchdb locks and get rid
+We have done some work on the reorganization of tchdb locks and got rid
 of reentrant/recursive mutexes.</p>
 </div>
 <div class="section" id="transactions">
 <h2><a class="toc-backref" href="#id9">Transactions</a><a class="headerlink" href="#transactions" title="Permalink to this headline">¶</a></h2>
 <p>EJDB provides atomic and durable non parallel and read-uncommited collection level transactions,
-i.e., for a single point in a time only one transaction for collection is active.
-Data written in a transaction is visible for other non transactional readers.
+i.e., There is only one transaction for collection is active for a single point in a time.
+The data written in a transaction is visible for other non transactional readers.
 EJDB transaction system utilizes write ahead logging to provide
 consistent transaction rollbacks.</p>
 <p>Implementation of parallel, read-commited ACID

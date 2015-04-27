@@ -3,14 +3,14 @@
 Command line interface
 ======================
 
-EJDB command line interface provided as the part of :ref:`ejdb-node module <nodejs>` published in
+EJDB command line interface is provided as the part of :ref:`ejdb-node module <nodejs>` published in
 `Nodejs Package Manager(NPM) repository <https://www.npmjs.com/package/ejdb>`_.
 
 Installation
 ------------
 
-You need the :ref:`ejdb-node module <nodejs>` installed on your system, to do this follow
-the :ref:`ejdb-node installation guide <nodejs_installation>`
+You need the :ref:`ejdb-node module <nodejs>` being installed on your system, follow
+the :ref:`ejdb-node installation guide <nodejs_installation>` to do this.
 
 Program options
 ---------------

@@ -15,7 +15,7 @@ Installation
 Windows
 *******
 
-On Windows, the easiest way to install `ejdb-node` is to use
+The easiest way to install `ejdb-node` in Windows is to use
 the precompiled `ejdb-node` binary modules.
 
 Installation prerequisites
@@ -33,7 +33,7 @@ Installation
 Linux and OSX
 *************
 
-On Linux and OSX systems you have to build `ejdb-node` module from sources.
+In Linux and OSX systems you have to build `ejdb-node` module from sources.
 
 Installation prerequisites
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

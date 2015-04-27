@@ -141,7 +141,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../iexp/index.html#command-response">Command response</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../limitations.html">Known EJDB limitations</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="../limitations.html">Known limitations</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../limitations.html#tokyo-cabinet-issues">Tokyo Cabinet issues</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../limitations.html#multiprocess-database-access">Multiprocess database access</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../limitations.html#indexes">Indexes</a></li>
@@ -189,8 +189,8 @@
 <span id="joins"></span><h1>Collection joins<a class="headerlink" href="#collection-joins" title="Permalink to this headline">¶</a></h1>
 <p>Joins can be specified in query within the <a class="reference internal" href="ql.html#do"><span>$do action directive</span></a>:</p>
 <p><code class="docutils literal"><span class="pre">{...,</span> <span class="pre">$do</span> <span class="pre">:</span> <span class="pre">{fieldpath1:</span> <span class="pre">{$join:</span> <span class="pre">collection1},</span> <span class="pre">fieldpath2</span> <span class="pre">:</span> <span class="pre">{$join:</span> <span class="pre">collection2}}</span> <span class="pre">}</span></code></p>
-<p>Where a value specified by <cite>fieldpath</cite> should point to <cite>OID`s</cite> of objects stored
-in the specific <cite>collection</cite>. Its value can be OID, string representation of OID, or array of OIDs.
+<p>Here a value specified by <cite>fieldpath</cite> should point to <cite>OID`s</cite> of objects stored
+in the specific <cite>collection</cite>. Its value could be OID, string representation of OID, or an array of OIDs.
 Upon query execution OID value stored in <cite>fieldpath</cite> will be replaced by
 joined objects fetched from <cite>collection</cite>.</p>
 <div class="section" id="simple-joins-showcase">
