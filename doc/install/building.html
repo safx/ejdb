@@ -245,6 +245,9 @@ PACKAGE_DEB:BOOL<span class="o">=</span>OFF
 // Build .tgz package archive
 PACKAGE_TGZ:BOOL<span class="o">=</span>ON
 
+// Build .zip package archive
+PACKAGE_ZIP:BOOL<span class="o">=</span>OFF
+
 // Upload debian packages to the launchpad ppa repository
 UPLOAD_PPA:BOOL<span class="o">=</span>OFF
 </pre></div>
@@ -255,7 +258,7 @@ UPLOAD_PPA:BOOL<span class="o">=</span>OFF
 <p>EJDB binaries for <cite>Windows</cite> need to be build on <cite>Linux</cite>
 using cross-compilation within the MXE cross build environment.
 First of all you need to checkout the <a class="reference external" href="http://mxe.cc">MXE cross build environment</a></p>
-<div class="highlight-sh"><div class="highlight"><pre>git clone -b stable https://github.com/mxe/mxe.git
+<div class="highlight-sh"><div class="highlight"><pre>git clone https://github.com/mxe/mxe.git
 </pre></div>
 </div>
 <p>Then create/edit MXE settings file:</p>
