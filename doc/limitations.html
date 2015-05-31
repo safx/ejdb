@@ -184,7 +184,7 @@
 <span id="limitations"></span><h1>Known limitations<a class="headerlink" href="#known-limitations" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="tokyo-cabinet-issues">
 <h2>Tokyo Cabinet issues<a class="headerlink" href="#tokyo-cabinet-issues" title="Permalink to this headline">¶</a></h2>
-<p>Limited concurrency and scalability on big data sets (&gt;10M records) This is known issue of tokyocabinet.
+<p>Limited concurrency and scalability on big data sets (&gt;10M-100M records) This is known issue of tokyocabinet.
 The problem is caused by many factors:</p>
 <ul class="simple">
 <li>No more than 255 concurrent rw-locks can be acquired in context of overall hash buckets space.

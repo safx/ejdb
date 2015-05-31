@@ -6,7 +6,7 @@ Known limitations
 Tokyo Cabinet issues
 --------------------
 
-Limited concurrency and scalability on big data sets (>10M records) This is known issue of tokyocabinet.
+Limited concurrency and scalability on big data sets (>10M-100M records) This is known issue of tokyocabinet.
 The problem is caused by many factors:
 
 * No more than 255 concurrent rw-locks can be acquired in context of overall hash buckets space.
