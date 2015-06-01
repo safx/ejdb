@@ -3,6 +3,19 @@
 Welcome to EJDB!
 ================
 
+EJDB v1.2.8 released
+--------------------
+2015-01-06
+
+**Changelog:**
+
+* Fix: Problem with the bson2json conversion dealing with doubles `#135 <https://github.com/Softmotions/ejdb/issues/135>`_
+*	$push and $pushAll operations are implemented. `#130 <https://github.com/Softmotions/ejdb/issues/130>`_
+* Fix: $rename can operate on nested json objects `#107 <https://github.com/Softmotions/ejdb/issues/107>`_
+* Fix: $inc doesn't create key if it doesn't exist `#120 <https://github.com/Softmotions/ejdb/issues/120>`_
+* Source code style fixes
+* A data format version info now stored in the database meta header `#139 <https://github.com/Softmotions/ejdb/issues/139>`_
+
 Mission
 -------
 EJDB is the embeddable (in-process) database engine designed for querying collections

@@ -1,15 +1,28 @@
 News
 ====
 
+EJDB v1.2.8 released
+--------------------
+2015-01-06
 
+**Changelog:**
+
+* Fix: Problem with the bson2json conversion dealing with doubles `#135 <https://github.com/Softmotions/ejdb/issues/135>`_
+*	$push and $pushAll operations are implemented. `#130 <https://github.com/Softmotions/ejdb/issues/130>`_
+* Fix: $rename can operate on nested json objects `#107 <https://github.com/Softmotions/ejdb/issues/107>`_
+* Fix: $inc doesn't create key if it doesn't exist `#120 <https://github.com/Softmotions/ejdb/issues/120>`_
+* Source code style fixes
+* A data format version info now stored in the database meta header `#139 <https://github.com/Softmotions/ejdb/issues/139>`_
+
+
+
+Archived
+--------
 * 2015-23-04 :ref:`v1.2.7 <v1.2.7>` released
 * 2015-15-04 :ref:`v1.2.6 <v1.2.6>` released
 * 2015-27-03 :ref:`v1.2.5 <v1.2.5>` released
 * 2015-22-03 :ref:`v1.2.4 <v1.2.4>` released
 * 2015-10-03 :ref:`v1.2.3 <v1.2.3>` released
-
-Archived
---------
 * 2013-09-20 EJDB Matlab binding from Kota Yamaguchi
 * 2013-09-10 v1.1.24 Fixed incorrect $set behaviour
 * 2013-08-19 v1.1.19 Added support the long awaited mongodb update positional operator
