@@ -223,7 +223,7 @@ It gives us the following benefits:<ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Record-level security/document stats are not yet implemented
-in the current 1.2.7 release.</p>
+in the current 1.2.8 release.</p>
 </div>
 </div>
 <div class="section" id="indexing">
@@ -267,7 +267,7 @@ field data type to be only 12-byte <a class="reference internal" href="../ql/ql.
 <p>Index for every indexed fieldpath stored in separate B+ tree file managed by tcbdb.</p>
 <p>Only one index is used during query execution.
 Major index selection among possible candidates is based on the number of empirical rules.
-Collections access/selectivity stats are not taken into account in the current EJDB  1.2.7 release.
+Collections access/selectivity stats are not taken into account in the current EJDB  1.2.8 release.
 EJDB supports token matching inverted indexes backed by B+ tree. Arrays, <a class="reference internal" href="../ql/ql.html#stror"><span>$stror</span></a>, <a class="reference internal" href="../ql/ql.html#strand"><span>$strand</span></a> matching.</p>
 <p>The following factors are taken into account
 when choosing an query index:</p>
@@ -303,7 +303,7 @@ so one <cite>fieldpath</cite> may be associated with number of different B+ inde
 <div class="section" id="locking">
 <h2><a class="toc-backref" href="#id8">Locking</a><a class="headerlink" href="#locking" title="Permalink to this headline">¶</a></h2>
 <p>EJDB uses <cite>pthreads</cite> and <cite>winpthreads</cite> libs to accomplish read-write API access locking.
-EJDB can be used by threads within a single process only. EJDB 1.2.7 is not
+EJDB can be used by threads within a single process only. EJDB 1.2.8 is not
 allowed for using by different OS processes.</p>
 <p>Data-locking routines in tchdb are quite optimal but intricate.
 We have done some work on the reorganization of tchdb locks and got rid
