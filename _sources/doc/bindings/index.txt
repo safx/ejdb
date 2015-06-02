@@ -11,7 +11,7 @@ EJDB language bindings
     Java <https://github.com/Softmotions/ejdb-java>
     Lua <https://github.com/Softmotions/ejdb-lua>
     Ruby <https://github.com/Softmotions/ejdb-ruby>
-    .Net <https://github.com/Softmotions/ejdb-csharp>
+    .Net (C#) <https://github.com/Softmotions/ejdb-csharp>
     thirdparty
 
 
