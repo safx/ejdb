@@ -60,6 +60,7 @@
 <li><a class="reference internal" href="#update">$ (update)</a></li>
 <li><a class="reference internal" href="#addtoset-and-addtosetall">$addToSet and $addToSetAll</a></li>
 <li><a class="reference internal" href="#pull-and-pullall">$pull and $pullAll</a></li>
+<li><a class="reference internal" href="#push-and-pushall">$push and $pushAll</a></li>
 <li><a class="reference internal" href="#rename">$rename</a></li>
 <li><a class="reference internal" href="#slice-projection">$slice (projection)</a></li>
 </ul>
@@ -283,13 +284,14 @@ mongodb.</p>
 <li><a class="reference internal" href="#update" id="id53">$ (update)</a></li>
 <li><a class="reference internal" href="#addtoset-and-addtosetall" id="id54">$addToSet and $addToSetAll</a></li>
 <li><a class="reference internal" href="#pull-and-pullall" id="id55">$pull and $pullAll</a></li>
-<li><a class="reference internal" href="#rename" id="id56">$rename</a></li>
-<li><a class="reference internal" href="#slice-projection" id="id57">$slice (projection)</a></li>
+<li><a class="reference internal" href="#push-and-pushall" id="id56">$push and $pushAll</a></li>
+<li><a class="reference internal" href="#rename" id="id57">$rename</a></li>
+<li><a class="reference internal" href="#slice-projection" id="id58">$slice (projection)</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#do-action-directive" id="id58">$do action directive</a></li>
-<li><a class="reference internal" href="#some-performance-considerations" id="id59">Some performance considerations</a></li>
-<li><a class="reference internal" href="#glossary" id="id60">Glossary</a></li>
+<li><a class="reference internal" href="#do-action-directive" id="id59">$do action directive</a></li>
+<li><a class="reference internal" href="#some-performance-considerations" id="id60">Some performance considerations</a></li>
+<li><a class="reference internal" href="#glossary" id="id61">Glossary</a></li>
 </ul>
 </li>
 </ul>
@@ -865,8 +867,20 @@ This is atomic operation.</p>
 <a class="reference internal" href="#addtoset">$addToSet</a> and  <a class="reference internal" href="#addtosetall">$addToSetAll</a></p>
 </div>
 </div>
+<div class="section" id="push-and-pushall">
+<span id="pushall"></span><span id="push"></span><h3><a class="toc-backref" href="#id56">$push and $pushAll</a><a class="headerlink" href="#push-and-pushall" title="Permalink to this headline">¶</a></h3>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.2.8.</span></p>
+</div>
+<p><code class="docutils literal"><span class="pre">{query,</span> <span class="pre">$push:</span> <span class="pre">{fieldpath1:</span> <span class="pre">value1,</span> <span class="pre">fieldpath2:</span> <span class="pre">value2,</span> <span class="pre">...}}</span></code></p>
+<p>Appends a specified <cite>value</cite> to the array field pointed by <cite>fieldpath</cite>.
+If the <cite>fieldpath</cite> is missing in the document, the <cite>$push</cite> adds new array field containing the specified <cite>value</cite>.
+This is atomic operation.</p>
+<p><cite>$pushAll</cite> is the batch version of <cite>$push</cite> operator:</p>
+<p><code class="docutils literal"><span class="pre">{query,</span> <span class="pre">$pushAll:</span> <span class="pre">{fieldpath1:</span> <span class="pre">[...],</span> <span class="pre">fieldpath2:</span> <span class="pre">[...],</span> <span class="pre">...}}</span></code></p>
+</div>
 <div class="section" id="rename">
-<span id="id22"></span><h3><a class="toc-backref" href="#id56">$rename</a><a class="headerlink" href="#rename" title="Permalink to this headline">¶</a></h3>
+<span id="id22"></span><h3><a class="toc-backref" href="#id57">$rename</a><a class="headerlink" href="#rename" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal"><span class="pre">{query,</span> <span class="pre">$rename'</span> <span class="pre">:</span> <span class="pre">{fieldpath1</span> <span class="pre">:</span> <span class="pre">name1,</span> <span class="pre">fieldpath2</span> <span class="pre">:</span> <span class="pre">name2,</span> <span class="pre">...}}</span></code></p>
 <p>Sets a new <cite>name</cite> to the field pointed by <cite>fieldpath</cite>.
 If the document has already had a field with the specified <cite>name</cite>,
@@ -874,7 +888,7 @@ the <cite>$rename</cite> operator removes that field and renames the field point
 to the new <cite>name</cite>.</p>
 </div>
 <div class="section" id="slice-projection">
-<span id="id23"></span><h3><a class="toc-backref" href="#id57">$slice (projection)</a><a class="headerlink" href="#slice-projection" title="Permalink to this headline">¶</a></h3>
+<span id="id23"></span><h3><a class="toc-backref" href="#id58">$slice (projection)</a><a class="headerlink" href="#slice-projection" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li><code class="docutils literal"><span class="pre">${...,</span> <span class="pre">$do:</span> <span class="pre">{fieldpath</span> <span class="pre">:</span> <span class="pre">{$slice</span> <span class="pre">:</span> <span class="pre">limit}}</span></code></li>
 <li><code class="docutils literal"><span class="pre">${...,</span> <span class="pre">$do:</span> <span class="pre">{fieldpath</span> <span class="pre">:</span> <span class="pre">{$slice</span> <span class="pre">:</span> <span class="pre">[offset,</span> <span class="pre">limit]}}</span></code></li>
@@ -913,7 +927,7 @@ limits a number of array items returned for document fields pointed by <cite>fie
 </div>
 </div>
 <div class="section" id="do-action-directive">
-<span id="do"></span><h2><a class="toc-backref" href="#id58">$do action directive</a><a class="headerlink" href="#do-action-directive" title="Permalink to this headline">¶</a></h2>
+<span id="do"></span><h2><a class="toc-backref" href="#id59">$do action directive</a><a class="headerlink" href="#do-action-directive" title="Permalink to this headline">¶</a></h2>
 <p>The <cite>$do</cite> action directive is used in the following cases:</p>
 <ul class="simple">
 <li><a class="reference internal" href="joins.html#joins"><span>Collection joins</span></a></li>
@@ -921,7 +935,7 @@ limits a number of array items returned for document fields pointed by <cite>fie
 </ul>
 </div>
 <div class="section" id="some-performance-considerations">
-<h2><a class="toc-backref" href="#id59">Some performance considerations</a><a class="headerlink" href="#some-performance-considerations" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id60">Some performance considerations</a><a class="headerlink" href="#some-performance-considerations" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Only one index can be used in search query operation.</li>
 <li>Negate operations: <a class="reference internal" href="#not">$not</a> and <a class="reference internal" href="#nin">$nin</a> do not use indexes
@@ -931,7 +945,7 @@ to avoid unnecessarily data fetching. (C API)</li>
 </ul>
 </div>
 <div class="section" id="glossary">
-<h2><a class="toc-backref" href="#id60">Glossary</a><a class="headerlink" href="#glossary" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id61">Glossary</a><a class="headerlink" href="#glossary" title="Permalink to this headline">¶</a></h2>
 <dl class="glossary docutils">
 <dt id="term-oid"><span id="term-objectid"></span>OID<br />ObjectId</dt>
 <dd>ObjectId (OID) is a unique identifier of every document stored in EJDB collection.

@@ -116,13 +116,13 @@ Update operators
         -
     *   - $addToSet, $pull
         - Y
-        - The EJDB specific :ref:`$addToSetAll`, :ref:`$pullAll` are also implemented.
+        - The EJDB specific :ref:`$addToSetAll <$addToSetAll>`, :ref:`$pullAll <$pullAll>` are also implemented.
     *   - $setOnInsert
         - YN
         - Special :ref:`$upsert` operator is used. Behaviour is a bit different
     *   - $each
         - YN
-        - `$addToSetAll` is used instead
+        - :ref:`$addToSetAll <$addToSetAll>` is used instead
     *   - $rename
         - Y
         -
@@ -133,8 +133,8 @@ Update operators
         - N
         -
     *   - $push
-        - N
-        -
+        - Y
+        - :ref:`$pushAll <$pushAll>` is the batch version of :ref:`$push <$push>` operator.
 
 Various operators
 -----------------

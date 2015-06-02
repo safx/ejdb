@@ -353,7 +353,7 @@ It may be hard to include this type of engine into embedded DB.</td>
 </tr>
 <tr class="row-odd"><td>$addToSet, $pull</td>
 <td>Y</td>
-<td>The EJDB specific <a class="reference internal" href="ql/ql.html#addtosetall"><span>$addToSet and $addToSetAll</span></a>, <a class="reference internal" href="ql/ql.html#pullall"><span>$pull and $pullAll</span></a> are also implemented.</td>
+<td>The EJDB specific <a class="reference internal" href="ql/ql.html#addtosetall"><span>$addToSetAll</span></a>, <a class="reference internal" href="ql/ql.html#pullall"><span>$pullAll</span></a> are also implemented.</td>
 </tr>
 <tr class="row-even"><td>$setOnInsert</td>
 <td>YN</td>
@@ -361,7 +361,7 @@ It may be hard to include this type of engine into embedded DB.</td>
 </tr>
 <tr class="row-odd"><td>$each</td>
 <td>YN</td>
-<td><cite>$addToSetAll</cite> is used instead</td>
+<td><a class="reference internal" href="ql/ql.html#addtosetall"><span>$addToSetAll</span></a> is used instead</td>
 </tr>
 <tr class="row-even"><td>$rename</td>
 <td>Y</td>
@@ -376,8 +376,8 @@ It may be hard to include this type of engine into embedded DB.</td>
 <td>&nbsp;</td>
 </tr>
 <tr class="row-odd"><td>$push</td>
-<td>N</td>
-<td>&nbsp;</td>
+<td>Y</td>
+<td><a class="reference internal" href="ql/ql.html#pushall"><span>$pushAll</span></a> is the batch version of <a class="reference internal" href="ql/ql.html#push"><span>$push</span></a> operator.</td>
 </tr>
 </tbody>
 </table>

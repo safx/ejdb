@@ -810,6 +810,25 @@ This is atomic operation.
     The `$pull` and `$pullAll` are the dual operations to
     `$addToSet`_ and  `$addToSetAll`_
 
+
+.. _$push:
+.. _$pushAll:
+
+$push and $pushAll
+******************
+.. versionadded:: 1.2.8
+
+``{query, $push: {fieldpath1: value1, fieldpath2: value2, ...}}``
+
+Appends a specified `value` to the array field pointed by `fieldpath`.
+If the `fieldpath` is missing in the document, the `$push` adds new array field containing the specified `value`.
+This is atomic operation.
+
+`$pushAll` is the batch version of `$push` operator:
+
+``{query, $pushAll: {fieldpath1: [...], fieldpath2: [...], ...}}``
+
+
 .. _$rename:
 
 $rename
