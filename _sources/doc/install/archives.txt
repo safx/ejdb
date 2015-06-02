@@ -1,7 +1,7 @@
 .. _archives:
 
-EJDB Binary artifacts
-=====================
+EJDB Binaries
+=============
 
 The archive of prebuilt EJDB artifacts http://softmotions.com/ejdb/
 

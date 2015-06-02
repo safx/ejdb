@@ -7,7 +7,7 @@ Installation
     ubuntu
     OSX <osx>
     windows
-    Binary distributions archive <archives>
+    EJDB binaries <archives>
     building
 
 
