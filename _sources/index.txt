@@ -48,10 +48,11 @@ Features
 
 
 Community
----------
+=========
 
 * `EJDB on Github <https://github.com/Softmotions/ejdb>`_
 * `@ejdblab Twitter <https://twitter.com/ejdblab>`_
+* `EJDB on Gitter <https://gitter.im/Softmotions/ejdb>`_
 * `Google groups <https://groups.google.com/forum/#!forum/ejdb>`_
 
 Documentation
