@@ -6,6 +6,7 @@ Nodejs
 
 .. toctree::
     api
+    samples
 
 .. _nodejs_installation:
 
