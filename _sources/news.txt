@@ -8,8 +8,8 @@ EJDB v1.2.10 released
 
 **Changelog:**
 
- * Fix: Uninitialized Memory Conditional fixe  `#155 <https://github.com/Softmotions/ejdb/issues/155>`_
- * Fix: `$set` fails to create nested keys if supplied with a non existent topmost key `#148 <https://github.com/Softmotions/ejdb/issues/148>`_
+* Fix: Uninitialized Memory Conditional fixe  `#155 <https://github.com/Softmotions/ejdb/issues/155>`_
+* Fix: `$set` fails to create nested keys if supplied with a non existent topmost key `#148 <https://github.com/Softmotions/ejdb/issues/148>`_
 
 
 EJDB v1.2.9 released
@@ -18,8 +18,8 @@ EJDB v1.2.9 released
 
 **Changelog:**
 
- * Fix: Builds shared lib when -DBUILD_SHARED_LIBS:BOOL=OFF `#143 <https://github.com/Softmotions/ejdb/issues/143>`
- * Fix: Not able to store data above 2GB on windows `#149 <https://github.com/Softmotions/ejdb/issues/149>`
+* Fix: Builds shared lib when -DBUILD_SHARED_LIBS:BOOL=OFF `#143 <https://github.com/Softmotions/ejdb/issues/143>`_
+* Fix: Not able to store data above 2GB on windows `#149 <https://github.com/Softmotions/ejdb/issues/149>`_
 
 
 EJDB v1.2.8 released
