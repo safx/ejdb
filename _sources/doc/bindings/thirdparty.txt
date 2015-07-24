@@ -12,3 +12,4 @@ Third-party language bindings
 * `Unofficial EJDB C# .Net binding <https://github.com/solyutor/ejdb-csharp>`_
 * `Pike language <https://github.com/hww3/pike_modules-ejdb>`_
 * `Matlab <https://github.com/kyamagu/matlab-ejdb>`_
+* `Qt/ QML <https://github.com/markusmarx/qtejdb>`_
